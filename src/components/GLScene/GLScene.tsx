@@ -505,6 +505,7 @@ export default class GLScene extends Component<SceneProps> {
   }
 
   start(): void {
+    console.log(this.glContext);
     if (!this.frameId) {
       this.frameId = requestAnimationFrame(this.animate);
     }

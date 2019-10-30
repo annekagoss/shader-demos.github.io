@@ -23,9 +23,21 @@ interface BufferInput {
   itemSize: number;
 }
 
-export function initShaderProgram(gl: WebGLRenderingContext, vertSource: string, fragSource: string): WebGLProgram {
-  const vertexShader: WebGLShader = loadShader(gl, gl.VERTEX_SHADER, vertSource);
-  const fragmentShader: WebGLShader = loadShader(gl, gl.FRAGMENT_SHADER, fragSource);
+export function initShaderProgram(
+  gl: WebGLRenderingContext,
+  vertSource: string,
+  fragSource: string
+): WebGLProgram {
+  const vertexShader: WebGLShader = loadShader(
+    gl,
+    gl.VERTEX_SHADER,
+    vertSource
+  );
+  const fragmentShader: WebGLShader = loadShader(
+    gl,
+    gl.FRAGMENT_SHADER,
+    fragSource
+  );
 
   const program: WebGLProgram = gl.createProgram();
   gl.attachShader(program, vertexShader);
@@ -33,26 +45,44 @@ export function initShaderProgram(gl: WebGLRenderingContext, vertSource: string,
   gl.linkProgram(program);
 
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    console.warn('Unabled to initialize the shader program: ' + gl.getProgramInfoLog(program)); /* tslint:disable-line no-console */
+    console.warn(
+      'Unabled to initialize the shader program: ' +
+        gl.getProgramInfoLog(program)
+    ); /* tslint:disable-line no-console */
   }
 
   return program;
 }
 
-export function loadShader(gl: WebGLRenderingContext, type: number, source: string): WebGLShader {
+export function loadShader(
+  gl: WebGLRenderingContext,
+  type: number,
+  source: string
+): WebGLShader {
   const shader: WebGLShader = gl.createShader(type);
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    console.warn('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader)); /* tslint:disable-line no-console */
+    console.warn(
+      'An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader)
+    ); /* tslint:disable-line no-console */
     gl.deleteShader(shader);
     return;
   }
   return shader;
 }
 
-export function initBuffers(gl: WebGLRenderingContext, loadedMesh: LoadedMesh): Buffers {
-  const { positions, normals, textures, textureAddresses, indices }: LoadedMesh = loadedMesh;
+export function initBuffers(
+  gl: WebGLRenderingContext,
+  loadedMesh: LoadedMesh
+): Buffers {
+  const {
+    positions,
+    normals,
+    textures,
+    textureAddresses,
+    indices
+  }: LoadedMesh = loadedMesh;
   const vertexBuffer: Buffer = buildBuffer({
     gl,
     type: gl.ARRAY_BUFFER,
@@ -97,7 +127,7 @@ export function initBuffers(gl: WebGLRenderingContext, loadedMesh: LoadedMesh): 
   };
 }
 
-export function buildBuffer({gl, type, data, itemSize}: BufferInput): Buffer {
+export function buildBuffer({ gl, type, data, itemSize }: BufferInput): Buffer {
   const buffer: WebGLBuffer = gl.createBuffer();
   const ArrayView: Float32ArrayConstructor | Uint16ArrayConstructor =
     type === gl.ARRAY_BUFFER ? Float32Array : Uint16Array;
@@ -123,19 +153,45 @@ export function initFrameBufferObject(gl: WebGLRenderingContext): FBO {
 
   const targetTexture: WebGLTexture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, targetTexture);
-  gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureWidth, textureHeight, border, format, type, data);
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    level,
+    internalFormat,
+    textureWidth,
+    textureHeight,
+    border,
+    format,
+    type,
+    data
+  );
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
   const depthBuffer: WebGLRenderbuffer = gl.createRenderbuffer();
   gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
-  gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, textureWidth, textureHeight);
+  gl.renderbufferStorage(
+    gl.RENDERBUFFER,
+    gl.DEPTH_COMPONENT16,
+    textureWidth,
+    textureHeight
+  );
 
   const frameBuffer: WebGLFramebuffer = gl.createFramebuffer();
   gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
-  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, level);
-  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
+  gl.framebufferTexture2D(
+    gl.FRAMEBUFFER,
+    gl.COLOR_ATTACHMENT0,
+    gl.TEXTURE_2D,
+    targetTexture,
+    level
+  );
+  gl.framebufferRenderbuffer(
+    gl.FRAMEBUFFER,
+    gl.DEPTH_ATTACHMENT,
+    gl.RENDERBUFFER,
+    depthBuffer
+  );
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   gl.bindTexture(gl.TEXTURE_2D, null);
@@ -152,25 +208,42 @@ export function initFrameBufferObject(gl: WebGLRenderingContext): FBO {
 }
 
 export const assignProjectionMatrix = (glContext: GLContext): void => {
-    const {gl, programInfo} = glContext;
-    let projectionMatrix: Matrix = applyPerspective({
-      sourceMatrix: createMat4(),
-      fieldOfView: degreesToRadians(40),
-      aspect: gl.canvas.clientWidth / gl.canvas.clientHeight,
-      near: 0.1,
-      far: 100
-    });
-    projectionMatrix = lookAt(projectionMatrix, {
-      target: { x: 0, y: 0, z: 0 },
-      origin: { x: 0, y: 0, z: 6 },
-      up: { x: 0, y: 1, z: 0 }
-    });
-    gl.useProgram(programInfo.program);
-    gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
+  const { gl, programInfo } = glContext;
+  let projectionMatrix: Matrix = applyPerspective({
+    sourceMatrix: createMat4(),
+    fieldOfView: degreesToRadians(40),
+    aspect: gl.canvas.clientWidth / gl.canvas.clientHeight,
+    near: 0.1,
+    far: 100
+  });
+  projectionMatrix = lookAt(projectionMatrix, {
+    target: { x: 0, y: 0, z: 0 },
+    origin: { x: 0, y: 0, z: 6 },
+    up: { x: 0, y: 1, z: 0 }
+  });
+  gl.useProgram(programInfo.program);
+  gl.uniformMatrix4fv(
+    programInfo.uniformLocations.projectionMatrix,
+    false,
+    projectionMatrix
+  );
 };
 
-export function assignStaticUniforms(glContext: GLContext, lightSettings: LightSettings, colors: GLSLColors, transformation: Transformation): void {
-  const { gl, supportsDepth, fbo, programInfo, shadowProgramInfo, mesh, placeholderTexture } = glContext;
+export function assignStaticUniforms(
+  glContext: GLContext,
+  lightSettings: LightSettings,
+  colors: GLSLColors,
+  transformation: Transformation
+): void {
+  const {
+    gl,
+    supportsDepth,
+    fbo,
+    programInfo,
+    shadowProgramInfo,
+    mesh,
+    placeholderTexture
+  } = glContext;
 
   assignProjectionMatrix(glContext);
 
@@ -192,9 +265,17 @@ export function assignStaticUniforms(glContext: GLContext, lightSettings: LightS
       up: { x: 0, y: 1, z: 0 }
     });
     gl.uniform1i(programInfo.uniformLocations.uDepthEnabled, 1);
-    gl.uniformMatrix4fv(programInfo.uniformLocations.leftLightMatrix, false, leftLightMatrix);
+    gl.uniformMatrix4fv(
+      programInfo.uniformLocations.leftLightMatrix,
+      false,
+      leftLightMatrix
+    );
     gl.useProgram(shadowProgramInfo.program);
-    gl.uniformMatrix4fv(shadowProgramInfo.uniformLocations.leftLightMatrix, false, leftLightMatrix);
+    gl.uniformMatrix4fv(
+      shadowProgramInfo.uniformLocations.leftLightMatrix,
+      false,
+      leftLightMatrix
+    );
   } else {
     gl.uniform1i(programInfo.uniformLocations.uDepthEnabled, 0);
   }
@@ -214,11 +295,26 @@ export function assignStaticUniforms(glContext: GLContext, lightSettings: LightS
           gl.uniform1f(programInfo.uniformLocations[`uHasTexture`], 1);
         }
 
-        gl.uniform3fv(programInfo.uniformLocations[`uDiffuseColor${i}`], mat.diffuse || [1, 1, 1]);
-        gl.uniform3fv(programInfo.uniformLocations[`uEmissiveColor${i}`], mat.emissive || [0, 0, 0]);
-        gl.uniform3fv(programInfo.uniformLocations[`uSpecularColor${i}`], mat.specular || [1, 1, 1]);
-        gl.uniform1f(programInfo.uniformLocations[`uReflectivity${i}`], mat.reflectivity ? mat.reflectivity : 1000);
-        gl.uniform1f(programInfo.uniformLocations[`uOpacity${i}`], mat.opacity || 1);
+        gl.uniform3fv(
+          programInfo.uniformLocations[`uDiffuseColor${i}`],
+          mat.diffuse || [1, 1, 1]
+        );
+        gl.uniform3fv(
+          programInfo.uniformLocations[`uEmissiveColor${i}`],
+          mat.emissive || [0, 0, 0]
+        );
+        gl.uniform3fv(
+          programInfo.uniformLocations[`uSpecularColor${i}`],
+          mat.specular || [1, 1, 1]
+        );
+        gl.uniform1f(
+          programInfo.uniformLocations[`uReflectivity${i}`],
+          mat.reflectivity ? mat.reflectivity : 1000
+        );
+        gl.uniform1f(
+          programInfo.uniformLocations[`uOpacity${i}`],
+          mat.opacity || 1
+        );
       }
     });
   } else {
@@ -249,30 +345,103 @@ export function assignStaticUniforms(glContext: GLContext, lightSettings: LightS
     gl.uniform1f(programInfo.uniformLocations[`uOpacity2`], 1);
   }
 
-  gl.uniform1f(programInfo.uniformLocations.uCustomShininess, lightSettings.customShininess);
-  gl.uniform1f(programInfo.uniformLocations.uShadowStrength, lightSettings.shadowStrength);
+  gl.uniform1f(
+    programInfo.uniformLocations.uCustomShininess,
+    lightSettings.customShininess
+  );
+  gl.uniform1f(
+    programInfo.uniformLocations.uShadowStrength,
+    lightSettings.shadowStrength
+  );
 
-  gl.uniform3fv(programInfo.uniformLocations.uAmbientLightColor, colors.ambientLight);
+  gl.uniform3fv(
+    programInfo.uniformLocations.uAmbientLightColor,
+    colors.ambientLight
+  );
   gl.uniform3fv(programInfo.uniformLocations.uLeftLightColor, colors.leftLight);
-  gl.uniform3fv(programInfo.uniformLocations.uRightLightColor, colors.rightLight);
+  gl.uniform3fv(
+    programInfo.uniformLocations.uRightLightColor,
+    colors.rightLight
+  );
   gl.uniform3fv(programInfo.uniformLocations.uTopLightColor, colors.topSpot);
-  gl.uniform3fv(programInfo.uniformLocations.uBottomLightColor, colors.bottomSpot);
+  gl.uniform3fv(
+    programInfo.uniformLocations.uBottomLightColor,
+    colors.bottomSpot
+  );
 
-  gl.uniform1f(programInfo.uniformLocations.uAmbientLightIntensity, lightSettings.intensities.ambient);
-  gl.uniform1f(programInfo.uniformLocations.uLeftLightIntensity, lightSettings.intensities.left);
-  gl.uniform1f(programInfo.uniformLocations.uRightLightIntensity, lightSettings.intensities.right);
-  gl.uniform1f(programInfo.uniformLocations.uTopLightIntensity, lightSettings.intensities.top);
-  gl.uniform1f(programInfo.uniformLocations.uBottomLightIntensity, lightSettings.intensities.bottom);
+  gl.uniform1f(
+    programInfo.uniformLocations.uAmbientLightIntensity,
+    lightSettings.intensities.ambient
+  );
+  gl.uniform1f(
+    programInfo.uniformLocations.uLeftLightIntensity,
+    lightSettings.intensities.left
+  );
+  gl.uniform1f(
+    programInfo.uniformLocations.uRightLightIntensity,
+    lightSettings.intensities.right
+  );
+  gl.uniform1f(
+    programInfo.uniformLocations.uTopLightIntensity,
+    lightSettings.intensities.top
+  );
+  gl.uniform1f(
+    programInfo.uniformLocations.uBottomLightIntensity,
+    lightSettings.intensities.bottom
+  );
 
-  gl.uniform3fv(programInfo.uniformLocations.uLeftLightPosition, lightSettings.positions.left);
-  gl.uniform3fv(programInfo.uniformLocations.uRightLightPosition, lightSettings.positions.right);
-  gl.uniform3fv(programInfo.uniformLocations.uTopLightPosition, lightSettings.positions.top);
-  gl.uniform3fv(programInfo.uniformLocations.uBottomLightPosition, lightSettings.positions.bottom);
+  gl.uniform3fv(
+    programInfo.uniformLocations.uLeftLightPosition,
+    lightSettings.positions.left
+  );
+  gl.uniform3fv(
+    programInfo.uniformLocations.uRightLightPosition,
+    lightSettings.positions.right
+  );
+  gl.uniform3fv(
+    programInfo.uniformLocations.uTopLightPosition,
+    lightSettings.positions.top
+  );
+  gl.uniform3fv(
+    programInfo.uniformLocations.uBottomLightPosition,
+    lightSettings.positions.bottom
+  );
 }
 
-export function initPlaceholderTexture(gl: WebGLRenderingContext): WebGLTexture {
+export function initPlaceholderTexture(
+  gl: WebGLRenderingContext
+): WebGLTexture {
   const texture: WebGLTexture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    0,
+    gl.RGBA,
+    1,
+    1,
+    0,
+    gl.RGBA,
+    gl.UNSIGNED_BYTE,
+    new Uint8Array([0, 0, 0, 0])
+  );
   return texture;
 }
+
+// Base mesh made of two triangles
+export const initBaseMesh = (
+  gl: WebGLRenderingContext,
+  program: WebGLProgram
+) => {
+  const { buffer } = buildBuffer({
+    gl,
+    type: gl.ARRAY_BUFFER,
+    data: [-1, 1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0],
+    itemSize: 3
+  });
+  const vertexPosition = gl.getAttribLocation(program, 'aVertexPosition');
+  gl.enableVertexAttribArray(vertexPosition);
+  gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
+  return {
+    vertexPosition
+  };
+};

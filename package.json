@@ -76,8 +76,8 @@
     "react-hot-loader": "^4.8.4",
     "sass-loader": "^7.1.0",
     "style-loader": "^0.23.1",
-    "tslint": "^5.14.0",
-    "typescript": "^3.3.4000",
+    "tslint": "^5.20.0",
+    "typescript": "^3.6.4",
     "uglifyjs-webpack-plugin": "^2.1.2",
     "webpack": "^4.29.6",
     "webpack-cli": "^3.3.0",
@@ -95,8 +95,10 @@
     "classnames": "^2.2.6",
     "glslify": "^7.0.0",
     "glslify-loader": "^2.0.0",
+    "latest": "^0.2.0",
     "raw-loader": "^2.0.0",
     "source-map-loader": "^0.2.4",
+    "three": "^0.109.0",
     "url-loader": "^1.1.2"
   }
 }

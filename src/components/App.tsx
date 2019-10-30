@@ -1,7 +1,8 @@
 import * as React from 'react';
 
-import {SceneProps} from '../../types';
+import { SceneProps } from '../../types';
 import GLScene from './GLScene/GLScene';
+import TransitionBackground from './TransitionBackground/TransitionBackground';
 
 import styles from './app.module.scss';
 
@@ -35,26 +36,23 @@ const GL_PROPS: SceneProps = {
     y: 1.9,
     z: 0
   },
-  brightness: .8,
+  brightness: 0.8,
   shininess: 0,
-  shadowStrength: .33,
-  scale: .0485,
+  shadowStrength: 0.33,
+  scale: 0.0485
 };
 
 export default class App extends React.Component {
-    render() {
-        return (
-            <div className={styles.app}>
-                <div className={styles.page}>
-                  <div className={styles.section}>
-                    <GLScene {...GL_PROPS} />
-                    <div
-                      className={styles.background}
-                      style={{ background: `linear-gradient(30deg, ${GL_PROPS.colors.backgroundA}, ${GL_PROPS.colors.backgroundB})` }}
-                    ></div>
-                  </div>
-                </div>
-            </div>
-        );
-    }
+  render() {
+    return (
+      <div className={styles.app}>
+        <div className={styles.page}>
+          <div className={styles.section}>
+            {/* <GLScene {...GL_PROPS} /> */}
+            <TransitionBackground />
+          </div>
+        </div>
+      </div>
+    );
+  }
 }
