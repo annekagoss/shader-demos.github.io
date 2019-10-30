@@ -276,3 +276,12 @@ export interface DrawOptions extends RenderOptions {
   shadowPass: boolean;
   frameId: number;
 }
+
+export enum UNIFORM_TYPE {
+  FLOAT_1 = 'uniform1f'
+}
+
+export interface UniformSetting {
+  name: string;
+  type: UNIFORM_TYPE;
+}

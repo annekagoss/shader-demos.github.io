@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { initBaseMesh, initShaderProgram } from '../../../lib/gl/initialize';
+import { UniformSetting, UNIFORM_TYPE } from '../../../types';
+import { useInitializeGL } from '../../hooks/gl';
 import { useAnimationFrame } from '../../hooks/animation';
 import baseVert from '../../../lib/gl/shaders/base.vert';
 import diagonalBackgroundFrag from '../../../lib/gl/shaders/diagonal-background.frag';
@@ -14,36 +16,21 @@ const render = (
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 };
 
+const UNIFORMS: UniformSetting[] = [
+  { name: 'uTime', type: UNIFORM_TYPE.FLOAT_1 }
+];
+
 const TransitionBackground = () => {
   const canvasRef = React.useRef<HTMLCanvasElement>();
-  const gl = React.useRef<WebGLRenderingContext>();
-  const program = React.useRef<WebGLProgram>();
-  const attributeLocations = React.useRef<Record<string, number>>();
-  const uniformLocations = React.useRef<Record<string, WebGLUniformLocation>>();
 
-  React.useLayoutEffect(() => {
-    if (canvasRef.current === undefined) return;
-    const tempGl: WebGLRenderingContext =
-      (canvasRef.current.getContext(
-        'experimental-webgl'
-      ) as WebGLRenderingContext) ||
-      (canvasRef.current.getContext('webgl') as WebGLRenderingContext);
-
-    const tempProgram: WebGLProgram = initShaderProgram(
-      tempGl,
-      baseVert,
-      diagonalBackgroundFrag
-    );
-
-    tempGl.useProgram(tempProgram);
-
-    attributeLocations.current = initBaseMesh(tempGl, tempProgram);
-    uniformLocations.current = {
-      uTime: tempGl.getUniformLocation(tempProgram, 'uTime')
-    };
-    gl.current = tempGl;
-    program.current = tempProgram;
-  }, [canvasRef.current]);
+  const { gl, program, attributeLocations, uniformLocations } = useInitializeGL(
+    {
+      canvasRef,
+      fragmentSource: diagonalBackgroundFrag,
+      vertexSource: baseVert,
+      uniforms: UNIFORMS
+    }
+  );
 
   useAnimationFrame((time: number) =>
     render(gl.current, uniformLocations.current, time)
