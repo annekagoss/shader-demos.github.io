@@ -56,7 +56,13 @@ export default class App extends React.Component {
           {/* <div className={styles.section}> */}
           {/* <GLScene {...GL_PROPS} /> */}
 
-          <Section title='0.0: Hello World'>
+          <Section
+            title='0.0: Hello World'
+            notes={`
+              The fragment shader is rendered onto a base mesh. In these first examples we will use a 1x1 plane which acts like a projection screen.
+              The aVertexPosition attribute holds an array of 3-vector coordinates for each vertex of the base mesh.  It looks like this: [-1, 1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0]
+            `}
+          >
             <BaseCanvas
               fragmentShader={helloWorldFragmentShader}
               vertexShader={baseVertexShader}

@@ -16,3 +16,14 @@
     flex-direction: column;
   }
 }
+
+.notes {
+  margin-top: 10px;
+  font-family: 'Inconsolata', monospace;
+  line-height: 1.25rem;
+  width: 50%;
+
+  @media (max-width: 900px) {
+    width: 100%;
+  }
+}
