@@ -2,7 +2,13 @@ import * as React from 'react';
 
 import { SceneProps } from '../../types';
 import GLScene from './GLScene/GLScene';
-import TransitionBackground from './TransitionBackground/TransitionBackground';
+import Section from './Section/Section';
+import BaseCanvas from './BaseCanvas/BaseCanvas';
+import ShaderText from './ShaderText/ShaderText';
+import baseVertexShader from '../../lib/gl/shaders/base.vert';
+
+// HELLO WORlD
+import helloWorldFragmentShader from '../../lib/gl/shaders/hello-world.frag';
 
 import styles from './app.module.scss';
 
@@ -47,10 +53,21 @@ export default class App extends React.Component {
     return (
       <div className={styles.app}>
         <div className={styles.page}>
-          <div className={styles.section}>
-            {/* <GLScene {...GL_PROPS} /> */}
-            <TransitionBackground />
-          </div>
+          {/* <div className={styles.section}> */}
+          {/* <GLScene {...GL_PROPS} /> */}
+
+          <Section title='0.0: Hello World'>
+            <BaseCanvas
+              fragmentShader={helloWorldFragmentShader}
+              vertexShader={baseVertexShader}
+            />
+            <ShaderText
+              fragmentShader={helloWorldFragmentShader}
+              vertexShader={baseVertexShader}
+            />
+          </Section>
+
+          {/* </div> */}
         </div>
       </div>
     );
