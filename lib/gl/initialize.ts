@@ -9,12 +9,12 @@ import {
   Material,
   Matrix,
   Transformation
-} from '../../types';
+} from "../../types";
 
-import { degreesToRadians } from './helpers';
-import { createMat4, applyPerspective, lookAt } from './matrix';
+import { degreesToRadians } from "./helpers";
+import { createMat4, applyPerspective, lookAt } from "./matrix";
 
-import { MAX_SUPPORTED_MATERIAL_TEXTURES } from './defaults';
+import { MAX_SUPPORTED_MATERIAL_TEXTURES } from "./defaults";
 
 interface BufferInput {
   gl: WebGLRenderingContext;
@@ -46,7 +46,7 @@ export function initShaderProgram(
 
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
     console.warn(
-      'Unabled to initialize the shader program: ' +
+      "Unabled to initialize the shader program: " +
         gl.getProgramInfoLog(program)
     ); /* tslint:disable-line no-console */
   }
@@ -64,7 +64,7 @@ export function loadShader(
   gl.compileShader(shader);
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
     console.warn(
-      'An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader)
+      "An error occurred compiling the shaders: " + gl.getShaderInfoLog(shader)
     ); /* tslint:disable-line no-console */
     gl.deleteShader(shader);
     return;
@@ -432,16 +432,18 @@ export const initBaseMesh = (
   gl: WebGLRenderingContext,
   program: WebGLProgram
 ) => {
+  const data = [-1, 1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0];
   const { buffer } = buildBuffer({
     gl,
     type: gl.ARRAY_BUFFER,
-    data: [-1, 1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0],
+    data,
     itemSize: 3
   });
-  const vertexPosition = gl.getAttribLocation(program, 'aVertexPosition');
+  const vertexPosition = gl.getAttribLocation(program, "aVertexPosition");
   gl.enableVertexAttribArray(vertexPosition);
   gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
   return {
+    bufferData: data,
     vertexPosition
   };
 };

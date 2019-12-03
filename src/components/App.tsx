@@ -5,6 +5,7 @@ import GLScene from "./GLScene/GLScene";
 import Section from "./Section/Section";
 import BaseCanvas from "./BaseCanvas/BaseCanvas";
 import ShaderText from "./ShaderText/ShaderText";
+import Inputs from "./Inputs/Inputs";
 import baseVertexShader from "../../lib/gl/shaders/base.vert";
 
 // HELLO WORlD
@@ -48,34 +49,40 @@ const GL_PROPS: SceneProps = {
   scale: 0.0485
 };
 
-export default class App extends React.Component {
-  render() {
-    return (
-      <div className={styles.app}>
-        <div className={styles.page}>
-          {/* <div className={styles.section}> */}
-          {/* <GLScene {...GL_PROPS} /> */}
+const App = () => {
+  const [uniforms, setUniforms] = React.useState<any[]>([]);
+  const [attributes, setAttributes] = React.useState<any[]>([]);
 
-          <Section
-            title="0.0: Hello World"
-            notes={`
+  return (
+    <div className={styles.app}>
+      <div className={styles.page}>
+        {/* <div className={styles.section}> */}
+        {/* <GLScene {...GL_PROPS} /> */}
+
+        <Section
+          title="0.0: Hello World"
+          notes={`
               The fragment shader is rendered onto a base mesh. In these first examples we will use a 1x1 plane which acts as a projection screen.
               The aVertexPosition attribute holds an array of 3-vector coordinates for each vertex of the base mesh.  It looks like this: [-1, 1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0]
             `}
-          >
-            <BaseCanvas
-              fragmentShader={helloWorldFragmentShader}
-              vertexShader={baseVertexShader}
-            />
-            <ShaderText
-              fragmentShader={helloWorldFragmentShader}
-              vertexShader={baseVertexShader}
-            />
-          </Section>
+        >
+          <BaseCanvas
+            fragmentShader={helloWorldFragmentShader}
+            vertexShader={baseVertexShader}
+            setUniforms={setUniforms}
+            setAttributes={setAttributes}
+          />
+          <ShaderText
+            fragmentShader={helloWorldFragmentShader}
+            vertexShader={baseVertexShader}
+          />
+          <Inputs uniforms={uniforms} attributes={attributes} />
+        </Section>
 
-          {/* </div> */}
-        </div>
+        {/* </div> */}
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
+
+export default App;
