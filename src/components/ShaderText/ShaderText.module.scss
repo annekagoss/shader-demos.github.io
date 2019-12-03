@@ -1,37 +1,69 @@
 .root {
   display: flex;
   flex: 1;
-
-  @media (max-width: 900px) {
-    flex-direction: column;
-  }
-}
-
-.textContainer {
-  flex: 1;
-  margin-left: 10px;
-  display: flex;
   flex-direction: column;
+  margin-left: 10px;
 
   @media (max-width: 900px) {
     margin-left: 0;
     margin-top: 10px;
   }
+
+  // @media (max-width: 900px) {
+  //   flex-direction: column;
+  // }
 }
 
-.title {
+.tabs {
+  display: flex;
+}
+
+.tab {
+  border: none;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  font-size: 14px;
+  padding: 5px;
   margin-bottom: 5px;
-  font-family: 'Inconsolata', monospace;
+  margin-right: 5px;
+  font-family: "Inconsolata", monospace;
+  color: rgba(0, 0, 0, 0.5);
+
+  &:hover {
+    cursor: pointer;
+    color: black;
+  }
+
+  &.active {
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+  }
+}
+
+.textContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 900px) {
+    // margin-top: 10px;
+  }
 }
 
 .textBlock {
   background: rgba(0, 0, 0, 0.8);
   color: white;
-  font-family: 'Inconsolata', monospace;
+  font-family: "Inconsolata", monospace;
   font-weight: 100;
   font-size: 14px;
   white-space: pre-wrap;
   padding: 10px;
   line-height: 1.125rem;
   flex: 1;
+  display: none;
+
+  &.active {
+    display: block;
+  }
 }
