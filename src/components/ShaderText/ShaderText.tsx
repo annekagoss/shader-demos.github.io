@@ -1,5 +1,9 @@
 import * as React from "react";
 import cx from "classnames";
+import * as prism from "prismjs";
+import "prismjs/components/prism-glsl";
+
+import "../prism.css";
 import styles from "./ShaderText.module.scss";
 
 interface Props {
@@ -10,6 +14,10 @@ interface Props {
 const ShaderText = ({ fragmentShader, vertexShader }: Props) => {
   const [fragVisible, setFragVisible] = React.useState<boolean>(true);
   const [vertVisible, setVertVisible] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    prism.highlightAll();
+  }, []);
 
   return (
     <div className={styles.root}>
@@ -39,10 +47,14 @@ const ShaderText = ({ fragmentShader, vertexShader }: Props) => {
       </div>
       <div className={styles.textContainer}>
         <div className={cx(styles.textBlock, fragVisible && styles.active)}>
-          {fragmentShader}
+          <pre>
+            <code className="language-glsl">{fragmentShader}</code>
+          </pre>
         </div>
         <div className={cx(styles.textBlock, vertVisible && styles.active)}>
-          {vertexShader}
+          <pre>
+            <code className="language-glsl">{vertexShader}</code>
+          </pre>
         </div>
       </div>
     </div>
