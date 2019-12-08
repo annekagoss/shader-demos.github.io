@@ -2,7 +2,6 @@ import * as React from 'react';
 import cx from 'classnames';
 import * as prism from 'prismjs';
 import 'prismjs/components/prism-glsl';
-
 import '../prism.css';
 import styles from './ShaderText.module.scss';
 
