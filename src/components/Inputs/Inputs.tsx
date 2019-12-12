@@ -1,5 +1,6 @@
 import * as React from 'react';
 import cx from 'classnames';
+import { parseUniform } from '../../utils/general';
 import styles from './Inputs.module.scss';
 
 interface Props {
@@ -52,7 +53,10 @@ const Inputs = ({ uniforms, attributes }: Props) => {
 				>
 					{uniforms.map(uniform => (
 						<div className={styles.textItem} key={uniform.name}>
-							{uniform.name}: {uniform.value}
+							{uniform.type}
+							<br />
+							{uniform.name}:
+							{parseUniform(uniform.value, uniform.type)}
 						</div>
 					))}
 				</div>
