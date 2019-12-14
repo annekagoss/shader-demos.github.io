@@ -20,3 +20,16 @@ body {
 canvas {
 	border: solid 1px rgb(127, 127, 127);
 }
+
+input {
+	background: black;
+	border: none;
+	padding: 4px;
+	color: white;
+}
+
+::placeholder {
+	/* Chrome, Firefox, Opera, Safari 10.1+ */
+	color: white;
+	opacity: 1; /* Firefox */
+}
