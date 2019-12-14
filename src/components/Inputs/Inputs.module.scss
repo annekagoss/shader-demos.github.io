@@ -46,7 +46,7 @@
 .textBlock {
 	background: rgba(0, 0, 0, 0.8);
 	color: white;
-	font-family: 'Inconsolata', monospace;
+	font-family: Consolas, monospace;
 	font-weight: 100;
 	font-size: 14px;
 	white-space: pre-wrap;
@@ -54,6 +54,7 @@
 	line-height: 1.125rem;
 	flex: 1;
 	display: none;
+	line-height: 2;
 
 	&.active {
 		display: block;
