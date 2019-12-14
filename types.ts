@@ -1,5 +1,5 @@
-import { type } from 'os';
-import { number } from 'prop-types';
+import {type} from 'os';
+import {number} from 'prop-types';
 
 export enum Direction {
 	BOTTOM = 'bottom',
@@ -289,7 +289,9 @@ export enum UNIFORM_TYPE {
 }
 
 export interface UniformSetting {
+	defaultValue: any;
 	name: string;
+	readonly: boolean;
 	type: UNIFORM_TYPE;
 	value: any;
 }

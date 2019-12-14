@@ -1,16 +1,133 @@
 import * as React from 'react';
 import cx from 'classnames';
+import {UNIFORM_TYPE, UniformSetting} from '../../../types';
 import {parseUniform} from '../../utils/general';
 import styles from './Inputs.module.scss';
+import {any} from 'prop-types';
 
 interface Props {
 	attributes: any[];
-	uniforms: any[];
+	uniforms: React.MutableRefObject<UniformSetting[]>;
 }
+
+interface UniformInputProps {
+	uniform: UniformSetting;
+	updateUniforms: (name: string, newValue: any) => void;
+}
+
+interface TypeInputProps {
+	uniform: UniformSetting;
+	updateUniforms: (name: string, newValue: any) => void;
+}
+
+const FloatInput = ({uniform, updateUniforms}: TypeInputProps) => (
+	<input
+		type='number'
+		placeholder={uniform.defaultValue}
+		step={0.01}
+		min={0}
+		max={1}
+		onChange={e => {
+			updateUniforms(uniform.name, e.target.value);
+		}}
+	/>
+);
+
+const Vec2Input = ({uniform, updateUniforms}: TypeInputProps) => {
+	return (
+		<>
+			<input
+				type='number'
+				placeholder={uniform.defaultValue.x}
+				step={0.01}
+				min={0}
+				max={1}
+				onChange={e => {
+					updateUniforms(uniform.name, {x: e.target.value, y: uniform.value.y});
+				}}
+			/>
+			<input
+				type='number'
+				placeholder={uniform.defaultValue.y}
+				step={0.01}
+				min={0}
+				max={1}
+				onChange={e => {
+					updateUniforms(uniform.name, {x: uniform.value.x, y: e.target.value});
+				}}
+			/>
+		</>
+	);
+};
+
+const Vec3Input = ({uniform, updateUniforms}: TypeInputProps) => (
+	<>
+		<input
+			type='number'
+			placeholder={uniform.defaultValue.x}
+			step={0.01}
+			min={0}
+			max={1}
+			onChange={e => {
+				updateUniforms(uniform.name, {x: e.target.value, y: uniform.value.y, z: uniform.value.z});
+			}}
+		/>
+		<input
+			type='number'
+			placeholder={uniform.defaultValue.y}
+			step={0.01}
+			min={0}
+			max={1}
+			onChange={e => {
+				updateUniforms(uniform.name, {x: uniform.value.x, y: e.target.value, z: uniform.value.z});
+			}}
+		/>
+		<input
+			type='number'
+			placeholder={uniform.defaultValue.z}
+			step={0.01}
+			min={0}
+			max={1}
+			onChange={e => {
+				updateUniforms(uniform.name, {x: uniform.value.x, y: uniform.value.y, z: e.target.value});
+			}}
+		/>
+	</>
+);
+
+const UniformInput = ({uniform, updateUniforms}: UniformInputProps) => {
+	if (uniform.readonly) return parseUniform(uniform.value, uniform.type);
+	switch (uniform.type) {
+		case UNIFORM_TYPE.FLOAT_1:
+			return <FloatInput uniform={uniform} updateUniforms={updateUniforms} />;
+		case UNIFORM_TYPE.VEC_2:
+			return <Vec2Input uniform={uniform} updateUniforms={updateUniforms} />;
+		case UNIFORM_TYPE.VEC_3:
+			return <Vec3Input uniform={uniform} updateUniforms={updateUniforms} />;
+		default:
+			return uniform.defaultValue;
+	}
+};
 
 const Inputs = ({uniforms, attributes}: Props) => {
 	const [uniformsVisible, setUniformsVisible] = React.useState<boolean>(true);
 	const [attributesVisible, setAttributesVisible] = React.useState<boolean>(false);
+
+	const updateUniforms = (name, newValue) => {
+		const newUniforms: UniformSetting[] = uniforms.current.reduce((result, oldUniform) => {
+			if (oldUniform.name === name) {
+				const newUniform = {
+					...oldUniform,
+					value: newValue
+				};
+				result.push(newUniform);
+				return result;
+			}
+			result.push(oldUniform);
+			return result;
+		}, []);
+		uniforms.current = newUniforms;
+	};
 
 	return (
 		<div className={styles.root}>
@@ -37,9 +154,9 @@ const Inputs = ({uniforms, attributes}: Props) => {
 				</button>
 			</div>
 			<div className={cx(styles.textBlock, uniformsVisible && styles.active)}>
-				{uniforms.map(uniform => (
+				{uniforms.current.map(uniform => (
 					<div className={styles.textItem} key={uniform.name}>
-						{uniform.name}: {parseUniform(uniform.value, uniform.type)}
+						{uniform.name}: <UniformInput uniform={uniform} updateUniforms={updateUniforms} />
 					</div>
 				))}
 			</div>

@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import {SceneProps} from '../../types';
+import {SceneProps, UNIFORM_TYPE, UniformSetting} from '../../types';
 import GLScene from './GLScene/GLScene';
 import Section from './Section/Section';
 import BaseCanvas from './BaseCanvas/BaseCanvas';
@@ -15,6 +15,27 @@ import helloWorldFragmentShader from '../../lib/gl/shaders/hello-world.frag';
 import stepFragmentShader from '../../lib/gl/shaders/step.frag';
 
 import styles from './app.module.scss';
+
+const BASE_UNIFORMS: UniformSetting[] = [
+	{
+		defaultValue: {x: 400, y: 400},
+		name: 'uResolution',
+		readonly: true,
+		type: UNIFORM_TYPE.VEC_2,
+		value: {x: 400, y: 400}
+	}
+];
+
+const BASE_STEP_UNIFORMS: UniformSetting[] = [
+	...BASE_UNIFORMS,
+	{
+		defaultValue: 0.5,
+		name: 'uThreshold',
+		readonly: false,
+		type: UNIFORM_TYPE.FLOAT_1,
+		value: 0.5
+	}
+];
 
 // FOX SKULL
 // import OBJSource from '../../lib/gl/assets/fox/fox3.obj';
@@ -53,7 +74,8 @@ import styles from './app.module.scss';
 // };
 
 const App = () => {
-	const [uniforms, setUniforms] = React.useState<any[]>([]);
+	const baseUniforms = React.useRef<UniformSetting[]>(BASE_UNIFORMS);
+	const stepUniforms = React.useRef<UniformSetting[]>(BASE_STEP_UNIFORMS);
 	const [attributes, setAttributes] = React.useState<any[]>([]);
 
 	return (
@@ -69,15 +91,15 @@ const App = () => {
               The fragment shader is rendered onto a base mesh. In these first examples we will use a 1x1 plane which acts as a projection screen.
               The aVertexPosition attribute holds an array of 3-vector coordinates for each vertex of the base mesh.
             `}>
-					<BaseCanvas fragmentShader={helloWorldFragmentShader} vertexShader={baseVertexShader} setUniforms={setUniforms} setAttributes={setAttributes} />
+					<BaseCanvas fragmentShader={helloWorldFragmentShader} vertexShader={baseVertexShader} uniforms={stepUniforms} setAttributes={setAttributes} />
 					<ShaderText fragmentShader={helloWorldFragmentShader} vertexShader={baseVertexShader} />
-					<Inputs uniforms={uniforms} attributes={attributes} />
+					<Inputs uniforms={baseUniforms} attributes={attributes} />
 				</Section>
 
 				<Section title='0.1: Step' notes={` Step is one of the hardware accelerated functions that are native to GLSL. It returns either 1.0 or 0.0 based on whether a value has passed a given threshold.`}>
-					<BaseCanvas fragmentShader={stepFragmentShader} vertexShader={baseVertexShader} setUniforms={setUniforms} setAttributes={setAttributes} />
+					<BaseCanvas fragmentShader={stepFragmentShader} vertexShader={baseVertexShader} uniforms={stepUniforms} setAttributes={setAttributes} />
 					<ShaderText fragmentShader={stepFragmentShader} vertexShader={baseVertexShader} />
-					<Inputs uniforms={uniforms} attributes={attributes} />
+					<Inputs attributes={attributes} uniforms={stepUniforms} />
 				</Section>
 			</div>
 		</div>
