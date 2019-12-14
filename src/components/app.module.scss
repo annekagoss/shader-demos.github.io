@@ -1,18 +1,22 @@
 @import url('https://fonts.googleapis.com/css?family=Inconsolata:400,700|Roboto:100,300,400,500&display=swap');
 
 body {
-  min-height: 100vh;
-  margin: 0;
-  // background-color: rgb(127, 127, 127);
-  padding: 1rem 2rem;
-  font-family: 'Roboto', sans-serif;
+	min-height: 100vh;
+	margin: 0;
+	// background-color: rgb(127, 127, 127);
+	padding: 1rem 2rem;
+	font-family: 'Roboto', sans-serif;
 }
 
 .app {
-  position: relative;
-  width: 100%;
+	position: relative;
+	width: 100%;
 }
 
 .page {
-  width: 100%;
+	width: 100%;
+}
+
+canvas {
+	border: solid 1px rgb(127, 127, 127);
 }

@@ -12,30 +12,29 @@ interface Props {
 }
 
 const RESOLUTION: Vector2 = {x: 400, y: 400};
-
-const UNIFORMS: UniformSetting[] = [
-	{
-		name: 'uResolution',
-		type: UNIFORM_TYPE.VEC_2,
-		value: RESOLUTION
-	}
-];
+const THRESHOLD: float = 0.5;
 
 const render = (gl: WebGLRenderingContext, uniformLocations: Record<string, WebGLUniformLocation>, uResolution: Vector2) => {
 	gl.uniform2fv(uniformLocations.uResolution, Object.values(uResolution));
+	gl.uniform1f(uniformLocations.uThreshold, THRESHOLD);
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 };
 
 const BaseExample = ({fragmentShader, vertexShader, setUniforms, setAttributes}: Props) => {
 	const canvasRef = React.useRef<HTMLCanvasElement>();
-	const targetWidth = Math.round(400 * window.devicePixelRatio);
-	const targetHeight = Math.round(400 * window.devicePixelRatio);
+	const targetWidth = Math.round(RESOLUTION.x * window.devicePixelRatio);
+	const targetHeight = Math.round(RESOLUTION.y * window.devicePixelRatio);
 
 	const UNIFORMS: UniformSetting[] = [
 		{
 			name: 'uResolution',
 			type: UNIFORM_TYPE.VEC_2,
 			value: {x: targetWidth, y: targetHeight}
+		},
+		{
+			name: 'uThreshold',
+			type: UNIFORM_TYPE.FLOAT_1,
+			value: 0.5
 		}
 	];
 
@@ -48,19 +47,12 @@ const BaseExample = ({fragmentShader, vertexShader, setUniforms, setAttributes}:
 		targetHeight
 	});
 
-	console.log({targetWidth, targetHeight});
-
 	React.useEffect(() => {
 		setUniforms(UNIFORMS);
 		setAttributes([{name: 'aVertexPosition', value: vertexBuffer.current.join(', ')}]);
 	}, []);
 
 	useAnimationFrame((time: number) => {
-		// const {width height} = canvasRef.current.getBoundingClientRect();
-		// const targetWidth: number = Math.round(width * window.devicePixelRatio);
-		// const targetHeight: number = Math.round(
-		// 	height * window.devicePixelRatio
-		// );
 		render(gl.current, uniformLocations.current, {x: targetWidth, y: targetHeight});
 	});
 

@@ -8,46 +8,49 @@ import ShaderText from './ShaderText/ShaderText';
 import Inputs from './Inputs/Inputs';
 import baseVertexShader from '../../lib/gl/shaders/base.vert';
 
-// HELLO WORlD
+// 0.0 HELLO WORlD
 import helloWorldFragmentShader from '../../lib/gl/shaders/hello-world.frag';
+
+// 0.1 STEP
+import stepFragmentShader from '../../lib/gl/shaders/step.frag';
 
 import styles from './app.module.scss';
 
 // FOX SKULL
-import OBJSource from '../../lib/gl/assets/fox/fox3.obj';
-import MTLSource from '../../lib/gl/assets/fox/fox.mtl';
-import diffuseSource0 from '../../lib/gl/assets/fox/fox_skull_0.jpg';
-import diffuseSource1 from '../../lib/gl/assets/fox/fox_skull_1.jpg';
+// import OBJSource from '../../lib/gl/assets/fox/fox3.obj';
+// import MTLSource from '../../lib/gl/assets/fox/fox.mtl';
+// import diffuseSource0 from '../../lib/gl/assets/fox/fox_skull_0.jpg';
+// import diffuseSource1 from '../../lib/gl/assets/fox/fox_skull_1.jpg';
 
-const GL_PROPS: SceneProps = {
-	colors: {
-		ambientLight: 'rgba(100, 100, 100, 1)',
-		backgroundA: 'rgba(255, 0, 0, 1)',
-		backgroundB: 'rgba(0, 0, 255, 1)',
-		leftLight: 'rgba(150, 150, 150, 1)',
-		rightLight: 'rgba(150, 150, 150, 1)'
-	},
-	OBJSource,
-	MTLSource,
-	diffuseSources: {
-		'material_0.001': diffuseSource0,
-		'material_1.001': diffuseSource1
-	},
-	positionOffset: {
-		x: 0,
-		y: 0.3,
-		z: 0
-	},
-	rotationOffset: {
-		x: 0.3,
-		y: 1.9,
-		z: 0
-	},
-	brightness: 0.8,
-	shininess: 0,
-	shadowStrength: 0.33,
-	scale: 0.0485
-};
+// // const GL_PROPS: SceneProps = {
+// 	colors: {
+// 		ambientLight: 'rgba(100, 100, 100, 1)',
+// 		backgroundA: 'rgba(255, 0, 0, 1)',
+// 		backgroundB: 'rgba(0, 0, 255, 1)',
+// 		leftLight: 'rgba(150, 150, 150, 1)',
+// 		rightLight: 'rgba(150, 150, 150, 1)'
+// 	},
+// 	OBJSource,
+// 	MTLSource,
+// 	diffuseSources: {
+// 		'material_0.001': diffuseSource0,
+// 		'material_1.001': diffuseSource1
+// 	},
+// 	positionOffset: {
+// 		x: 0,
+// 		y: 0.3,
+// 		z: 0
+// 	},
+// 	rotationOffset: {
+// 		x: 0.3,
+// 		y: 1.9,
+// 		z: 0
+// 	},
+// 	brightness: 0.8,
+// 	shininess: 0,
+// 	shadowStrength: 0.33,
+// 	scale: 0.0485
+// };
 
 const App = () => {
 	const [uniforms, setUniforms] = React.useState<any[]>([]);
@@ -68,6 +71,12 @@ const App = () => {
             `}>
 					<BaseCanvas fragmentShader={helloWorldFragmentShader} vertexShader={baseVertexShader} setUniforms={setUniforms} setAttributes={setAttributes} />
 					<ShaderText fragmentShader={helloWorldFragmentShader} vertexShader={baseVertexShader} />
+					<Inputs uniforms={uniforms} attributes={attributes} />
+				</Section>
+
+				<Section title='0.1: Step' notes={` Step is one of the hardware accelerated functions that are native to GLSL. It returns either 1.0 or 0.0 based on whether a value has passed a given threshold.`}>
+					<BaseCanvas fragmentShader={stepFragmentShader} vertexShader={baseVertexShader} setUniforms={setUniforms} setAttributes={setAttributes} />
+					<ShaderText fragmentShader={stepFragmentShader} vertexShader={baseVertexShader} />
 					<Inputs uniforms={uniforms} attributes={attributes} />
 				</Section>
 			</div>
