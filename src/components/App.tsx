@@ -14,6 +14,9 @@ import helloWorldFragmentShader from '../../lib/gl/shaders/hello-world.frag';
 // 0.1 STEP
 import stepFragmentShader from '../../lib/gl/shaders/step.frag';
 
+// 0.2 LINE
+import lineFragmentShader from '../../lib/gl/shaders/line.frag';
+
 import styles from './app.module.scss';
 
 const BASE_UNIFORMS: UniformSetting[] = [
@@ -34,6 +37,17 @@ const BASE_STEP_UNIFORMS: UniformSetting[] = [
 		readonly: false,
 		type: UNIFORM_TYPE.FLOAT_1,
 		value: 0.5
+	}
+];
+
+const BASE_LINE_UNIFORMS: UniformSetting[] = [
+	...BASE_UNIFORMS,
+	{
+		defaultValue: 0.01,
+		name: 'uThickness',
+		readonly: false,
+		type: UNIFORM_TYPE.FLOAT_1,
+		value: 0.01
 	}
 ];
 
@@ -76,6 +90,7 @@ const BASE_STEP_UNIFORMS: UniformSetting[] = [
 const App = () => {
 	const baseUniforms = React.useRef<UniformSetting[]>(BASE_UNIFORMS);
 	const stepUniforms = React.useRef<UniformSetting[]>(BASE_STEP_UNIFORMS);
+	const lineUniforms = React.useRef<UniformSetting[]>(BASE_LINE_UNIFORMS);
 	const [attributes, setAttributes] = React.useState<any[]>([]);
 
 	return (
@@ -100,6 +115,12 @@ const App = () => {
 					<BaseCanvas fragmentShader={stepFragmentShader} vertexShader={baseVertexShader} uniforms={stepUniforms} setAttributes={setAttributes} />
 					<ShaderText fragmentShader={stepFragmentShader} vertexShader={baseVertexShader} />
 					<Inputs attributes={attributes} uniforms={stepUniforms} />
+				</Section>
+
+				<Section title='0.2: Line' notes={``}>
+					<BaseCanvas fragmentShader={lineFragmentShader} vertexShader={baseVertexShader} uniforms={lineUniforms} setAttributes={setAttributes} />
+					<ShaderText fragmentShader={lineFragmentShader} vertexShader={baseVertexShader} />
+					<Inputs attributes={attributes} uniforms={lineUniforms} />
 				</Section>
 			</div>
 		</div>

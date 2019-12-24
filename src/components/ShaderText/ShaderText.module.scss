@@ -3,6 +3,7 @@
 	flex: 1;
 	flex-direction: column;
 	margin-left: 10px;
+	max-width: calc(1 / 3 * 100%);
 
 	@media (max-width: 900px) {
 		margin-left: 0;
@@ -41,9 +42,12 @@
 	flex: 1;
 	display: flex;
 	flex-direction: column;
+	height: 370px;
 }
 
 .textBlock {
+	height: 370px;
+	overflow: scroll;
 	background: rgba(0, 0, 0, 0.8);
 	color: white;
 	font-family: 'Inconsolata', monospace;
