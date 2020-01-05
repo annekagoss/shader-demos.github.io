@@ -121,6 +121,14 @@ const BASE_TRIANGLE_UNIFORMS: UniformSetting[] = [
 		readonly: false,
 		type: UNIFORM_TYPE.VEC_2,
 		value: {x: 0.5, y: 0.5}
+	},
+	{
+		defaultValue: 0,
+		isBool: true,
+		name: 'uShowSDF',
+		readonly: false,
+		type: UNIFORM_TYPE.INT_1,
+		value: 0
 	}
 ];
 

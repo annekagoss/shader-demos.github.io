@@ -5,6 +5,7 @@ precision mediump float;
 uniform vec2 uResolution;
 uniform vec2 uDimensions;
 uniform int uSmooth;
+uniform int uShowSDF;
 
 float SDFTriangleIsosceles(vec2 triDimensions, vec2 st) {
 	vec2 a = st - triDimensions*clamp( dot(st,triDimensions)/dot(triDimensions,triDimensions), 0.0, 1.0 );
@@ -25,6 +26,10 @@ float triangle() {
 	// Ratio of width/height to side lengths
 	vec2 triDimensions = uDimensions * vec2(0.5, .866025);
 	float SDFTri = SDFTriangleIsosceles(triDimensions, st);
+	
+	if (uShowSDF == 1) {
+		return SDFTri;
+	}
 	
 	if (uSmooth == 1) {
 		return smoothstep(-0.0025, 0.0025, -SDFTri);
