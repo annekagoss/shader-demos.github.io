@@ -46,11 +46,19 @@ const BASE_STEP_UNIFORMS: UniformSetting[] = [
 const BASE_LINE_UNIFORMS: UniformSetting[] = [
 	...BASE_UNIFORMS,
 	{
-		defaultValue: 0.01,
+		defaultValue: 0.02,
 		name: 'uThickness',
 		readonly: false,
 		type: UNIFORM_TYPE.FLOAT_1,
-		value: 0.01
+		value: 0.02
+	},
+	{
+		defaultValue: 1,
+		isBool: true,
+		name: 'uSmooth',
+		readonly: false,
+		type: UNIFORM_TYPE.INT_1,
+		value: 1
 	}
 ];
 
@@ -132,7 +140,7 @@ const App = () => {
 					<Inputs attributes={attributes} uniforms={stepUniforms} />
 				</Section>
 
-				<Section title='0.2: Line'>
+				<Section title='0.2: Line' notes={' Smoothstep is another hardware accelerated function.  It performs a smooth interpolation between 0 and 1 for a given value (in this case, y.)  Notice the anti-aliasing benefit smoothstep adds by toggling uSmooth on and off.'}>
 					<BaseCanvas fragmentShader={lineFragmentShader} vertexShader={baseVertexShader} uniforms={lineUniforms} setAttributes={setAttributes} />
 					<ShaderText fragmentShader={lineFragmentShader} vertexShader={baseVertexShader} />
 					<Inputs attributes={attributes} uniforms={lineUniforms} />

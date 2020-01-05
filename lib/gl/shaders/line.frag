@@ -4,10 +4,13 @@ precision mediump float;
 
 uniform vec2 uResolution;
 uniform float uThickness;
+uniform int uSmooth;
 
 float plotLine(vec2 st){
-  return  smoothstep( st.x-uThickness, st.x, st.y) -
-          smoothstep( st.x, st.x+uThickness, st.y);
+	float leftEdge = 1.0-st.x-(uThickness*0.5);
+	float rightEdge = st.x-(uThickness*0.5);
+	if (uSmooth == 1) return smoothstep(leftEdge, leftEdge+0.01, 1.0-st.y) * smoothstep(rightEdge, rightEdge+0.01, st.y);
+	return step(leftEdge, 1.0-st.y) * step(rightEdge, st.y);
 }
 
 void main() {

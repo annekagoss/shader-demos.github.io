@@ -18,11 +18,14 @@ const render = (gl: WebGLRenderingContext, uniformLocations: Record<string, WebG
 	// gl.uniform1f(uniformLocations.uThreshold, THRESHOLD);
 
 	// debugger;
-	// console.log(uniforms[1].value);
+	// console.log(uniforms[2] && uniforms[2].value);
 	uniforms.forEach((uniform: UniformSetting) => {
 		switch (uniform.type) {
 			case UNIFORM_TYPE.FLOAT_1:
 				gl.uniform1f(uniformLocations[uniform.name], uniform.value);
+				break;
+			case UNIFORM_TYPE.INT_1:
+				gl.uniform1i(uniformLocations[uniform.name], uniform.value);
 				break;
 			case UNIFORM_TYPE.VEC_2:
 				gl.uniform2fv(uniformLocations[uniform.name], Object.values(uniform.value));

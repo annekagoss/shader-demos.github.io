@@ -33,6 +33,30 @@ const FloatInput = ({uniform, updateUniforms}: TypeInputProps) => (
 	/>
 );
 
+const IntInput = ({uniform, updateUniforms}: TypeInputProps) => (
+	<input
+		type='number'
+		checked={uniform.defaultValue === 1}
+		onChange={e => {
+			const booleanAsInteger: number = e.target.value ? 1 : 0;
+			updateUniforms(uniform.name, booleanAsInteger);
+		}}
+	/>
+);
+
+const BoolInput = ({uniform, updateUniforms}: TypeInputProps) => (
+	<input
+		type='checkbox'
+		defaultChecked={uniform.defaultValue === 1}
+		step={1}
+		min={0}
+		max={1}
+		onChange={e => {
+			updateUniforms(uniform.name, e.target.checked ? 1 : 0);
+		}}
+	/>
+);
+
 const Vec2Input = ({uniform, updateUniforms}: TypeInputProps) => {
 	return (
 		<div>
@@ -115,6 +139,9 @@ const UniformInput = ({uniform, updateUniforms}: UniformInputProps) => {
 	switch (uniform.type) {
 		case UNIFORM_TYPE.FLOAT_1:
 			return <FloatInput uniform={uniform} updateUniforms={updateUniforms} />;
+		case UNIFORM_TYPE.INT_1:
+			if (uniform.isBool) return <BoolInput uniform={uniform} updateUniforms={updateUniforms} />;
+			return <IntInput uniform={uniform} updateUniforms={updateUniforms} />;
 		case UNIFORM_TYPE.VEC_2:
 			return <Vec2Input uniform={uniform} updateUniforms={updateUniforms} />;
 		case UNIFORM_TYPE.VEC_3:

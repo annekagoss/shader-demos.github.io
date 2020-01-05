@@ -283,6 +283,7 @@ export interface DrawOptions extends RenderOptions {
 }
 
 export enum UNIFORM_TYPE {
+	INT_1 = 'uniform1i',
 	FLOAT_1 = 'uniform1f',
 	VEC_2 = 'uniform2fv',
 	VEC_3 = 'uniform3fv'
@@ -290,6 +291,7 @@ export enum UNIFORM_TYPE {
 
 export interface UniformSetting {
 	defaultValue: any;
+	isBool?: boolean;
 	name: string;
 	readonly: boolean;
 	type: UNIFORM_TYPE;
