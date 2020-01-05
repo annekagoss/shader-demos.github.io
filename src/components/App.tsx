@@ -23,6 +23,9 @@ import rectangleFragmentShader from '../../lib/gl/shaders/rectangle.frag';
 // 0.4 CIRCLE
 import circleFragmentShader from '../../lib/gl/shaders/circle.frag';
 
+// 0.5 TRIANGLE
+import triangleFragmentShader from '../../lib/gl/shaders/triangle.frag';
+
 import styles from './app.module.scss';
 
 const BASE_UNIFORMS: UniformSetting[] = [
@@ -102,6 +105,25 @@ const BASE_CIRCLE_UNIFORMS: UniformSetting[] = [
 	}
 ];
 
+const BASE_TRIANGLE_UNIFORMS: UniformSetting[] = [
+	...BASE_UNIFORMS,
+	{
+		defaultValue: 1,
+		isBool: true,
+		name: 'uSmooth',
+		readonly: false,
+		type: UNIFORM_TYPE.INT_1,
+		value: 1
+	},
+	{
+		defaultValue: {x: 0.5, y: 0.5},
+		name: 'uDimensions',
+		readonly: false,
+		type: UNIFORM_TYPE.VEC_2,
+		value: {x: 0.5, y: 0.5}
+	}
+];
+
 // FOX SKULL
 // import OBJSource from '../../lib/gl/assets/fox/fox3.obj';
 // import MTLSource from '../../lib/gl/assets/fox/fox.mtl';
@@ -144,6 +166,7 @@ const App = () => {
 	const lineUniforms = React.useRef<UniformSetting[]>(BASE_LINE_UNIFORMS);
 	const rectUniforms = React.useRef<UniformSetting[]>(BASE_RECTANGLE_UNIFORMS);
 	const circleUniforms = React.useRef<UniformSetting[]>(BASE_CIRCLE_UNIFORMS);
+	const triangleUniforms = React.useRef<UniformSetting[]>(BASE_TRIANGLE_UNIFORMS);
 	const [attributes, setAttributes] = React.useState<any[]>([]);
 
 	return (
@@ -186,6 +209,12 @@ const App = () => {
 					<BaseCanvas fragmentShader={circleFragmentShader} vertexShader={baseVertexShader} uniforms={circleUniforms} setAttributes={setAttributes} />
 					<ShaderText fragmentShader={circleFragmentShader} vertexShader={baseVertexShader} />
 					<Inputs attributes={attributes} uniforms={circleUniforms} />
+				</Section>
+
+				<Section title='0.5: Triangle' notes={`Signed Distance Functions are very tricky, but very powerful.  They define a field of values based on each point's distance from a given boundary, where the sign determined whether the point is within the boundary.  Here we have a function that determines if a pixel is inside a triangle.`}>
+					<BaseCanvas fragmentShader={triangleFragmentShader} vertexShader={baseVertexShader} uniforms={triangleUniforms} setAttributes={setAttributes} />
+					<ShaderText fragmentShader={triangleFragmentShader} vertexShader={baseVertexShader} />
+					<Inputs attributes={attributes} uniforms={triangleUniforms} />
 				</Section>
 			</div>
 		</div>
