@@ -57,11 +57,11 @@ const BASE_LINE_UNIFORMS: UniformSetting[] = [
 const BASE_RECTANGLE_UNIFORMS: UniformSetting[] = [
 	...BASE_UNIFORMS,
 	{
-		defaultValue: {x: 0.25, y: 0.25},
+		defaultValue: {x: 0.33, y: 0.66},
 		name: 'uRectDimensions',
 		readonly: false,
 		type: UNIFORM_TYPE.VEC_2,
-		value: {x: 0.25, y: 0.25}
+		value: {x: 0.33, y: 0.66}
 	}
 ];
 
@@ -139,9 +139,9 @@ const App = () => {
 				</Section>
 
 				<Section title='0.3: Rectangle'>
-					<BaseCanvas fragmentShader={rectangleFragmentShader} vertexShader={baseVertexShader} uniforms={baseUniforms} setAttributes={setAttributes} />
+					<BaseCanvas fragmentShader={rectangleFragmentShader} vertexShader={baseVertexShader} uniforms={rectUniforms} setAttributes={setAttributes} />
 					<ShaderText fragmentShader={rectangleFragmentShader} vertexShader={baseVertexShader} />
-					<Inputs attributes={attributes} uniforms={baseUniforms} />
+					<Inputs attributes={attributes} uniforms={rectUniforms} />
 				</Section>
 			</div>
 		</div>

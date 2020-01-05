@@ -35,7 +35,41 @@ const FloatInput = ({uniform, updateUniforms}: TypeInputProps) => (
 
 const Vec2Input = ({uniform, updateUniforms}: TypeInputProps) => {
 	return (
-		<>
+		<div>
+			<div>
+				{`x: `}
+				<input
+					type='number'
+					placeholder={uniform.defaultValue.x}
+					step={0.01}
+					min={0}
+					max={1}
+					onChange={e => {
+						updateUniforms(uniform.name, {x: e.target.value});
+					}}
+				/>
+			</div>
+			<div>
+				{`y: `}
+				<input
+					type='number'
+					placeholder={uniform.defaultValue.y}
+					step={0.01}
+					min={0}
+					max={1}
+					onChange={e => {
+						updateUniforms(uniform.name, {y: e.target.value});
+					}}
+				/>
+			</div>
+		</div>
+	);
+};
+
+const Vec3Input = ({uniform, updateUniforms}: TypeInputProps) => (
+	<div>
+		<div>
+			{`x: `}
 			<input
 				type='number'
 				placeholder={uniform.defaultValue.x}
@@ -43,9 +77,12 @@ const Vec2Input = ({uniform, updateUniforms}: TypeInputProps) => {
 				min={0}
 				max={1}
 				onChange={e => {
-					updateUniforms(uniform.name, {x: e.target.value, y: uniform.value.y});
+					updateUniforms(uniform.name, {x: e.target.value});
 				}}
 			/>
+		</div>
+		<div>
+			{`y: `}
 			<input
 				type='number'
 				placeholder={uniform.defaultValue.y}
@@ -53,46 +90,24 @@ const Vec2Input = ({uniform, updateUniforms}: TypeInputProps) => {
 				min={0}
 				max={1}
 				onChange={e => {
-					updateUniforms(uniform.name, {x: uniform.value.x, y: e.target.value});
+					updateUniforms(uniform.name, {y: e.target.value});
 				}}
 			/>
-		</>
-	);
-};
-
-const Vec3Input = ({uniform, updateUniforms}: TypeInputProps) => (
-	<>
-		<input
-			type='number'
-			placeholder={uniform.defaultValue.x}
-			step={0.01}
-			min={0}
-			max={1}
-			onChange={e => {
-				updateUniforms(uniform.name, {x: e.target.value, y: uniform.value.y, z: uniform.value.z});
-			}}
-		/>
-		<input
-			type='number'
-			placeholder={uniform.defaultValue.y}
-			step={0.01}
-			min={0}
-			max={1}
-			onChange={e => {
-				updateUniforms(uniform.name, {x: uniform.value.x, y: e.target.value, z: uniform.value.z});
-			}}
-		/>
-		<input
-			type='number'
-			placeholder={uniform.defaultValue.z}
-			step={0.01}
-			min={0}
-			max={1}
-			onChange={e => {
-				updateUniforms(uniform.name, {x: uniform.value.x, y: uniform.value.y, z: e.target.value});
-			}}
-		/>
-	</>
+		</div>
+		<div>
+			{`z: `}
+			<input
+				type='number'
+				placeholder={uniform.defaultValue.z}
+				step={0.01}
+				min={0}
+				max={1}
+				onChange={e => {
+					updateUniforms(uniform.name, {z: e.target.value});
+				}}
+			/>
+		</div>
+	</div>
 );
 
 const UniformInput = ({uniform, updateUniforms}: UniformInputProps) => {
@@ -116,9 +131,10 @@ const Inputs = ({uniforms, attributes}: Props) => {
 	const updateUniforms = (name, newValue) => {
 		const newUniforms: UniformSetting[] = uniforms.current.reduce((result, oldUniform) => {
 			if (oldUniform.name === name) {
+				const uniformIsVector: boolean = [UNIFORM_TYPE.VEC_2, UNIFORM_TYPE.VEC_3].includes(oldUniform.type);
 				const newUniform = {
 					...oldUniform,
-					value: newValue
+					value: uniformIsVector ? {...oldUniform.value, ...newValue} : newValue
 				};
 				result.push(newUniform);
 				return result;

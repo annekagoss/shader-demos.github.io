@@ -3,13 +3,13 @@ precision mediump float;
 #endif
 
 uniform vec2 uResolution;
-// uniform vec2 uRectDimensions;
+uniform vec2 uRectDimensions;
 
 float rectangle(vec2 st){
 	float width = 0.3;
 	float height = 0.3;
-	float hOffset = (1.0 - width) / 2.0;
-	float vOffset = (1.0 - height) / 2.0;
+	float hOffset = (1.0 - uRectDimensions.x) / 2.0;
+	float vOffset = (1.0 - uRectDimensions.y) / 2.0;
 	
   	return step(hOffset, 1.0 - st.x) * 
 	  	   step(hOffset, st.x) * 
