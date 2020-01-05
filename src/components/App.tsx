@@ -20,6 +20,9 @@ import lineFragmentShader from '../../lib/gl/shaders/line.frag';
 // 0.3 RECTANGLE
 import rectangleFragmentShader from '../../lib/gl/shaders/rectangle.frag';
 
+// 0.4 CIRCLE
+import circleFragmentShader from '../../lib/gl/shaders/circle.frag';
+
 import styles from './app.module.scss';
 
 const BASE_UNIFORMS: UniformSetting[] = [
@@ -46,19 +49,19 @@ const BASE_STEP_UNIFORMS: UniformSetting[] = [
 const BASE_LINE_UNIFORMS: UniformSetting[] = [
 	...BASE_UNIFORMS,
 	{
-		defaultValue: 0.02,
-		name: 'uThickness',
-		readonly: false,
-		type: UNIFORM_TYPE.FLOAT_1,
-		value: 0.02
-	},
-	{
 		defaultValue: 1,
 		isBool: true,
 		name: 'uSmooth',
 		readonly: false,
 		type: UNIFORM_TYPE.INT_1,
 		value: 1
+	},
+	{
+		defaultValue: 0.02,
+		name: 'uThickness',
+		readonly: false,
+		type: UNIFORM_TYPE.FLOAT_1,
+		value: 0.02
 	}
 ];
 
@@ -70,6 +73,32 @@ const BASE_RECTANGLE_UNIFORMS: UniformSetting[] = [
 		readonly: false,
 		type: UNIFORM_TYPE.VEC_2,
 		value: {x: 0.33, y: 0.66}
+	}
+];
+
+const BASE_CIRCLE_UNIFORMS: UniformSetting[] = [
+	...BASE_UNIFORMS,
+	{
+		defaultValue: 1,
+		isBool: true,
+		name: 'uSmooth',
+		readonly: false,
+		type: UNIFORM_TYPE.INT_1,
+		value: 1
+	},
+	{
+		defaultValue: 0.25,
+		name: 'uRadius',
+		readonly: false,
+		type: UNIFORM_TYPE.FLOAT_1,
+		value: 0.25
+	},
+	{
+		defaultValue: {x: 0.5, y: 0.5},
+		name: 'uCenter',
+		readonly: false,
+		type: UNIFORM_TYPE.VEC_2,
+		value: {x: 0.5, y: 0.5}
 	}
 ];
 
@@ -114,6 +143,7 @@ const App = () => {
 	const stepUniforms = React.useRef<UniformSetting[]>(BASE_STEP_UNIFORMS);
 	const lineUniforms = React.useRef<UniformSetting[]>(BASE_LINE_UNIFORMS);
 	const rectUniforms = React.useRef<UniformSetting[]>(BASE_RECTANGLE_UNIFORMS);
+	const circleUniforms = React.useRef<UniformSetting[]>(BASE_CIRCLE_UNIFORMS);
 	const [attributes, setAttributes] = React.useState<any[]>([]);
 
 	return (
@@ -146,10 +176,16 @@ const App = () => {
 					<Inputs attributes={attributes} uniforms={lineUniforms} />
 				</Section>
 
-				<Section title='0.3: Rectangle'>
+				<Section title='0.3: Rectangle' notes={`Adding, subtracting, multiplying and dividing operations work exactly like blending modes in CSS or Photoshop.  Here we're using multiply  to combine the dark edges around the rectangle.`}>
 					<BaseCanvas fragmentShader={rectangleFragmentShader} vertexShader={baseVertexShader} uniforms={rectUniforms} setAttributes={setAttributes} />
 					<ShaderText fragmentShader={rectangleFragmentShader} vertexShader={baseVertexShader} />
 					<Inputs attributes={attributes} uniforms={rectUniforms} />
+				</Section>
+
+				<Section title='0.4: Circle' notes={`Distance is a very useful hardware accelerated function that return the distance between two points.  The points can be represented as two floats or two n-dimensional vectors.`}>
+					<BaseCanvas fragmentShader={circleFragmentShader} vertexShader={baseVertexShader} uniforms={circleUniforms} setAttributes={setAttributes} />
+					<ShaderText fragmentShader={circleFragmentShader} vertexShader={baseVertexShader} />
+					<Inputs attributes={attributes} uniforms={circleUniforms} />
 				</Section>
 			</div>
 		</div>
