@@ -6,6 +6,7 @@ import styles from './BaseCanvas.module.scss';
 
 interface Props {
 	fragmentShader: string;
+	globalTime?: React.RefObject<number>;
 	vertexShader: string;
 	uniforms: React.MutableRefObject<UniformSetting[]>;
 	setAttributes: (attributes: any[]) => void;
@@ -13,15 +14,21 @@ interface Props {
 
 const THRESHOLD: number = 0.5;
 
-const render = (gl: WebGLRenderingContext, uniformLocations: Record<string, WebGLUniformLocation>, uniforms: UniformSetting[]) => {
+const render = (gl: WebGLRenderingContext, uniformLocations: Record<string, WebGLUniformLocation>, uniforms: UniformSetting[], time: number) => {
 	// gl.uniform2fv(uniformLocations.uResolution, Object.values(uResolution));
 	// gl.uniform1f(uniformLocations.uThreshold, THRESHOLD);
 
 	// debugger;
 	// console.log(uniforms[2] && uniforms[2].value);
+	// console.log('render');
 	uniforms.forEach((uniform: UniformSetting) => {
 		switch (uniform.type) {
 			case UNIFORM_TYPE.FLOAT_1:
+				// console.log(uniform.name);
+				if (uniform.name === 'uTime') {
+					// console.log({time});
+					uniform.value = time;
+				}
 				gl.uniform1f(uniformLocations[uniform.name], uniform.value);
 				break;
 			case UNIFORM_TYPE.INT_1:
@@ -40,7 +47,8 @@ const render = (gl: WebGLRenderingContext, uniformLocations: Record<string, WebG
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 };
 
-const BaseExample = ({fragmentShader, vertexShader, uniforms, setAttributes}: Props) => {
+const BaseExample = ({fragmentShader, globalTime, vertexShader, uniforms, setAttributes}: Props) => {
+	console.log('render');
 	const canvasRef = React.useRef<HTMLCanvasElement>();
 	const targetWidth = Math.round(uniforms.current[0].value.x * window.devicePixelRatio);
 	const targetHeight = Math.round(uniforms.current[0].value.y * window.devicePixelRatio);
@@ -59,7 +67,7 @@ const BaseExample = ({fragmentShader, vertexShader, uniforms, setAttributes}: Pr
 	}, []);
 
 	useAnimationFrame((time: number) => {
-		render(gl.current, uniformLocations.current, uniforms.current);
+		render(gl.current, uniformLocations.current, uniforms.current, time);
 	});
 
 	return <canvas ref={canvasRef} width={targetWidth} height={targetHeight} className={styles.canvas} />;

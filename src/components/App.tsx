@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {useAnimationFrame} from '../hooks/animation';
 
 import {SceneProps, UNIFORM_TYPE, UniformSetting} from '../../types';
 import GLScene from './GLScene/GLScene';
@@ -25,6 +26,9 @@ import circleFragmentShader from '../../lib/gl/shaders/circle.frag';
 
 // 0.5 TRIANGLE
 import triangleFragmentShader from '../../lib/gl/shaders/triangle.frag';
+
+// 0.6 Translation
+import translationFragmentShader from '../../lib/gl/shaders/translate.frag';
 
 import styles from './app.module.scss';
 
@@ -132,6 +136,24 @@ const BASE_TRIANGLE_UNIFORMS: UniformSetting[] = [
 	}
 ];
 
+const BASE_TRANSLATION_UNIFORMS: UniformSetting[] = [
+	...BASE_UNIFORMS,
+	{
+		defaultValue: 0,
+		name: 'uTime',
+		readonly: true,
+		type: UNIFORM_TYPE.FLOAT_1,
+		value: 0
+	},
+	{
+		defaultValue: {x: 0.5, y: 0.5},
+		name: 'uRectDimensions',
+		readonly: false,
+		type: UNIFORM_TYPE.VEC_2,
+		value: {x: 0.5, y: 0.5}
+	}
+];
+
 // FOX SKULL
 // import OBJSource from '../../lib/gl/assets/fox/fox3.obj';
 // import MTLSource from '../../lib/gl/assets/fox/fox.mtl';
@@ -169,13 +191,19 @@ const BASE_TRIANGLE_UNIFORMS: UniformSetting[] = [
 // };
 
 const App = () => {
+	const globalTime = React.useRef<number>(0);
 	const baseUniforms = React.useRef<UniformSetting[]>(BASE_UNIFORMS);
 	const stepUniforms = React.useRef<UniformSetting[]>(BASE_STEP_UNIFORMS);
 	const lineUniforms = React.useRef<UniformSetting[]>(BASE_LINE_UNIFORMS);
 	const rectUniforms = React.useRef<UniformSetting[]>(BASE_RECTANGLE_UNIFORMS);
 	const circleUniforms = React.useRef<UniformSetting[]>(BASE_CIRCLE_UNIFORMS);
 	const triangleUniforms = React.useRef<UniformSetting[]>(BASE_TRIANGLE_UNIFORMS);
+	const translationUniforms = React.useRef<UniformSetting[]>(BASE_TRANSLATION_UNIFORMS);
 	const [attributes, setAttributes] = React.useState<any[]>([]);
+
+	useAnimationFrame((time: number) => {
+		globalTime.current = time;
+	});
 
 	return (
 		<div className={styles.app}>
@@ -183,7 +211,7 @@ const App = () => {
 				{/* <div className={styles.section}> */}
 				{/* <GLScene {...GL_PROPS} /> */}
 				{/* </div> */}
-
+				{/* 
 				<Section
 					title='0.0: Hello World'
 					notes={`
@@ -219,10 +247,16 @@ const App = () => {
 					<Inputs attributes={attributes} uniforms={circleUniforms} />
 				</Section>
 
-				<Section title='0.5: Triangle' notes={`Signed Distance Functions are very tricky, but very powerful.  They define a field of values based on each point's distance from a given boundary, where the sign determined whether the point is within the boundary.  Here we have a function that determines if a pixel is inside a triangle.`}>
+				<Section title='0.5: Triangle' notes={`Signed Distance Functions are tricky, but very powerful.  They define a field of values based on each point's distance from a given boundary, where the sign determined whether the point is within the boundary.  Here we have a function that determines if a pixel is inside a triangle.`}>
 					<BaseCanvas fragmentShader={triangleFragmentShader} vertexShader={baseVertexShader} uniforms={triangleUniforms} setAttributes={setAttributes} />
 					<ShaderText fragmentShader={triangleFragmentShader} vertexShader={baseVertexShader} />
 					<Inputs attributes={attributes} uniforms={triangleUniforms} />
+				</Section> */}
+
+				<Section title='0.6: Translation' notes={``}>
+					<BaseCanvas fragmentShader={translationFragmentShader} vertexShader={baseVertexShader} uniforms={translationUniforms} setAttributes={setAttributes} />
+					<ShaderText fragmentShader={translationFragmentShader} vertexShader={baseVertexShader} />
+					<Inputs attributes={attributes} uniforms={translationUniforms} />
 				</Section>
 			</div>
 		</div>

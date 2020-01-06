@@ -154,6 +154,10 @@ const UniformInput = ({uniform, updateUniforms}: UniformInputProps) => {
 const Inputs = ({uniforms, attributes}: Props) => {
 	const [uniformsVisible, setUniformsVisible] = React.useState<boolean>(true);
 	const [attributesVisible, setAttributesVisible] = React.useState<boolean>(false);
+	// console.log(uniforms);
+	// React.useCallback(() => {
+	// 	console.log(uniforms[1]);
+	// }, [uniforms[1]]);
 
 	const updateUniforms = (name, newValue) => {
 		const newUniforms: UniformSetting[] = uniforms.current.reduce((result, oldUniform) => {
