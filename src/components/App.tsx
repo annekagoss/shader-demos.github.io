@@ -192,6 +192,7 @@ const BASE_TRANSLATION_UNIFORMS: UniformSetting[] = [
 
 const App = () => {
 	const globalTime = React.useRef<number>(0);
+
 	const baseUniforms = React.useRef<UniformSetting[]>(BASE_UNIFORMS);
 	const stepUniforms = React.useRef<UniformSetting[]>(BASE_STEP_UNIFORMS);
 	const lineUniforms = React.useRef<UniformSetting[]>(BASE_LINE_UNIFORMS);
@@ -203,7 +204,12 @@ const App = () => {
 
 	useAnimationFrame((time: number) => {
 		globalTime.current = time;
+		// console.log('app', globalTime);
 	});
+
+	const memoizedTime = React.useMemo(() => {
+		return globalTime.current;
+	}, [globalTime.current]);
 
 	return (
 		<div className={styles.app}>
@@ -254,7 +260,7 @@ const App = () => {
 				</Section> */}
 
 				<Section title='0.6: Translation' notes={``}>
-					<BaseCanvas fragmentShader={translationFragmentShader} vertexShader={baseVertexShader} uniforms={translationUniforms} setAttributes={setAttributes} />
+					<BaseCanvas fragmentShader={translationFragmentShader} vertexShader={baseVertexShader} uniforms={translationUniforms} setAttributes={setAttributes} globalTime={memoizedTime} />
 					<ShaderText fragmentShader={translationFragmentShader} vertexShader={baseVertexShader} />
 					<Inputs attributes={attributes} uniforms={translationUniforms} />
 				</Section>

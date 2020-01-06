@@ -6,7 +6,8 @@ import styles from './BaseCanvas.module.scss';
 
 interface Props {
 	fragmentShader: string;
-	globalTime?: React.RefObject<number>;
+	// globalTime?: React.RefObject<number>;
+	globalTime?: number;
 	vertexShader: string;
 	uniforms: React.MutableRefObject<UniformSetting[]>;
 	setAttributes: (attributes: any[]) => void;
@@ -66,9 +67,13 @@ const BaseExample = ({fragmentShader, globalTime, vertexShader, uniforms, setAtt
 		setAttributes([{name: 'aVertexPosition', value: vertexBuffer.current.join(', ')}]);
 	}, []);
 
-	useAnimationFrame((time: number) => {
-		render(gl.current, uniformLocations.current, uniforms.current, time);
-	});
+	React.useCallback(() => {
+		console.log('base canvas', globalTime);
+	}, [globalTime]);
+
+	// useAnimationFrame((time: number) => {
+	// 	render(gl.current, uniformLocations.current, uniforms.current, time);
+	// });
 
 	return <canvas ref={canvasRef} width={targetWidth} height={targetHeight} className={styles.canvas} />;
 };
