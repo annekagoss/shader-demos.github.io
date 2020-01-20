@@ -5,7 +5,7 @@ precision mediump float;
 uniform vec2 uResolution;
 uniform vec2 uRectDimensions;
 
-#pragma glslify: rectangle = require('./common/shapes.glsl');
+#pragma glslify: rectangle = require('./common/rectangle.glsl');
 
 void main() {
     vec2 st = gl_FragCoord.xy/uResolution;

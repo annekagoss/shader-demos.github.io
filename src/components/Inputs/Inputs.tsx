@@ -1,6 +1,6 @@
 import * as React from 'react';
 import cx from 'classnames';
-import {UNIFORM_TYPE, UniformSetting} from '../../../types';
+import {UNIFORM_TYPE, UniformSetting, Vector2} from '../../../types';
 import {parseUniform} from '../../utils/general';
 import styles from './Inputs.module.scss';
 import {any} from 'prop-types';
@@ -8,11 +8,13 @@ import {any} from 'prop-types';
 interface Props {
 	attributes: any[];
 	uniforms: React.MutableRefObject<UniformSetting[]>;
+	pageMousePosRef?: React.MutableRefObject<Vector2>;
 }
 
 interface UniformInputProps {
 	uniform: UniformSetting;
 	updateUniforms: (name: string, newValue: any) => void;
+	pageMousePosRef?: React.MutableRefObject<Vector2>;
 }
 
 interface TypeInputProps {
@@ -134,8 +136,13 @@ const Vec3Input = ({uniform, updateUniforms}: TypeInputProps) => (
 	</div>
 );
 
-const UniformInput = ({uniform, updateUniforms}: UniformInputProps) => {
-	if (uniform.readonly) return parseUniform(uniform.value, uniform.type);
+const UniformInput = ({uniform, updateUniforms, pageMousePosRef}: UniformInputProps) => {
+	if (uniform.readonly) {
+		if (uniform.name === 'uMouse' && pageMousePosRef !== null) {
+			return parseUniform(pageMousePosRef.current, UNIFORM_TYPE.VEC_2);
+		}
+		return parseUniform(uniform.value, uniform.type);
+	}
 	switch (uniform.type) {
 		case UNIFORM_TYPE.FLOAT_1:
 			return <FloatInput uniform={uniform} updateUniforms={updateUniforms} />;
@@ -151,13 +158,9 @@ const UniformInput = ({uniform, updateUniforms}: UniformInputProps) => {
 	}
 };
 
-const Inputs = ({uniforms, attributes}: Props) => {
+const Inputs = ({uniforms, attributes, pageMousePosRef}: Props) => {
 	const [uniformsVisible, setUniformsVisible] = React.useState<boolean>(true);
 	const [attributesVisible, setAttributesVisible] = React.useState<boolean>(false);
-	// console.log(uniforms);
-	// React.useCallback(() => {
-	// 	console.log(uniforms[1]);
-	// }, [uniforms[1]]);
 
 	const updateUniforms = (name, newValue) => {
 		const newUniforms: UniformSetting[] = uniforms.current.reduce((result, oldUniform) => {
@@ -201,11 +204,13 @@ const Inputs = ({uniforms, attributes}: Props) => {
 				</button>
 			</div>
 			<div className={cx(styles.textBlock, uniformsVisible && styles.active)}>
-				{uniforms.current.map(uniform => (
-					<div className={styles.textItem} key={uniform.name}>
-						{uniform.name}: <UniformInput uniform={uniform} updateUniforms={updateUniforms} />
-					</div>
-				))}
+				{uniforms.current
+					.filter(uniform => uniform.name !== 'uMouse' && uniform.name !== 'uTime')
+					.map(uniform => (
+						<div className={styles.textItem} key={uniform.name}>
+							{uniform.name}: <UniformInput uniform={uniform} updateUniforms={updateUniforms} pageMousePosRef={pageMousePosRef} />
+						</div>
+					))}
 			</div>
 			<div className={cx(styles.textBlock, attributesVisible && styles.active)}>
 				{attributes.map(attribute => (
