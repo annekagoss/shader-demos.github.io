@@ -1,4 +1,4 @@
-import {UNIFORM_TYPE} from '../../types';
+import {UNIFORM_TYPE, UniformSetting} from '../../types';
 
 export const calcWindowDiagonalAngle = (): number => {
 	const {innerWidth, innerHeight} = window;
@@ -22,3 +22,13 @@ export const parseUniform = (value: any, type: UNIFORM_TYPE) => {
 			return value;
 	}
 };
+
+export const BASE_UNIFORMS: UniformSetting[] = [
+	{
+		defaultValue: {x: 400, y: 400},
+		name: 'uResolution',
+		readonly: true,
+		type: UNIFORM_TYPE.VEC_2,
+		value: {x: 400, y: 400}
+	}
+];
