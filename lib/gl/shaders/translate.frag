@@ -20,9 +20,8 @@ vec2 translateWithMouse(vec2 st) {
 	return st + (mouseSt * -1.) + vec2(.5, -.5);
 }
 
-vec3 overlapRectangles(float circleRect, float mouseRect) {
-	if (mouseRect <= 0.0) return vec3(circleRect) * vec3(0, 0, 1);
-	return vec3(mouseRect) * vec3(1, 0, 0);
+vec3 overlapShapes(float circleRect, float mouseRect) {
+	return mix(vec3(circleRect) * vec3(0, 0, 1), vec3(mouseRect) * vec3(1, 0, 0), mouseRect);
 }
 
 void main() {
@@ -31,6 +30,6 @@ void main() {
 	vec2 mouseSt = translateWithMouse(st);
 	float rect = rectangle(circleSt, uRectDimensions);
 	float c = circle(mouseSt, vec2(.5), .25);
-	vec3 color = overlapRectangles(rect, c);
+	vec3 color = overlapShapes(rect, c);
 	gl_FragColor = vec4(color, 1.0);
 }
