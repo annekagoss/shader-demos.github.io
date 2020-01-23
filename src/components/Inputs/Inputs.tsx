@@ -41,6 +41,7 @@ const IntInput = ({uniform, updateUniforms}: TypeInputProps) => (
 		step={1}
 		min={0}
 		max={20}
+		defaultValue={uniform.defaultValue}
 		onChange={e => {
 			updateUniforms(uniform.name, e.target.value);
 		}}

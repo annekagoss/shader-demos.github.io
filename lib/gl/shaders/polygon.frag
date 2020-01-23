@@ -21,7 +21,7 @@ void main() {
 	float polygon = SDFPolygon(st);
 	float value = polygon;
 	if (uShowSDF == 0) {
-		value = smoothstep(.4, .41, polygon);
+		value = 1.0 - smoothstep(.4, .41, polygon);
 	}
 	gl_FragColor = vec4(vec3(value), 1.0);
 }
