@@ -12,8 +12,7 @@ import stepFragmentShader from '../../../lib/gl/shaders/step.frag';
 import lineFragmentShader from '../../../lib/gl/shaders/line.frag';
 import rectangleFragmentShader from '../../../lib/gl/shaders/rectangle.frag';
 import circleFragmentShader from '../../../lib/gl/shaders/circle.frag';
-import triangleFragmentShader from '../../../lib/gl/shaders/triangle.frag';
-import translationFragmentShader from '../../../lib/gl/shaders/translate.frag';
+import polygonFragmentShader from '../../../lib/gl/shaders/polygon.frag';
 import styles from './ShapesPage.module.scss';
 
 const BASE_STEP_UNIFORMS: UniformSetting[] = [
@@ -110,21 +109,23 @@ const BASE_TRIANGLE_UNIFORMS: UniformSetting[] = [
 	}
 ];
 
-const BASE_TRANSLATION_UNIFORMS: UniformSetting[] = [
+const BASE_POLYGON_UNIFORMS: UniformSetting[] = [
 	...BASE_UNIFORMS,
 	{
-		defaultValue: 0,
-		name: 'uTime',
-		readonly: true,
-		type: UNIFORM_TYPE.FLOAT_1,
-		value: 0
+		defaultValue: 3,
+		isBool: false,
+		name: 'uNumSides',
+		readonly: false,
+		type: UNIFORM_TYPE.INT_1,
+		value: 3
 	},
 	{
-		defaultValue: {x: 0.5, y: 0.5},
-		name: 'uRectDimensions',
+		defaultValue: 0,
+		isBool: true,
+		name: 'uShowSDF',
 		readonly: false,
-		type: UNIFORM_TYPE.VEC_2,
-		value: {x: 0.5, y: 0.5}
+		type: UNIFORM_TYPE.INT_1,
+		value: 0
 	}
 ];
 
@@ -138,8 +139,7 @@ const ShapesPage = ({isActive}: Props) => {
 	const lineUniforms = React.useRef<UniformSetting[]>(BASE_LINE_UNIFORMS);
 	const rectUniforms = React.useRef<UniformSetting[]>(BASE_RECTANGLE_UNIFORMS);
 	const circleUniforms = React.useRef<UniformSetting[]>(BASE_CIRCLE_UNIFORMS);
-	const triangleUniforms = React.useRef<UniformSetting[]>(BASE_TRIANGLE_UNIFORMS);
-	const translationUniforms = React.useRef<UniformSetting[]>(BASE_TRANSLATION_UNIFORMS);
+	const polygonUniforms = React.useRef<UniformSetting[]>(BASE_POLYGON_UNIFORMS);
 	const [attributes, setAttributes] = React.useState<any[]>([]);
 
 	if (!isActive) return <></>;
@@ -181,10 +181,10 @@ const ShapesPage = ({isActive}: Props) => {
 				<Inputs attributes={attributes} uniforms={circleUniforms} />
 			</Section>
 
-			<Section title='0.5: Triangle' notes={`Signed Distance Functions are tricky, but very powerful.  They define a field of values based on each point's distance from a given boundary, where the sign determined whether the point is within the boundary.  Here we have a function that determines if a pixel is inside a triangle.`}>
-				<BaseCanvas fragmentShader={triangleFragmentShader} vertexShader={baseVertexShader} uniforms={triangleUniforms} setAttributes={setAttributes} />
-				<ShaderText fragmentShader={triangleFragmentShader} vertexShader={baseVertexShader} />
-				<Inputs attributes={attributes} uniforms={triangleUniforms} />
+			<Section title='0.5: Polygon' notes={`Signed Distance Functions are tricky, but very powerful.  They define a field of values based on each point's distance from a given boundary, where the sign determined whether the point is within the boundary.  Here we have a function that determines if a pixel is inside the boundaries of an n-sided polygon.`}>
+				<BaseCanvas fragmentShader={polygonFragmentShader} vertexShader={baseVertexShader} uniforms={polygonUniforms} setAttributes={setAttributes} />
+				<ShaderText fragmentShader={polygonFragmentShader} vertexShader={baseVertexShader} />
+				<Inputs attributes={attributes} uniforms={polygonUniforms} />
 			</Section>
 		</div>
 	);

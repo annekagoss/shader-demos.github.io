@@ -38,10 +38,11 @@ const FloatInput = ({uniform, updateUniforms}: TypeInputProps) => (
 const IntInput = ({uniform, updateUniforms}: TypeInputProps) => (
 	<input
 		type='number'
-		checked={uniform.defaultValue === 1}
+		step={1}
+		min={0}
+		max={20}
 		onChange={e => {
-			const booleanAsInteger: number = e.target.value ? 1 : 0;
-			updateUniforms(uniform.name, booleanAsInteger);
+			updateUniforms(uniform.name, e.target.value);
 		}}
 	/>
 );

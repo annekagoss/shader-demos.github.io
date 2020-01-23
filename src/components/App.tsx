@@ -50,7 +50,7 @@ import styles from './app.module.scss';
 // };
 
 const App = () => {
-	const [activePageIndex, setActivePageIndex] = React.useState<number>(1);
+	const [activePageIndex, setActivePageIndex] = React.useState<number>(0);
 	return (
 		<div className={styles.app}>
 			{/* <div className={styles.page}>
