@@ -9,6 +9,7 @@ import {UNIFORM_TYPE, Vector2, UniformSetting} from '../../../types';
 import translationFragmentShader from '../../../lib/gl/shaders/translate.frag';
 import scaleFragmentShader from '../../../lib/gl/shaders/scale.frag';
 import rotationFragmentShader from '../../../lib/gl/shaders/rotation.frag';
+import signalFragmentShader from '../../../lib/gl/shaders/signal.frag';
 import styles from './MovementPage.module.scss';
 
 const BASE_TRANSLATION_UNIFORMS: UniformSetting[] = [
@@ -65,6 +66,39 @@ const BASE_ROTATION_UNIFORMS: UniformSetting[] = [
 	}
 ];
 
+const BASE_SIGNAL_UNIFORMS: UniformSetting[] = [
+	...BASE_UNIFORMS,
+	{
+		defaultValue: 0,
+		name: 'uTime',
+		readonly: true,
+		type: UNIFORM_TYPE.FLOAT_1,
+		value: 0
+	},
+	{
+		defaultValue: 20.0,
+		name: 'uFrequency',
+		readonly: false,
+		type: UNIFORM_TYPE.FLOAT_1,
+		value: 20.0
+	},
+	{
+		defaultValue: 1.0,
+		name: 'uSpeed',
+		readonly: false,
+		type: UNIFORM_TYPE.FLOAT_1,
+		value: 1.0
+	},
+	{
+		defaultValue: 0,
+		isBool: false,
+		name: 'uSignalType',
+		readonly: false,
+		type: UNIFORM_TYPE.INT_1,
+		value: 0
+	}
+];
+
 interface Props {
 	isActive: boolean;
 }
@@ -73,6 +107,7 @@ const MovementPage = ({isActive}: Props) => {
 	const translationUniforms = React.useRef<UniformSetting[]>(BASE_TRANSLATION_UNIFORMS);
 	const scaleUniforms = React.useRef<UniformSetting[]>(BASE_SCALE_UNIFORMS);
 	const rotationUniforms = React.useRef<UniformSetting[]>(BASE_ROTATION_UNIFORMS);
+	const signalUniforms = React.useRef<UniformSetting[]>(BASE_SIGNAL_UNIFORMS);
 	const pageMousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: 0.5, y: 0.5});
 	const [attributes, setAttributes] = React.useState<any[]>([]);
 
@@ -94,6 +129,11 @@ const MovementPage = ({isActive}: Props) => {
 				<BaseCanvas fragmentShader={rotationFragmentShader} vertexShader={baseVertexShader} uniforms={rotationUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={rotationFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={rotationUniforms} />
+			</Section>
+			<Section title='1.3: Signal' notes={``}>
+				<BaseCanvas fragmentShader={signalFragmentShader} vertexShader={baseVertexShader} uniforms={signalUniforms} setAttributes={setAttributes} />
+				<ShaderText fragmentShader={signalFragmentShader} vertexShader={baseVertexShader} />
+				<Inputs attributes={attributes} uniforms={signalUniforms} />
 			</Section>
 		</div>
 	);
