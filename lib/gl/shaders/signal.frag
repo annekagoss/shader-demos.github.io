@@ -25,8 +25,7 @@ float signal(vec2 st) {
 		return sinewave;
 	} else if (uSignalType == 1) {
 		return step(1. - sinewave, .5);
-	} 
-	else {
+	} else {
 		return fract(st.x*(uFrequency*0.25)+(phase*0.25));
 	}
 }
