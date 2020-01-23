@@ -24,7 +24,7 @@ vec2 scale(vec2 _st, vec2 scale) {
 void main() {
     vec2 st = gl_FragCoord.xy/uResolution;
 	st = scale(st, uScale);
-	float pentagon = SDFPentagon(st, .25);
+	float pentagon = abs(SDFPentagon(st, .25)) - .01;
 	float value = smoothstep(-0.0025, 0.0025, -pentagon);
 	gl_FragColor = vec4(vec3(value), 1.0);
 }

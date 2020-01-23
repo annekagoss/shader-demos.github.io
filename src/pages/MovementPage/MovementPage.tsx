@@ -8,6 +8,7 @@ import {BASE_UNIFORMS} from '../../utils/general';
 import {UNIFORM_TYPE, Vector2, UniformSetting} from '../../../types';
 import translationFragmentShader from '../../../lib/gl/shaders/translate.frag';
 import scaleFragmentShader from '../../../lib/gl/shaders/scale.frag';
+import rotationFragmentShader from '../../../lib/gl/shaders/rotation.frag';
 import styles from './MovementPage.module.scss';
 
 const BASE_TRANSLATION_UNIFORMS: UniformSetting[] = [
@@ -46,6 +47,24 @@ const BASE_SCALE_UNIFORMS: UniformSetting[] = [
 	}
 ];
 
+const BASE_ROTATION_UNIFORMS: UniformSetting[] = [
+	...BASE_UNIFORMS,
+	{
+		defaultValue: 0,
+		name: 'uTime',
+		readonly: true,
+		type: UNIFORM_TYPE.FLOAT_1,
+		value: 0
+	},
+	{
+		defaultValue: 1,
+		name: 'uSpeed',
+		readonly: false,
+		type: UNIFORM_TYPE.FLOAT_1,
+		value: 1
+	}
+];
+
 interface Props {
 	isActive: boolean;
 }
@@ -53,6 +72,7 @@ interface Props {
 const MovementPage = ({isActive}: Props) => {
 	const translationUniforms = React.useRef<UniformSetting[]>(BASE_TRANSLATION_UNIFORMS);
 	const scaleUniforms = React.useRef<UniformSetting[]>(BASE_SCALE_UNIFORMS);
+	const rotationUniforms = React.useRef<UniformSetting[]>(BASE_ROTATION_UNIFORMS);
 	const pageMousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: 0.5, y: 0.5});
 	const [attributes, setAttributes] = React.useState<any[]>([]);
 
@@ -69,6 +89,11 @@ const MovementPage = ({isActive}: Props) => {
 				<BaseCanvas fragmentShader={scaleFragmentShader} vertexShader={baseVertexShader} uniforms={scaleUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={scaleFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={scaleUniforms} />
+			</Section>
+			<Section title='1.2: Rotation' notes={``}>
+				<BaseCanvas fragmentShader={rotationFragmentShader} vertexShader={baseVertexShader} uniforms={rotationUniforms} setAttributes={setAttributes} />
+				<ShaderText fragmentShader={rotationFragmentShader} vertexShader={baseVertexShader} />
+				<Inputs attributes={attributes} uniforms={rotationUniforms} />
 			</Section>
 		</div>
 	);
