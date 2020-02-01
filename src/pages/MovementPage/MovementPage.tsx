@@ -10,6 +10,7 @@ import translationFragmentShader from '../../../lib/gl/shaders/translate.frag';
 import scaleFragmentShader from '../../../lib/gl/shaders/scale.frag';
 import rotationFragmentShader from '../../../lib/gl/shaders/rotation.frag';
 import signalFragmentShader from '../../../lib/gl/shaders/signal.frag';
+import noiseFragmentShader from '../../../lib/gl/shaders/noise.frag';
 import styles from './MovementPage.module.scss';
 
 const BASE_TRANSLATION_UNIFORMS: UniformSetting[] = [
@@ -99,6 +100,33 @@ const BASE_SIGNAL_UNIFORMS: UniformSetting[] = [
 	}
 ];
 
+const BASE_NOISE_UNIFORMS: UniformSetting[] = [
+	...BASE_UNIFORMS,
+	{
+		defaultValue: 0,
+		name: 'uTime',
+		readonly: true,
+		type: UNIFORM_TYPE.FLOAT_1,
+		value: 0
+	},
+	{
+		defaultValue: 1,
+		isBool: true,
+		name: 'uFractal',
+		readonly: false,
+		type: UNIFORM_TYPE.INT_1,
+		value: 1
+	},
+	{
+		defaultValue: 4,
+		isBool: false,
+		name: 'uOctaves',
+		readonly: false,
+		type: UNIFORM_TYPE.INT_1,
+		value: 4
+	}
+];
+
 interface Props {
 	isActive: boolean;
 }
@@ -108,6 +136,7 @@ const MovementPage = ({isActive}: Props) => {
 	const scaleUniforms = React.useRef<UniformSetting[]>(BASE_SCALE_UNIFORMS);
 	const rotationUniforms = React.useRef<UniformSetting[]>(BASE_ROTATION_UNIFORMS);
 	const signalUniforms = React.useRef<UniformSetting[]>(BASE_SIGNAL_UNIFORMS);
+	const noiseUniforms = React.useRef<UniformSetting[]>(BASE_NOISE_UNIFORMS);
 	const pageMousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: 0.5, y: 0.5});
 	const [attributes, setAttributes] = React.useState<any[]>([]);
 
@@ -134,6 +163,11 @@ const MovementPage = ({isActive}: Props) => {
 				<BaseCanvas fragmentShader={signalFragmentShader} vertexShader={baseVertexShader} uniforms={signalUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={signalFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={signalUniforms} />
+			</Section>
+			<Section title='1.4: Noise' notes={`Noise is a powerful tool to create organic effects.  This is an example of 3D Simplex Noise, where we animate the noise by mapping the 3rd dimension to time.`}>
+				<BaseCanvas fragmentShader={noiseFragmentShader} vertexShader={baseVertexShader} uniforms={noiseUniforms} setAttributes={setAttributes} />
+				<ShaderText fragmentShader={noiseFragmentShader} vertexShader={baseVertexShader} />
+				<Inputs attributes={attributes} uniforms={noiseUniforms} />
 			</Section>
 		</div>
 	);
