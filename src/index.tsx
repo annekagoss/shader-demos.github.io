@@ -3,7 +3,10 @@ import {render} from 'react-dom';
 import {AppContainer, setConfig} from 'react-hot-loader';
 import App from './components/App';
 
-setConfig({ErrorOverlay: () => null});
+setConfig({
+	errorReporter: () => null,
+	ErrorOverlay: () => null
+});
 
 const rootEl = document.getElementById('root');
 
