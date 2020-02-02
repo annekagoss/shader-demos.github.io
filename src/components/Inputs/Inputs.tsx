@@ -26,7 +26,7 @@ const FloatInput = ({uniform, updateUniforms}: TypeInputProps) => (
 	<input
 		type='number'
 		placeholder={uniform.defaultValue}
-		step={0.01}
+		step={0.1}
 		min={0}
 		max={100}
 		onChange={e => {

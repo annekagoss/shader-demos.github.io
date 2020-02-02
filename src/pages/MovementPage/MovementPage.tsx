@@ -77,11 +77,11 @@ const BASE_SIGNAL_UNIFORMS: UniformSetting[] = [
 		value: 0
 	},
 	{
-		defaultValue: 20.0,
+		defaultValue: 1.0,
 		name: 'uFrequency',
 		readonly: false,
 		type: UNIFORM_TYPE.FLOAT_1,
-		value: 20.0
+		value: 1.0
 	},
 	{
 		defaultValue: 1.0,
