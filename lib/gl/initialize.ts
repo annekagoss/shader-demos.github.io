@@ -267,7 +267,7 @@ export function initPlaceholderTexture(gl: WebGLRenderingContext): WebGLTexture 
 // Base mesh made of two triangles
 export const initBaseMesh = (gl: WebGLRenderingContext, program: WebGLProgram) => {
 	const data = [-1, 1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0];
-	const {buffer} = buildBuffer({
+	buildBuffer({
 		gl,
 		type: gl.ARRAY_BUFFER,
 		data,

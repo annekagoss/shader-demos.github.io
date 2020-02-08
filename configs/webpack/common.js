@@ -40,6 +40,7 @@ module.exports = {
 		extensions: ['.ts', '.tsx', '.js', '.jsx']
 	},
 	context: resolve(__dirname, '../../src'),
+	entry: './index.tsx',
 	module: {
 		rules: [
 			{

@@ -11,7 +11,9 @@ import scaleFragmentShader from '../../../lib/gl/shaders/scale.frag';
 import rotationFragmentShader from '../../../lib/gl/shaders/rotation.frag';
 import signalFragmentShader from '../../../lib/gl/shaders/signal.frag';
 import noiseFragmentShader from '../../../lib/gl/shaders/noise.frag';
+import feedbackFragmentShader from '../../../lib/gl/shaders/feedback.frag';
 import styles from './MovementPage.module.scss';
+import FeedbackCanvas from '../../components/FeedbackCanvas/FeedbackCanvas';
 
 const BASE_TRANSLATION_UNIFORMS: UniformSetting[] = [
 	...BASE_UNIFORMS,
@@ -127,6 +129,8 @@ const BASE_NOISE_UNIFORMS: UniformSetting[] = [
 	}
 ];
 
+const BASE_FEEDBACK_UNIFORMS: UniformSetting[] = [...BASE_UNIFORMS];
+
 interface Props {
 	isActive: boolean;
 }
@@ -137,6 +141,7 @@ const MovementPage = ({isActive}: Props) => {
 	const rotationUniforms = React.useRef<UniformSetting[]>(BASE_ROTATION_UNIFORMS);
 	const signalUniforms = React.useRef<UniformSetting[]>(BASE_SIGNAL_UNIFORMS);
 	const noiseUniforms = React.useRef<UniformSetting[]>(BASE_NOISE_UNIFORMS);
+	const feedbackUniforms = React.useRef<UniformSetting[]>(BASE_FEEDBACK_UNIFORMS);
 	const pageMousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: 0.5, y: 0.5});
 	const [attributes, setAttributes] = React.useState<any[]>([]);
 
@@ -144,7 +149,7 @@ const MovementPage = ({isActive}: Props) => {
 
 	return (
 		<div className={styles.page}>
-			<Section title='1.0: Translation' notes={`To change the position of a shape in a shader, you actually change the coordinate system itself.  In this example we move the screen space around in a circle, and then draw the square inside it.  If there are multiple shapes that are moving independantly would each have their own unique coordinate system.`}>
+			{/* <Section title='1.0: Translation' notes={`To change the position of a shape in a shader, you actually change the coordinate system itself.  In this example we move the screen space around in a circle, and then draw the square inside it.  If there are multiple shapes that are moving independantly would each have their own unique coordinate system.`}>
 				<BaseCanvas fragmentShader={translationFragmentShader} vertexShader={baseVertexShader} uniforms={translationUniforms} setAttributes={setAttributes} pageMousePosRef={pageMousePosRef} />
 				<ShaderText fragmentShader={translationFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={translationUniforms} pageMousePosRef={pageMousePosRef} />
@@ -168,6 +173,11 @@ const MovementPage = ({isActive}: Props) => {
 				<BaseCanvas fragmentShader={noiseFragmentShader} vertexShader={baseVertexShader} uniforms={noiseUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={noiseFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={noiseUniforms} />
+			</Section> */}
+			<Section title='1.5: Feedback' notes={``}>
+				<FeedbackCanvas fragmentShader={feedbackFragmentShader} vertexShader={baseVertexShader} uniforms={feedbackUniforms} setAttributes={setAttributes} />
+				<ShaderText fragmentShader={feedbackFragmentShader} vertexShader={baseVertexShader} />
+				<Inputs attributes={attributes} uniforms={feedbackUniforms} />
 			</Section>
 		</div>
 	);

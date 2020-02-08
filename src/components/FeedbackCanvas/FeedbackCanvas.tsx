@@ -1,8 +1,8 @@
 import * as React from 'react';
-import {UniformSetting, Vector2, UNIFORM_TYPE} from '../../../types';
+import {UniformSetting, Vector2, UNIFORM_TYPE, FBO} from '../../../types';
 import {useInitializeGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
-import styles from './BaseCanvas.module.scss';
+import styles from './FeedbackCanvas.module.scss';
 
 interface Props {
 	fragmentShader: string;
@@ -18,9 +18,11 @@ interface RenderProps {
 	uniforms: UniformSetting[];
 	time: number;
 	mousePos: Vector2;
+	FBO: FBO;
+	pingPong: number;
 }
 
-const render = ({gl, uniformLocations, uniforms, time, mousePos}: RenderProps) => {
+const render = ({gl, uniformLocations, uniforms, time, mousePos, FBO, pingPong}: RenderProps) => {
 	uniforms.forEach((uniform: UniformSetting) => {
 		switch (uniform.type) {
 			case UNIFORM_TYPE.FLOAT_1:
@@ -45,35 +47,52 @@ const render = ({gl, uniformLocations, uniforms, time, mousePos}: RenderProps) =
 				break;
 		}
 	});
+
+	// console.log(time);
+
+	// Draw to frame buffer
+	gl.bindFramebuffer(gl.FRAMEBUFFER, FBO.buffer);
+	gl.viewport(0, 0, 400, 400);
+	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+	// Draw to canvas
+	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+	gl.uniform1i(uniformLocations.frameBufferTexture0, 0);
+	gl.activeTexture(gl.TEXTURE0 + 0);
+	gl.bindTexture(gl.TEXTURE_2D, FBO.targetTexture);
+
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 };
 
-const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef}: Props) => {
+const FeedbackCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef}: Props) => {
 	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
 	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: 0.5, y: 0.5});
 	const targetWidth = Math.round(uniforms.current[0].value.x * window.devicePixelRatio);
 	const targetHeight = Math.round(uniforms.current[0].value.y * window.devicePixelRatio);
 
-	const {gl, uniformLocations, vertexBuffer} = useInitializeGL({
+	const {gl, uniformLocations, vertexBuffer, FBO} = useInitializeGL({
 		canvasRef,
 		fragmentSource: fragmentShader,
 		vertexSource: vertexShader,
 		uniforms: uniforms.current,
 		targetWidth,
-		targetHeight
+		targetHeight,
+		useFrameBuffer: true
 	});
 
 	React.useEffect(() => {
 		setAttributes([{name: 'aVertexPosition', value: vertexBuffer.current.join(', ')}]);
 	}, []);
 
-	useAnimationFrame((time: number) => {
+	useAnimationFrame((time: number, pingPong: number) => {
 		render({
 			gl: gl.current,
 			uniformLocations: uniformLocations.current,
 			uniforms: uniforms.current,
 			time,
-			mousePos: mousePosRef.current
+			mousePos: mousePosRef.current,
+			FBO: FBO.current,
+			pingPong
 		});
 	});
 
@@ -97,4 +116,4 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, page
 	);
 };
 
-export default BaseCanvas;
+export default FeedbackCanvas;
