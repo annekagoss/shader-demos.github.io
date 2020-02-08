@@ -15,7 +15,11 @@ interface InitializeProps {
 
 const mapUniformSettingsToLocations = (settings: UniformSetting[], gl: WebGLRenderingContext, program: WebGLProgram, useFrameBuffer: boolean): Record<string, WebGLUniformLocation> => {
 	if (!settings.length) return null;
-	const locations: Record<string, WebGLUniformLocation> = useFrameBuffer ? {frameBufferTexture0: gl.getUniformLocation(program, 'frameBufferTexture0')} : {};
+	const locations: Record<string, WebGLUniformLocation> = useFrameBuffer
+		? {
+				frameBufferTexture0: gl.getUniformLocation(program, 'frameBufferTexture0')
+		  }
+		: {};
 	return settings.reduce((result, setting) => {
 		result[setting.name] = gl.getUniformLocation(program, setting.name);
 		return result;
@@ -28,7 +32,8 @@ export const useInitializeGL = ({canvasRef, fragmentSource, vertexSource, unifor
 	const attributeLocations = React.useRef<Record<string, number>>();
 	const uniformLocations = React.useRef<Record<string, WebGLUniformLocation>>();
 	const vertexBuffer = React.useRef<any>();
-	const FBO = React.useRef<FBO>();
+	const FBOA = React.useRef<FBO>();
+	const FBOB = React.useRef<FBO>();
 
 	React.useLayoutEffect(() => {
 		if (canvasRef.current === undefined) return;
@@ -48,7 +53,8 @@ export const useInitializeGL = ({canvasRef, fragmentSource, vertexSource, unifor
 		uniformLocations.current = mapUniformSettingsToLocations(uniforms, tempGl, tempProgram, useFrameBuffer);
 
 		if (useFrameBuffer) {
-			FBO.current = initSimpleFrameBufferObject(tempGl, targetWidth, targetHeight);
+			FBOA.current = initSimpleFrameBufferObject(tempGl, targetWidth, targetHeight);
+			FBOB.current = initSimpleFrameBufferObject(tempGl, targetWidth, targetHeight);
 		}
 
 		gl.current = tempGl;
@@ -62,7 +68,8 @@ export const useInitializeGL = ({canvasRef, fragmentSource, vertexSource, unifor
 		attributeLocations,
 		uniformLocations,
 		vertexBuffer,
-		FBO
+		FBOA,
+		FBOB
 	};
 };
 

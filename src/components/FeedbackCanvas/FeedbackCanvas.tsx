@@ -18,11 +18,12 @@ interface RenderProps {
 	uniforms: UniformSetting[];
 	time: number;
 	mousePos: Vector2;
-	FBO: FBO;
+	FBOA: FBO;
+	FBOB: FBO;
 	pingPong: number;
 }
 
-const render = ({gl, uniformLocations, uniforms, time, mousePos, FBO, pingPong}: RenderProps) => {
+const render = ({gl, uniformLocations, uniforms, time, mousePos, FBOA, FBOB, pingPong}: RenderProps) => {
 	uniforms.forEach((uniform: UniformSetting) => {
 		switch (uniform.type) {
 			case UNIFORM_TYPE.FLOAT_1:
@@ -48,10 +49,11 @@ const render = ({gl, uniformLocations, uniforms, time, mousePos, FBO, pingPong}:
 		}
 	});
 
-	// console.log(time);
+	const buffer: WebGLFramebuffer = pingPong === 0 ? FBOA.buffer : FBOB.buffer;
+	const targetTexture: WebGLTexture = pingPong === 0 ? FBOA.targetTexture : FBOB.targetTexture;
 
 	// Draw to frame buffer
-	gl.bindFramebuffer(gl.FRAMEBUFFER, FBO.buffer);
+	gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
 	gl.viewport(0, 0, 400, 400);
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
@@ -59,7 +61,7 @@ const render = ({gl, uniformLocations, uniforms, time, mousePos, FBO, pingPong}:
 	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	gl.uniform1i(uniformLocations.frameBufferTexture0, 0);
 	gl.activeTexture(gl.TEXTURE0 + 0);
-	gl.bindTexture(gl.TEXTURE_2D, FBO.targetTexture);
+	gl.bindTexture(gl.TEXTURE_2D, targetTexture);
 
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 };
@@ -70,7 +72,7 @@ const FeedbackCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, 
 	const targetWidth = Math.round(uniforms.current[0].value.x * window.devicePixelRatio);
 	const targetHeight = Math.round(uniforms.current[0].value.y * window.devicePixelRatio);
 
-	const {gl, uniformLocations, vertexBuffer, FBO} = useInitializeGL({
+	const {gl, uniformLocations, vertexBuffer, FBOA, FBOB} = useInitializeGL({
 		canvasRef,
 		fragmentSource: fragmentShader,
 		vertexSource: vertexShader,
@@ -91,7 +93,8 @@ const FeedbackCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, 
 			uniforms: uniforms.current,
 			time,
 			mousePos: mousePosRef.current,
-			FBO: FBO.current,
+			FBOA: FBOA.current,
+			FBOB: FBOB.current,
 			pingPong
 		});
 	});
