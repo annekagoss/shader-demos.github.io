@@ -2,21 +2,56 @@
 precision mediump float;
 #endif
 
-const vec2 OFFSET = vec2(0.0, -0.01);
-const float ALPHA = .9;
+#define TAU 6.2831853071;
+
+#pragma glslify: circle = require('./common/circle.glsl');
+#pragma glslify: fractalNoise = require('./common/fractalNoise.glsl');
 
 uniform vec2 uResolution;
 uniform sampler2D frameBufferTexture0;
+uniform float uTime;
+uniform vec2 uMouse;
+uniform vec2 uOffset;
+uniform float uAlpha;
+uniform int uSmoke;
 
-float circle(vec2 st) {
-	float dist = distance(st, vec2(0.5));
-	return smoothstep(dist - 0.005, dist, 0.25);
+const float NOISE_SCALE= 3.;
+const float NOISE_SPEED = 0.0005;
+
+vec2 translateWithMouse(vec2 st) {
+	vec2 mouseSt = uMouse/uResolution;
+	return st + (mouseSt * -1.) + vec2(.5, -.5);
+}
+
+vec2 sampleCoordinate(vec2 st) {
+	vec2 offset = st + uOffset;
+	if (uSmoke == 0) {
+		return offset;
+	}
+	
+	float time = uTime*NOISE_SPEED;
+	vec2 multiplier = (1. + fractalNoise(st, time, 1, NOISE_SCALE * 3.0, 4)) / uResolution.xy;
+	offset = uOffset * 10. * multiplier;
+	
+	// Two passes of simplex noise are applied to the offset
+	
+	// Broad smoke form
+	float noiseA = fractalNoise(st, time, 0, NOISE_SCALE * 2.0, 4);
+	float angleA = noiseA * TAU + (4. * time);
+	offset += vec2(sin(angleA), cos(angleA)) * multiplier;
+	
+	// Finely detailed smoke
+	float noiseB = fractalNoise(st, time, 1, NOISE_SCALE, 4);
+	float angleB = noiseB * TAU + time;
+	offset += vec2(sin(angleB), cos(angleB)) * multiplier / 3.;
+	
+	return st + offset;
 }
 
 void main() {
     vec2 st = gl_FragCoord.xy/uResolution;
-	float shape = circle(st);
-	
-	float frameBufferValue = texture2D(frameBufferTexture0, st + OFFSET).r * ALPHA;
-	gl_FragColor = vec4(vec3(shape + frameBufferValue), 1.0);
+	vec2 mouseSt = translateWithMouse(st);
+	float baseShape = circle(mouseSt, vec2(.5), .125);
+	float frameBufferValue = texture2D(frameBufferTexture0, sampleCoordinate(st)).r * uAlpha;
+	gl_FragColor = vec4(vec3(baseShape + frameBufferValue), 1.0);
 }

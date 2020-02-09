@@ -129,7 +129,45 @@ const BASE_NOISE_UNIFORMS: UniformSetting[] = [
 	}
 ];
 
-const BASE_FEEDBACK_UNIFORMS: UniformSetting[] = [...BASE_UNIFORMS];
+const BASE_FEEDBACK_UNIFORMS: UniformSetting[] = [
+	...BASE_UNIFORMS,
+	{
+		defaultValue: 0,
+		name: 'uTime',
+		readonly: true,
+		type: UNIFORM_TYPE.FLOAT_1,
+		value: 0
+	},
+	{
+		defaultValue: {x: BASE_UNIFORMS[0].defaultValue / 2, y: BASE_UNIFORMS[0].defaultValue / -2},
+		name: 'uMouse',
+		readonly: true,
+		type: UNIFORM_TYPE.VEC_2,
+		value: {x: 0.5, y: 0.5}
+	},
+	{
+		defaultValue: {x: 0, y: -0.01},
+		name: 'uOffset',
+		readonly: false,
+		type: UNIFORM_TYPE.VEC_2,
+		value: {x: 0, y: -0.01}
+	},
+	{
+		defaultValue: 0.95,
+		name: 'uAlpha',
+		readonly: false,
+		type: UNIFORM_TYPE.FLOAT_1,
+		value: 0.95
+	},
+	{
+		defaultValue: 1,
+		isBool: true,
+		name: 'uSmoke',
+		readonly: false,
+		type: UNIFORM_TYPE.INT_1,
+		value: 1
+	}
+];
 
 interface Props {
 	isActive: boolean;
@@ -149,7 +187,7 @@ const MovementPage = ({isActive}: Props) => {
 
 	return (
 		<div className={styles.page}>
-			{/* <Section title='1.0: Translation' notes={`To change the position of a shape in a shader, you actually change the coordinate system itself.  In this example we move the screen space around in a circle, and then draw the square inside it.  If there are multiple shapes that are moving independantly would each have their own unique coordinate system.`}>
+			<Section title='1.0: Translation' notes={`To change the position of a shape in a shader, you actually change the coordinate system itself.  In this example we move the screen space around in a circle, and then draw the square inside it.  If there are multiple shapes that are moving independantly would each have their own unique coordinate system.`}>
 				<BaseCanvas fragmentShader={translationFragmentShader} vertexShader={baseVertexShader} uniforms={translationUniforms} setAttributes={setAttributes} pageMousePosRef={pageMousePosRef} />
 				<ShaderText fragmentShader={translationFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={translationUniforms} pageMousePosRef={pageMousePosRef} />
@@ -173,7 +211,7 @@ const MovementPage = ({isActive}: Props) => {
 				<BaseCanvas fragmentShader={noiseFragmentShader} vertexShader={baseVertexShader} uniforms={noiseUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={noiseFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={noiseUniforms} />
-			</Section> */}
+			</Section>
 			<Section title='1.5: Feedback' notes={``}>
 				<FeedbackCanvas fragmentShader={feedbackFragmentShader} vertexShader={baseVertexShader} uniforms={feedbackUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={feedbackFragmentShader} vertexShader={baseVertexShader} />

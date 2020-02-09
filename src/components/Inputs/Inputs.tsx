@@ -70,7 +70,7 @@ const Vec2Input = ({uniform, updateUniforms}: TypeInputProps) => {
 					type='number'
 					placeholder={uniform.defaultValue.x}
 					step={0.01}
-					min={0}
+					min={-1}
 					max={1}
 					onChange={e => {
 						updateUniforms(uniform.name, {x: e.target.value});
@@ -83,7 +83,7 @@ const Vec2Input = ({uniform, updateUniforms}: TypeInputProps) => {
 					type='number'
 					placeholder={uniform.defaultValue.y}
 					step={0.01}
-					min={0}
+					min={-1}
 					max={1}
 					onChange={e => {
 						updateUniforms(uniform.name, {y: e.target.value});

@@ -67,10 +67,10 @@ const render = ({gl, uniformLocations, uniforms, time, mousePos, FBOA, FBOB, pin
 };
 
 const FeedbackCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef}: Props) => {
-	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
-	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: 0.5, y: 0.5});
 	const targetWidth = Math.round(uniforms.current[0].value.x * window.devicePixelRatio);
 	const targetHeight = Math.round(uniforms.current[0].value.y * window.devicePixelRatio);
+	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
+	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: targetWidth * 0.5, y: targetHeight * -0.5});
 
 	const {gl, uniformLocations, vertexBuffer, FBOA, FBOB} = useInitializeGL({
 		canvasRef,
