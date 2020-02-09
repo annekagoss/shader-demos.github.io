@@ -31,19 +31,19 @@ vec2 sampleCoordinate(vec2 st) {
 	
 	float time = uTime*NOISE_SPEED;
 	vec2 multiplier = (1. + fractalNoise(st, time, 1, NOISE_SCALE * 3.0, 4)) / uResolution.xy;
-	offset = uOffset * 10. * multiplier;
+	offset = uOffset * 100. * multiplier;
 	
 	// Two passes of simplex noise are applied to the offset
 	
 	// Broad smoke form
 	float noiseA = fractalNoise(st, time, 0, NOISE_SCALE * 2.0, 4);
-	float angleA = noiseA * TAU + (4. * time);
-	offset += vec2(sin(angleA), cos(angleA)) * multiplier;
+	float angleA = noiseA * TAU + (time);
+	offset += vec2(cos(angleA) , sin(angleA)) * multiplier;
 	
 	// Finely detailed smoke
 	float noiseB = fractalNoise(st, time, 1, NOISE_SCALE, 4);
 	float angleB = noiseB * TAU + time;
-	offset += vec2(sin(angleB), cos(angleB)) * multiplier / 3.;
+	offset += vec2(cos(angleB), sin(angleB)) * multiplier / 3.;
 	
 	return st + offset;
 }
