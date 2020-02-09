@@ -2,7 +2,7 @@
 precision mediump float;
 #endif
 
-#define TAU 6.2831853071;
+#define TAU 6.2831853071
 
 #pragma glslify: circle = require('./common/circle.glsl');
 #pragma glslify: fractalNoise = require('./common/fractalNoise.glsl');

@@ -2,8 +2,13 @@
 precision mediump float;
 #endif
 
+#define TAU 6.2831853071
+
 uniform vec2 uResolution;
-uniform vec2 uScale;
+uniform vec2 uMaxScale;
+uniform float uTime;
+
+const float SPEED = 0.001;
 
 #pragma glslify: SDFPentagon = require('./common/pentagon.glsl');
 
@@ -23,7 +28,8 @@ vec2 scale(vec2 _st, vec2 scale) {
 
 void main() {
     vec2 st = gl_FragCoord.xy/uResolution;
-	st = scale(st, uScale);
+	float sineScalar = sin(TAU + (uTime * SPEED)) * .5 + .5;
+	st = scale(st, uMaxScale * sineScalar);
 	float pentagon = abs(SDFPentagon(st, .25)) - .01;
 	float value = smoothstep(-0.0025, 0.0025, -pentagon);
 	gl_FragColor = vec4(vec3(value), 1.0);

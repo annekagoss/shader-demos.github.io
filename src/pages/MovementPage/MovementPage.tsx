@@ -43,8 +43,15 @@ const BASE_TRANSLATION_UNIFORMS: UniformSetting[] = [
 const BASE_SCALE_UNIFORMS: UniformSetting[] = [
 	...BASE_UNIFORMS,
 	{
+		defaultValue: 0,
+		name: 'uTime',
+		readonly: true,
+		type: UNIFORM_TYPE.FLOAT_1,
+		value: 0
+	},
+	{
 		defaultValue: {x: 1.0, y: 1.0},
-		name: 'uScale',
+		name: 'uMaxScale',
 		readonly: false,
 		type: UNIFORM_TYPE.VEC_2,
 		value: {x: 1.0, y: 1.0}
@@ -160,12 +167,12 @@ const BASE_FEEDBACK_UNIFORMS: UniformSetting[] = [
 		value: 0.95
 	},
 	{
-		defaultValue: 1,
+		defaultValue: 0,
 		isBool: true,
 		name: 'uSmoke',
 		readonly: false,
 		type: UNIFORM_TYPE.INT_1,
-		value: 1
+		value: 0
 	}
 ];
 
