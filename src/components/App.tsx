@@ -11,6 +11,7 @@ import baseVertexShader from '../../lib/gl/shaders/base.vert';
 import {BASE_UNIFORMS} from '../utils/general';
 import ShapesPage from '../pages/ShapesPage/ShapesPage';
 import MovementPage from '../pages/MovementPage/MovementPage';
+import DepthPage from '../pages/DepthPage/DepthPage';
 import styles from './app.module.scss';
 
 // FOX SKULL
@@ -78,7 +79,7 @@ const App = () => {
 					onClick={() => {
 						setActivePageIndex(2);
 					}}>
-					2. Vertex
+					2. Depth
 				</div>
 				<div
 					className={cx(styles.navItem, activePageIndex === 3 && styles.active)}
@@ -91,6 +92,7 @@ const App = () => {
 			<div className={styles.PagesContainer}>
 				<ShapesPage isActive={activePageIndex === 0} />
 				<MovementPage isActive={activePageIndex === 1} />
+				<DepthPage isActive={activePageIndex === 2} />
 			</div>
 		</div>
 	);
