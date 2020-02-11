@@ -52,6 +52,7 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, page
 	const targetWidth = Math.round(uniforms.current[0].value.x * window.devicePixelRatio);
 	const targetHeight = Math.round(uniforms.current[0].value.y * window.devicePixelRatio);
 	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
+	const mouseDownRef: React.MutableRefObject<boolean> = React.useRef<boolean>(false);
 	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: targetWidth * 0.5, y: targetHeight * -0.5});
 
 	const {gl, uniformLocations, vertexBuffer} = useInitializeGL({
@@ -83,7 +84,14 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, page
 			width={uniforms.current[0].value.x}
 			height={uniforms.current[0].value.y}
 			className={styles.canvas}
+			onMouseDown={() => {
+				mouseDownRef.current = true;
+			}}
+			onMouseUp={() => {
+				mouseDownRef.current = false;
+			}}
 			onMouseMove={e => {
+				if (!mouseDownRef.current) return;
 				const {left, top} = canvasRef.current.getBoundingClientRect();
 				mousePosRef.current = {
 					x: e.clientX - left,

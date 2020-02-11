@@ -204,12 +204,12 @@ const MovementPage = ({isActive}: Props) => {
 				<ShaderText fragmentShader={scaleFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={scaleUniforms} />
 			</Section>
-			<Section title='1.2: Rotation' notes={``}>
+			<Section title='1.2: Rotation' notes={`Here we use another 2x2 matrix to rotate the coordinate system around the origin x:0 y: 0.`}>
 				<BaseCanvas fragmentShader={rotationFragmentShader} vertexShader={baseVertexShader} uniforms={rotationUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={rotationFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={rotationUniforms} />
 			</Section>
-			<Section title='1.3: Signal' notes={``}>
+			<Section title='1.3: Signal' notes={`Like noise, signals can be a powerful tool for generating and animating graphics. If with think of the x-axis as the time domain we can draw signals by offsetting them in time instead of space.`}>
 				<BaseCanvas fragmentShader={signalFragmentShader} vertexShader={baseVertexShader} uniforms={signalUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={signalFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={signalUniforms} />
@@ -219,7 +219,7 @@ const MovementPage = ({isActive}: Props) => {
 				<ShaderText fragmentShader={noiseFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={noiseUniforms} />
 			</Section>
-			<Section title='1.5: Feedback' notes={``}>
+			<Section title='1.5: Feedback' notes={`This shader takes in itself as in input to generate this tail. On each frame it recursively applies an offset and opacity to the frame before it.  To achieve this we need two offscreen frame buffers and target textures that are alternated each frame (called PingPonging.)`}>
 				<FeedbackCanvas fragmentShader={feedbackFragmentShader} vertexShader={baseVertexShader} uniforms={feedbackUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={feedbackFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={feedbackUniforms} />
