@@ -1,4 +1,4 @@
-import {Buffer, Buffers, GLSLColors, FBO, GLContext, LightSettings, LoadedMesh, Material, Matrix, Transformation} from '../../types';
+import {Buffer, Buffers, GLSLColors, FBO, GLContext, LightSettings, LoadedMesh, Material, Matrix, Transformation, Vector3} from '../../types';
 
 import {degreesToRadians} from './helpers';
 import {createMat4, applyPerspective, lookAt} from './matrix';
@@ -267,6 +267,23 @@ export function initPlaceholderTexture(gl: WebGLRenderingContext): WebGLTexture 
 // Base mesh made of two triangles
 export const initBaseMesh = (gl: WebGLRenderingContext, program: WebGLProgram) => {
 	const data = [-1, 1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0];
+	buildBuffer({
+		gl,
+		type: gl.ARRAY_BUFFER,
+		data,
+		itemSize: 3
+	});
+	const vertexPosition = gl.getAttribLocation(program, 'aVertexPosition');
+	gl.enableVertexAttribArray(vertexPosition);
+	gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
+	return {
+		bufferData: data,
+		vertexPosition
+	};
+};
+
+export const initMesh = (gl: WebGLRenderingContext, program: WebGLProgram, positionData: Vector3[]) => {
+	const data: number[] = positionData.map((coordinate: Vector3) => Object.values(coordinate)).flat();
 	buildBuffer({
 		gl,
 		type: gl.ARRAY_BUFFER,

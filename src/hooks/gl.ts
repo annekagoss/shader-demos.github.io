@@ -1,6 +1,6 @@
 import * as React from 'react';
-import {Buffer, Buffers, FBO, UniformSetting, UNIFORM_TYPE} from '../../types';
-import {initShaderProgram, initBaseMesh} from '../../lib/gl/initialize';
+import {Buffer, Buffers, FBO, UniformSetting, UNIFORM_TYPE, Vector3} from '../../types';
+import {initShaderProgram, initBaseMesh, initMesh} from '../../lib/gl/initialize';
 import {string} from 'prop-types';
 
 interface InitializeProps {
@@ -11,6 +11,10 @@ interface InitializeProps {
 	targetWidth: number;
 	targetHeight: number;
 	useFrameBuffer?: boolean;
+}
+
+interface InitializeDepthProps extends InitializeProps {
+	vertexPositionData: Vector3[];
 }
 
 const mapUniformSettingsToLocations = (settings: UniformSetting[], gl: WebGLRenderingContext, program: WebGLProgram, useFrameBuffer: boolean): Record<string, WebGLUniformLocation> => {
@@ -51,6 +55,58 @@ export const useInitializeGL = ({canvasRef, fragmentSource, vertexSource, unifor
 		const {bufferData, vertexPosition} = initBaseMesh(tempGl, tempProgram);
 		attributeLocations.current = {vertexPosition};
 		uniformLocations.current = mapUniformSettingsToLocations(uniforms, tempGl, tempProgram, useFrameBuffer);
+
+		if (useFrameBuffer) {
+			FBOA.current = initSimpleFrameBufferObject(tempGl, targetWidth, targetHeight);
+			FBOB.current = initSimpleFrameBufferObject(tempGl, targetWidth, targetHeight);
+		}
+
+		gl.current = tempGl;
+		program.current = tempProgram;
+		vertexBuffer.current = bufferData;
+	}, [canvasRef.current]);
+
+	return {
+		gl,
+		program,
+		attributeLocations,
+		uniformLocations,
+		vertexBuffer,
+		FBOA,
+		FBOB
+	};
+};
+
+export const useInitializeDepthGL = ({canvasRef, fragmentSource, vertexSource, uniforms, targetWidth, targetHeight, vertexPositionData, useFrameBuffer = false}: InitializeDepthProps) => {
+	const gl = React.useRef<WebGLRenderingContext>();
+	const program = React.useRef<WebGLProgram>();
+	const attributeLocations = React.useRef<Record<string, number>>();
+	const uniformLocations = React.useRef<Record<string, WebGLUniformLocation>>();
+	const vertexBuffer = React.useRef<any>();
+	const FBOA = React.useRef<FBO>();
+	const FBOB = React.useRef<FBO>();
+
+	React.useLayoutEffect(() => {
+		if (canvasRef.current === undefined) return;
+		const tempGl: WebGLRenderingContext = (canvasRef.current.getContext('experimental-webgl') as WebGLRenderingContext) || (canvasRef.current.getContext('webgl') as WebGLRenderingContext);
+
+		tempGl.clearColor(0, 0, 0, 0);
+		tempGl.clearDepth(1);
+		tempGl.enable(tempGl.DEPTH_TEST);
+		tempGl.depthFunc(tempGl.LEQUAL);
+		tempGl.clear(tempGl.COLOR_BUFFER_BIT | tempGl.DEPTH_BUFFER_BIT);
+		tempGl.viewport(0, 0, targetWidth, targetHeight);
+
+		const tempProgram: WebGLProgram = initShaderProgram(tempGl, vertexSource, fragmentSource);
+		tempGl.useProgram(tempProgram);
+		const {bufferData, vertexPosition} = initMesh(tempGl, tempProgram, vertexPositionData);
+		attributeLocations.current = {vertexPosition};
+
+		uniformLocations.current = {
+			...mapUniformSettingsToLocations(uniforms, tempGl, tempProgram, useFrameBuffer),
+			uProjectionMatrix: tempGl.getUniformLocation(tempProgram, 'uProjectionMatrix'),
+			uModelViewMatrix: tempGl.getUniformLocation(tempProgram, 'uModelViewMatrix')
+		};
 
 		if (useFrameBuffer) {
 			FBOA.current = initSimpleFrameBufferObject(tempGl, targetWidth, targetHeight);

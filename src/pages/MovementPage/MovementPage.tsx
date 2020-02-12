@@ -12,8 +12,9 @@ import rotationFragmentShader from '../../../lib/gl/shaders/rotation.frag';
 import signalFragmentShader from '../../../lib/gl/shaders/signal.frag';
 import noiseFragmentShader from '../../../lib/gl/shaders/noise.frag';
 import feedbackFragmentShader from '../../../lib/gl/shaders/feedback.frag';
-import styles from './MovementPage.module.scss';
 import FeedbackCanvas from '../../components/FeedbackCanvas/FeedbackCanvas';
+
+import styles from './MovementPage.module.scss';
 
 const BASE_TRANSLATION_UNIFORMS: UniformSetting[] = [
 	...BASE_UNIFORMS,
