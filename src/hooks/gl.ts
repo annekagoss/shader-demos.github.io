@@ -14,7 +14,7 @@ interface InitializeProps {
 }
 
 interface InitializeDepthProps extends InitializeProps {
-	vertexPositionData: Vector3[];
+	mesh: Vector3[][];
 }
 
 const mapUniformSettingsToLocations = (settings: UniformSetting[], gl: WebGLRenderingContext, program: WebGLProgram, useFrameBuffer: boolean): Record<string, WebGLUniformLocation> => {
@@ -77,12 +77,13 @@ export const useInitializeGL = ({canvasRef, fragmentSource, vertexSource, unifor
 	};
 };
 
-export const useInitializeDepthGL = ({canvasRef, fragmentSource, vertexSource, uniforms, targetWidth, targetHeight, vertexPositionData, useFrameBuffer = false}: InitializeDepthProps) => {
+export const useInitializeDepthGL = ({canvasRef, fragmentSource, vertexSource, uniforms, targetWidth, targetHeight, mesh, useFrameBuffer = false}: InitializeDepthProps) => {
 	const gl = React.useRef<WebGLRenderingContext>();
 	const program = React.useRef<WebGLProgram>();
 	const attributeLocations = React.useRef<Record<string, number>>();
 	const uniformLocations = React.useRef<Record<string, WebGLUniformLocation>>();
-	const vertexBuffer = React.useRef<any>();
+	const vertexPositionBuffer = React.useRef<any>();
+	const vertexNormalBuffer = React.useRef<any>();
 	const FBOA = React.useRef<FBO>();
 	const FBOB = React.useRef<FBO>();
 
@@ -99,7 +100,7 @@ export const useInitializeDepthGL = ({canvasRef, fragmentSource, vertexSource, u
 
 		const tempProgram: WebGLProgram = initShaderProgram(tempGl, vertexSource, fragmentSource);
 		tempGl.useProgram(tempProgram);
-		const {bufferData, vertexPosition} = initMesh(tempGl, tempProgram, vertexPositionData);
+		const {positionBufferData, normalBufferData, vertexPosition} = initMesh(tempGl, tempProgram, mesh);
 		attributeLocations.current = {vertexPosition};
 
 		uniformLocations.current = {
@@ -115,7 +116,8 @@ export const useInitializeDepthGL = ({canvasRef, fragmentSource, vertexSource, u
 
 		gl.current = tempGl;
 		program.current = tempProgram;
-		vertexBuffer.current = bufferData;
+		vertexPositionBuffer.current = positionBufferData;
+		vertexNormalBuffer.current = normalBufferData;
 	}, [canvasRef.current]);
 
 	return {
@@ -123,7 +125,8 @@ export const useInitializeDepthGL = ({canvasRef, fragmentSource, vertexSource, u
 		program,
 		attributeLocations,
 		uniformLocations,
-		vertexBuffer,
+		vertexPositionBuffer,
+		vertexNormalBuffer,
 		FBOA,
 		FBOB
 	};

@@ -24,67 +24,115 @@ const BASE_MESH_UNIFORMS: UniformSetting[] = [
 		readonly: true,
 		type: UNIFORM_TYPE.FLOAT_1,
 		value: 0
+	},
+	{
+		defaultValue: 0,
+		name: 'uMaterialType',
+		isBool: false,
+		readonly: false,
+		type: UNIFORM_TYPE.INT_1,
+		value: 0
+	},
+	{
+		defaultValue: {x: 1.0, y: 1.0, z: 1.0},
+		name: 'uLightPositionA',
+		readonly: false,
+		type: UNIFORM_TYPE.VEC_3,
+		value: {x: 1.0, y: 1.0, z: 1.0}
+	},
+	{
+		defaultValue: {x: 0.3, y: 0.0, z: 0.6},
+		name: 'uLightColorB',
+		readonly: false,
+		type: UNIFORM_TYPE.VEC_3,
+		value: {x: 0.3, y: 0.0, z: 0.6}
+	},
+	{
+		defaultValue: {x: -1.0, y: -1.0, z: 1.0},
+		name: 'uLightPositionB',
+		readonly: false,
+		type: UNIFORM_TYPE.VEC_3,
+		value: {x: -1.0, y: -1.0, z: 1.0}
+	},
+	{
+		defaultValue: {x: 0.0, y: 0.0, z: 1.0},
+		name: 'uLightColorA',
+		readonly: false,
+		type: UNIFORM_TYPE.VEC_3,
+		value: {x: 0.0, y: 0.0, z: 1.0}
 	}
 ];
 
-const CUBE_VERTEX_POSITIONS: Vector3[] = [
-	// Face 1
-	// Triangle 1
-	{x: -1, y: -1, z: -1},
-	{x: -1, y: -1, z: 1},
-	{x: -1, y: 1, z: 1},
-	// Triangle 2
-	{x: -1, y: -1, z: -1},
-	{x: -1, y: 1, z: 1},
-	{x: -1, y: 1, z: -1},
-	// Face 2
-	// Triangle 1
-	{x: 1, y: 1, z: -1},
-	{x: -1, y: -1, z: -1},
-	{x: -1, y: 1, z: -1},
-	// Triangle 2
-	{x: 1, y: 1, z: -1},
-	{x: 1, y: -1, z: -1},
-	{x: -1, y: -1, z: -1},
-	// Face 3
-	// Triangle 1
-	{x: 1, y: -1, z: 1},
-	{x: -1, y: -1, z: -1},
-	{x: 1, y: -1, z: -1},
-	// Triangle 2
-	{x: 1, y: -1, z: 1},
-	{x: -1, y: -1, z: 1},
-	{x: -1, y: -1, z: -1},
-	// Face 4
-	// Triangle 1
-	{x: 1, y: 1, z: 1},
-	{x: 1, y: -1, z: -1},
-	{x: 1, y: 1, z: -1},
-	// Triangle 2
-	{x: 1, y: -1, z: -1},
-	{x: 1, y: 1, z: 1},
-	{x: 1, y: -1, z: 1},
-	// Face 5
-	// Triangle 1
-	{x: 1, y: 1, z: 1},
-	{x: 1, y: 1, z: -1},
-	{x: -1, y: 1, z: -1},
-	// Triangle 2
-	{x: 1, y: 1, z: 1},
-	{x: -1, y: 1, z: -1},
-	{x: -1, y: 1, z: 1},
-	// Face 6
-	// Triangle 1
-	{x: -1, y: 1, z: 1},
-	{x: -1, y: -1, z: 1},
-	{x: 1, y: -1, z: 1},
-	// Triangle 2
-	{x: 1, y: 1, z: 1},
-	{x: -1, y: 1, z: 1},
-	{x: 1, y: -1, z: 1}
+const CUBE_MESH: Vector3[][] = [
+	// Side 1
+	[
+		{x: -1, y: -1, z: -1},
+		{x: -1, y: -1, z: 1},
+		{x: -1, y: 1, z: 1}
+	],
+	[
+		{x: -1, y: -1, z: -1},
+		{x: -1, y: 1, z: 1},
+		{x: -1, y: 1, z: -1}
+	],
+	// Side 2
+	[
+		{x: 1, y: 1, z: -1},
+		{x: -1, y: -1, z: -1},
+		{x: -1, y: 1, z: -1}
+	],
+	[
+		{x: 1, y: 1, z: -1},
+		{x: 1, y: -1, z: -1},
+		{x: -1, y: -1, z: -1}
+	],
+	// Side 3
+	[
+		{x: 1, y: -1, z: 1},
+		{x: -1, y: -1, z: -1},
+		{x: 1, y: -1, z: -1}
+	],
+	[
+		{x: 1, y: -1, z: 1},
+		{x: -1, y: -1, z: 1},
+		{x: -1, y: -1, z: -1}
+	],
+	// Side 4
+	[
+		{x: 1, y: 1, z: 1},
+		{x: 1, y: -1, z: -1},
+		{x: 1, y: 1, z: -1}
+	],
+	[
+		{x: 1, y: -1, z: -1},
+		{x: 1, y: 1, z: 1},
+		{x: 1, y: -1, z: 1}
+	],
+	// Side 5
+	[
+		{x: 1, y: 1, z: 1},
+		{x: 1, y: 1, z: -1},
+		{x: -1, y: 1, z: -1}
+	],
+	[
+		{x: 1, y: 1, z: 1},
+		{x: -1, y: 1, z: -1},
+		{x: -1, y: 1, z: 1}
+	],
+	// Side 6
+	[
+		{x: -1, y: 1, z: 1},
+		{x: -1, y: -1, z: 1},
+		{x: 1, y: -1, z: 1}
+	],
+	[
+		{x: 1, y: 1, z: 1},
+		{x: -1, y: 1, z: 1},
+		{x: 1, y: -1, z: 1}
+	]
 ];
 
-const CUBE_ROTATION_DELTA: Vector3 = {x: 0.001, y: 0.01, z: 0};
+const CUBE_ROTATION_DELTA: Vector3 = {x: 0.0025, y: 0.01, z: 0};
 
 const DepthPage = ({isActive}: Props) => {
 	const meshUniforms = React.useRef<UniformSetting[]>(BASE_MESH_UNIFORMS);
@@ -104,7 +152,7 @@ const DepthPage = ({isActive}: Props) => {
 					vertexShader={depthVertexShader}
 					uniforms={meshUniforms}
 					setAttributes={setAttributes}
-					vertexPositions={CUBE_VERTEX_POSITIONS}
+					mesh={CUBE_MESH}
 					rotationDelta={CUBE_ROTATION_DELTA}
 				/>
 				<ShaderText fragmentShader={depthFragmentShader} vertexShader={depthVertexShader} />

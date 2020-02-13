@@ -1,6 +1,6 @@
 import {Buffer, Buffers, GLSLColors, FBO, GLContext, LightSettings, LoadedMesh, Material, Matrix, Transformation, Vector3} from '../../types';
 
-import {degreesToRadians} from './helpers';
+import {degreesToRadians, normalizeVector, subtractVectors, crossVectors} from './helpers';
 import {createMat4, applyPerspective, lookAt} from './matrix';
 
 import {MAX_SUPPORTED_MATERIAL_TEXTURES} from './defaults';
@@ -282,19 +282,54 @@ export const initBaseMesh = (gl: WebGLRenderingContext, program: WebGLProgram) =
 	};
 };
 
-export const initMesh = (gl: WebGLRenderingContext, program: WebGLProgram, positionData: Vector3[]) => {
-	const data: number[] = positionData.map((coordinate: Vector3) => Object.values(coordinate)).flat();
+const computeFaceNormal = (face: Vector3[]): Vector3 => {
+	const [a, b, c] = face;
+	const cb: Vector3 = subtractVectors(c, b);
+	const ab: Vector3 = subtractVectors(a, b);
+	const cross: Vector3 = crossVectors(cb, ab);
+	/* We need to use === on -0 here because the recommended Object.is
+      is not supported on IE. */
+	if (cross.x === -0) cross.x = 0; // eslint-disable-line no-compare-neg-zero
+	if (cross.y === -0) cross.y = 0; // eslint-disable-line no-compare-neg-zero
+	if (cross.z === -0) cross.z = 0; // eslint-disable-line no-compare-neg-zero
+	return normalizeVector(cross);
+};
+
+const computeFaceNormals = (mesh: Vector3[][]): number[] =>
+	mesh.reduce((result, face) => {
+		const normal: Vector3 = computeFaceNormal(face);
+		result = result.concat([normal.x, normal.y, normal.z, normal.x, normal.y, normal.z, normal.x, normal.y, normal.z]);
+		return result;
+	}, [] as number[]);
+
+export const initMesh = (gl: WebGLRenderingContext, program: WebGLProgram, mesh: Vector3[][]) => {
+	const vertices = mesh.flat();
+	const positions: number[] = vertices.map((coordinate: Vector3) => Object.values(coordinate)).flat();
+	const normals = computeFaceNormals(mesh);
+
 	buildBuffer({
 		gl,
 		type: gl.ARRAY_BUFFER,
-		data,
+		data: positions,
 		itemSize: 3
 	});
 	const vertexPosition = gl.getAttribLocation(program, 'aVertexPosition');
-	gl.enableVertexAttribArray(vertexPosition);
 	gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
+	gl.enableVertexAttribArray(vertexPosition);
+
+	buildBuffer({
+		gl,
+		type: gl.ARRAY_BUFFER,
+		data: normals,
+		itemSize: 3
+	});
+	const vertexNormal = gl.getAttribLocation(program, 'aVertexNormal');
+	gl.vertexAttribPointer(vertexNormal, 3, gl.FLOAT, false, 0, 0);
+	gl.enableVertexAttribArray(vertexNormal);
+
 	return {
-		bufferData: data,
+		positionBufferData: positions,
+		normalBufferData: normals,
 		vertexPosition
 	};
 };
