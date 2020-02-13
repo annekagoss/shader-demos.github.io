@@ -8,7 +8,7 @@ import depthFragmentShader from '../../../lib/gl/shaders/depth.frag';
 import baseVertexShader from '../../../lib/gl/shaders/base.vert';
 import depthVertexShader from '../../../lib/gl/shaders/depth.vert';
 import {BASE_UNIFORMS} from '../../utils/general';
-import {UNIFORM_TYPE, Vector2, UniformSetting} from '../../../types';
+import {UNIFORM_TYPE, Vector2, UniformSetting, Vector3} from '../../../types';
 
 import styles from './DepthPage.module.scss';
 
@@ -27,9 +27,71 @@ const BASE_MESH_UNIFORMS: UniformSetting[] = [
 	}
 ];
 
+const CUBE_VERTEX_POSITIONS: Vector3[] = [
+	// Face 1
+	// Triangle 1
+	{x: -1, y: -1, z: -1},
+	{x: -1, y: -1, z: 1},
+	{x: -1, y: 1, z: 1},
+	// Triangle 2
+	{x: -1, y: -1, z: -1},
+	{x: -1, y: 1, z: 1},
+	{x: -1, y: 1, z: -1},
+	// Face 2
+	// Triangle 1
+	{x: 1, y: 1, z: -1},
+	{x: -1, y: -1, z: -1},
+	{x: -1, y: 1, z: -1},
+	// Triangle 2
+	{x: 1, y: 1, z: -1},
+	{x: 1, y: -1, z: -1},
+	{x: -1, y: -1, z: -1},
+	// Face 3
+	// Triangle 1
+	{x: 1, y: -1, z: 1},
+	{x: -1, y: -1, z: -1},
+	{x: 1, y: -1, z: -1},
+	// Triangle 2
+	{x: 1, y: -1, z: 1},
+	{x: -1, y: -1, z: 1},
+	{x: -1, y: -1, z: -1},
+	// Face 4
+	// Triangle 1
+	{x: 1, y: 1, z: 1},
+	{x: 1, y: -1, z: -1},
+	{x: 1, y: 1, z: -1},
+	// Triangle 2
+	{x: 1, y: -1, z: -1},
+	{x: 1, y: 1, z: 1},
+	{x: 1, y: -1, z: 1},
+	// Face 5
+	// Triangle 1
+	{x: 1, y: 1, z: 1},
+	{x: 1, y: 1, z: -1},
+	{x: -1, y: 1, z: -1},
+	// Triangle 2
+	{x: 1, y: 1, z: 1},
+	{x: -1, y: 1, z: -1},
+	{x: -1, y: 1, z: 1},
+	// Face 6
+	// Triangle 1
+	{x: -1, y: 1, z: 1},
+	{x: -1, y: -1, z: 1},
+	{x: 1, y: -1, z: 1},
+	// Triangle 2
+	{x: 1, y: 1, z: 1},
+	{x: -1, y: 1, z: 1},
+	{x: 1, y: -1, z: 1}
+];
+
+const CUBE_ROTATION_DELTA: Vector3 = {x: 0.001, y: 0.01, z: 0};
+
 const DepthPage = ({isActive}: Props) => {
 	const meshUniforms = React.useRef<UniformSetting[]>(BASE_MESH_UNIFORMS);
-	const pageMousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: 0.5, y: 0.5});
+	const pageMousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({
+		x: 0.5,
+		y: 0.5
+	});
 	const [attributes, setAttributes] = React.useState<any[]>([]);
 
 	if (!isActive) return <></>;
@@ -37,7 +99,14 @@ const DepthPage = ({isActive}: Props) => {
 	return (
 		<div className={styles.page}>
 			<Section title='2.0: Mesh' notes={``}>
-				<DepthCanvas fragmentShader={depthFragmentShader} vertexShader={depthVertexShader} uniforms={meshUniforms} setAttributes={setAttributes} />
+				<DepthCanvas
+					fragmentShader={depthFragmentShader}
+					vertexShader={depthVertexShader}
+					uniforms={meshUniforms}
+					setAttributes={setAttributes}
+					vertexPositions={CUBE_VERTEX_POSITIONS}
+					rotationDelta={CUBE_ROTATION_DELTA}
+				/>
 				<ShaderText fragmentShader={depthFragmentShader} vertexShader={depthVertexShader} />
 				<Inputs attributes={attributes} uniforms={meshUniforms} pageMousePosRef={pageMousePosRef} />
 			</Section>

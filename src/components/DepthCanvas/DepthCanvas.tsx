@@ -3,8 +3,8 @@ import {UniformSetting, Vector2, UNIFORM_TYPE, Matrix, Vector3} from '../../../t
 import {useInitializeDepthGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
 import styles from './DepthCanvas.module.scss';
-import {applyPerspective, createMat4, lookAt} from '../../../lib/gl/matrix';
-import {degreesToRadians} from '../../../lib/gl/helpers';
+import {applyPerspective, applyRotation, createMat4, lookAt} from '../../../lib/gl/matrix';
+import {degreesToRadians, addVectors} from '../../../lib/gl/helpers';
 
 interface Props {
 	fragmentShader: string;
@@ -12,6 +12,8 @@ interface Props {
 	uniforms: React.MutableRefObject<UniformSetting[]>;
 	setAttributes: (attributes: any[]) => void;
 	pageMousePosRef?: React.MutableRefObject<Vector2>;
+	vertexPositions: Vector3[];
+	rotationDelta: Vector3;
 }
 
 interface RenderProps {
@@ -21,6 +23,8 @@ interface RenderProps {
 	time: number;
 	mousePos: Vector2;
 	canvasSize: Vector2;
+	numVertices: number;
+	rotation: Vector3;
 }
 
 const assignProjectionMatrix = (gl: WebGLRenderingContext, uniformLocations: Record<string, WebGLUniformLocation>, canvasSize: Vector2) => {
@@ -40,9 +44,9 @@ const assignProjectionMatrix = (gl: WebGLRenderingContext, uniformLocations: Rec
 	gl.uniformMatrix4fv(uniformLocations.uProjectionMatrix, false, projectionMatrix);
 };
 
-const render = ({gl, uniformLocations, uniforms, time, mousePos, canvasSize}: RenderProps) => {
+const render = ({gl, uniformLocations, uniforms, time, mousePos, canvasSize, numVertices, rotation}: RenderProps) => {
 	assignProjectionMatrix(gl, uniformLocations, canvasSize);
-	gl.uniformMatrix4fv(uniformLocations.uModelViewMatrix, false, createMat4());
+	gl.uniformMatrix4fv(uniformLocations.uModelViewMatrix, false, applyRotation(createMat4().slice(), rotation));
 
 	uniforms.forEach((uniform: UniformSetting) => {
 		switch (uniform.type) {
@@ -68,27 +72,18 @@ const render = ({gl, uniformLocations, uniforms, time, mousePos, canvasSize}: Re
 				break;
 		}
 	});
-	gl.drawArrays(gl.TRIANGLE_STRIP, 0, VERTEX_POSITIONS.length);
+	gl.drawArrays(gl.TRIANGLES, 0, numVertices);
 };
 
-const VERTEX_POSITIONS: Vector3[] = [
-	{x: -1, y: -1, z: 0},
-	{x: 1, y: -1, z: 0},
-	{x: -1, y: 1, z: 0},
-	{x: 1, y: 1, z: 0},
-	{x: -1, y: -1, z: -1},
-	{x: 1, y: -1, z: -1},
-	{x: -1, y: 1, z: -1},
-	{x: 1, y: 1, z: -1}
-];
-
-const DepthCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef}: Props) => {
+const DepthCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef, vertexPositions, rotationDelta}: Props) => {
 	const canvasSize: Vector2 = uniforms.current[0].value;
-	const targetWidth = Math.round(canvasSize.x * window.devicePixelRatio);
-	const targetHeight = Math.round(canvasSize.y * window.devicePixelRatio);
+	const targetWidth: number = Math.round(canvasSize.x * window.devicePixelRatio);
+	const targetHeight: number = Math.round(canvasSize.y * window.devicePixelRatio);
+	const numVertices: number = vertexPositions.length;
 	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
 	const mouseDownRef: React.MutableRefObject<boolean> = React.useRef<boolean>(false);
 	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: targetWidth * 0.5, y: targetHeight * -0.5});
+	const rotationRef: React.MutableRefObject<Vector3> = React.useRef<Vector3>({x: 0, y: 0, z: 0});
 
 	const {gl, uniformLocations, vertexBuffer} = useInitializeDepthGL({
 		canvasRef,
@@ -97,7 +92,7 @@ const DepthCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pag
 		uniforms: uniforms.current,
 		targetWidth,
 		targetHeight,
-		vertexPositionData: VERTEX_POSITIONS
+		vertexPositionData: vertexPositions
 	});
 
 	React.useEffect(() => {
@@ -105,13 +100,16 @@ const DepthCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pag
 	}, []);
 
 	useAnimationFrame((time: number) => {
+		rotationRef.current = addVectors(rotationRef.current, rotationDelta);
 		render({
 			gl: gl.current,
 			uniformLocations: uniformLocations.current,
 			uniforms: uniforms.current,
 			time,
 			mousePos: mousePosRef.current,
-			canvasSize
+			canvasSize,
+			numVertices,
+			rotation: rotationRef.current
 		});
 	});
 
