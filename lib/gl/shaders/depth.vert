@@ -2,6 +2,7 @@ precision mediump float;
 
 attribute vec4 aVertexPosition;
 attribute vec3 aVertexNormal;
+attribute vec3 aBarycentric;
 
 uniform mat4 uProjectionMatrix;
 uniform mat4 uModelViewMatrix;
@@ -11,6 +12,7 @@ uniform vec3 uLightColorA;
 uniform vec3 uLightColorB;
 
 varying vec3 vLighting;
+varying vec3 vBarycentric;
 
 vec3 calculateLighting() {
 	vec4 normal = uModelViewMatrix * vec4(aVertexNormal, 1.);
@@ -22,4 +24,5 @@ vec3 calculateLighting() {
 void main() {
 	gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
 	vLighting = calculateLighting();
+	vBarycentric = aBarycentric;
 }

@@ -80,7 +80,6 @@ export const useInitializeGL = ({canvasRef, fragmentSource, vertexSource, unifor
 export const useInitializeDepthGL = ({canvasRef, fragmentSource, vertexSource, uniforms, targetWidth, targetHeight, mesh, useFrameBuffer = false}: InitializeDepthProps) => {
 	const gl = React.useRef<WebGLRenderingContext>();
 	const program = React.useRef<WebGLProgram>();
-	const attributeLocations = React.useRef<Record<string, number>>();
 	const uniformLocations = React.useRef<Record<string, WebGLUniformLocation>>();
 	const vertexPositionBuffer = React.useRef<any>();
 	const vertexNormalBuffer = React.useRef<any>();
@@ -97,11 +96,11 @@ export const useInitializeDepthGL = ({canvasRef, fragmentSource, vertexSource, u
 		tempGl.depthFunc(tempGl.LEQUAL);
 		tempGl.clear(tempGl.COLOR_BUFFER_BIT | tempGl.DEPTH_BUFFER_BIT);
 		tempGl.viewport(0, 0, targetWidth, targetHeight);
+		tempGl.enable(tempGl.SAMPLE_ALPHA_TO_COVERAGE);
 
 		const tempProgram: WebGLProgram = initShaderProgram(tempGl, vertexSource, fragmentSource);
 		tempGl.useProgram(tempProgram);
-		const {positionBufferData, normalBufferData, vertexPosition} = initMesh(tempGl, tempProgram, mesh);
-		attributeLocations.current = {vertexPosition};
+		const {positionBufferData, normalBufferData} = initMesh(tempGl, tempProgram, mesh, true);
 
 		uniformLocations.current = {
 			...mapUniformSettingsToLocations(uniforms, tempGl, tempProgram, useFrameBuffer),
@@ -123,7 +122,6 @@ export const useInitializeDepthGL = ({canvasRef, fragmentSource, vertexSource, u
 	return {
 		gl,
 		program,
-		attributeLocations,
 		uniformLocations,
 		vertexPositionBuffer,
 		vertexNormalBuffer,

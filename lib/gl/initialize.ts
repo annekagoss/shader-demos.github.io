@@ -302,10 +302,21 @@ const computeFaceNormals = (mesh: Vector3[][]): number[] =>
 		return result;
 	}, [] as number[]);
 
-export const initMesh = (gl: WebGLRenderingContext, program: WebGLProgram, mesh: Vector3[][]) => {
+const computeBarycentricCoords = (numFaces: number): number[] => {
+	const coords: number[] = [];
+	for (let i = 0; i < numFaces; i++) {
+		if (i % 2 === 0) {
+			coords.push(0, 0, 1, 0, 1, 0, 1, 0, 0);
+		} else {
+			coords.push(0, 1, 0, 0, 0, 1, 1, 0, 0);
+		}
+	}
+	return coords;
+};
+
+export const initMesh = (gl: WebGLRenderingContext, program: WebGLProgram, mesh: Vector3[][], useBarycentric: bool) => {
 	const vertices = mesh.flat();
 	const positions: number[] = vertices.map((coordinate: Vector3) => Object.values(coordinate)).flat();
-	const normals = computeFaceNormals(mesh);
 
 	buildBuffer({
 		gl,
@@ -317,6 +328,7 @@ export const initMesh = (gl: WebGLRenderingContext, program: WebGLProgram, mesh:
 	gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
 	gl.enableVertexAttribArray(vertexPosition);
 
+	const normals = computeFaceNormals(mesh);
 	buildBuffer({
 		gl,
 		type: gl.ARRAY_BUFFER,
@@ -327,9 +339,21 @@ export const initMesh = (gl: WebGLRenderingContext, program: WebGLProgram, mesh:
 	gl.vertexAttribPointer(vertexNormal, 3, gl.FLOAT, false, 0, 0);
 	gl.enableVertexAttribArray(vertexNormal);
 
+	if (useBarycentric) {
+		const barycentric = computeBarycentricCoords(mesh.length);
+		buildBuffer({
+			gl,
+			type: gl.ARRAY_BUFFER,
+			data: barycentric,
+			itemSize: 3
+		});
+		const barycentricLocation = gl.getAttribLocation(program, 'aBarycentric');
+		gl.vertexAttribPointer(barycentricLocation, 3, gl.FLOAT, false, 0, 0);
+		gl.enableVertexAttribArray(barycentricLocation);
+	}
+
 	return {
 		positionBufferData: positions,
-		normalBufferData: normals,
-		vertexPosition
+		normalBufferData: normals
 	};
 };
