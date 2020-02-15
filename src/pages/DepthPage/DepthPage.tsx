@@ -4,9 +4,9 @@ import BaseCanvas from '../../components/BaseCanvas/BaseCanvas';
 import DepthCanvas from '../../components/DepthCanvas/DepthCanvas';
 import ShaderText from '../../components/ShaderText/ShaderText';
 import Inputs from '../../components/Inputs/Inputs';
-import depthFragmentShader from '../../../lib/gl/shaders/depth.frag';
+import meshFragmentShader from '../../../lib/gl/shaders/mesh.frag';
 import baseVertexShader from '../../../lib/gl/shaders/base.vert';
-import depthVertexShader from '../../../lib/gl/shaders/depth.vert';
+import meshVertexShader from '../../../lib/gl/shaders/mesh.vert';
 import {BASE_UNIFORMS} from '../../utils/general';
 import {UNIFORM_TYPE, Vector2, UniformSetting, Vector3} from '../../../types';
 
@@ -148,14 +148,14 @@ const DepthPage = ({isActive}: Props) => {
 		<div className={styles.page}>
 			<Section title='2.0: Mesh' notes={``}>
 				<DepthCanvas
-					fragmentShader={depthFragmentShader}
-					vertexShader={depthVertexShader}
+					fragmentShader={meshFragmentShader}
+					vertexShader={meshVertexShader}
 					uniforms={meshUniforms}
 					setAttributes={setAttributes}
 					mesh={CUBE_MESH}
 					rotationDelta={CUBE_ROTATION_DELTA}
 				/>
-				<ShaderText fragmentShader={depthFragmentShader} vertexShader={depthVertexShader} />
+				<ShaderText fragmentShader={meshFragmentShader} vertexShader={meshVertexShader} />
 				<Inputs attributes={attributes} uniforms={meshUniforms} pageMousePosRef={pageMousePosRef} />
 			</Section>
 		</div>
