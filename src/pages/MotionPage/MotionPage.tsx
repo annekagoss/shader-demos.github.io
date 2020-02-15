@@ -14,7 +14,7 @@ import noiseFragmentShader from '../../../lib/gl/shaders/noise.frag';
 import feedbackFragmentShader from '../../../lib/gl/shaders/feedback.frag';
 import FeedbackCanvas from '../../components/FeedbackCanvas/FeedbackCanvas';
 
-import styles from './MovementPage.module.scss';
+import styles from './MotionPage.module.scss';
 
 const BASE_TRANSLATION_UNIFORMS: UniformSetting[] = [
 	...BASE_UNIFORMS,
@@ -181,7 +181,7 @@ interface Props {
 	isActive: boolean;
 }
 
-const MovementPage = ({isActive}: Props) => {
+const MotionPage = ({isActive}: Props) => {
 	const translationUniforms = React.useRef<UniformSetting[]>(BASE_TRANSLATION_UNIFORMS);
 	const scaleUniforms = React.useRef<UniformSetting[]>(BASE_SCALE_UNIFORMS);
 	const rotationUniforms = React.useRef<UniformSetting[]>(BASE_ROTATION_UNIFORMS);
@@ -195,12 +195,14 @@ const MovementPage = ({isActive}: Props) => {
 
 	return (
 		<div className={styles.page}>
-			{/* <Section title='1.0: Translation' notes={`To change the position of a shape in a shader, you actually change the coordinate system itself.  In this example we move the screen space around in a circle, and then draw the square inside it.  If there are multiple shapes that are moving independantly would each have their own unique coordinate system.`}>
+			<Section
+				title='1.0: Translation'
+				notes={`To change the position of a shape in a shader, you actually change the coordinate system itself.  In this example we move the screen space around in a circle, and then draw the square inside it.  If there are multiple shapes that are moving independantly would each have their own unique coordinate system.`}>
 				<BaseCanvas fragmentShader={translationFragmentShader} vertexShader={baseVertexShader} uniforms={translationUniforms} setAttributes={setAttributes} pageMousePosRef={pageMousePosRef} />
 				<ShaderText fragmentShader={translationFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={translationUniforms} pageMousePosRef={pageMousePosRef} />
-			</Section> */}
-			{/* <Section
+			</Section>
+			<Section
 				title='1.1: Scale'
 				notes={`GLSL's native support for matrices allows us to apply complex spatial transformations efficiently. Scaling is probably the simplest of these transformations.  Notice that we need to normalize and then re-center the coordinate system before and after applying the matrix.`}>
 				<BaseCanvas fragmentShader={scaleFragmentShader} vertexShader={baseVertexShader} uniforms={scaleUniforms} setAttributes={setAttributes} />
@@ -225,7 +227,7 @@ const MovementPage = ({isActive}: Props) => {
 				<BaseCanvas fragmentShader={noiseFragmentShader} vertexShader={baseVertexShader} uniforms={noiseUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={noiseFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={noiseUniforms} />
-			</Section> */}
+			</Section>
 			<Section
 				title='1.5: Feedback'
 				notes={`This shader takes in itself as in input to generate this tail. On each frame it recursively applies an offset and opacity to the frame before it.  To achieve this we need two offscreen frame buffers and target textures that are alternated each frame (called PingPonging.)`}>
@@ -237,4 +239,4 @@ const MovementPage = ({isActive}: Props) => {
 	);
 };
 
-export default MovementPage;
+export default MotionPage;

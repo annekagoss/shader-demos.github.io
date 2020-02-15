@@ -10,7 +10,7 @@ import Inputs from './Inputs/Inputs';
 import baseVertexShader from '../../lib/gl/shaders/base.vert';
 import {BASE_UNIFORMS} from '../utils/general';
 import ShapesPage from '../pages/ShapesPage/ShapesPage';
-import MovementPage from '../pages/MovementPage/MovementPage';
+import MotionPage from '../pages/MotionPage/MotionPage';
 import DepthPage from '../pages/DepthPage/DepthPage';
 import styles from './app.module.scss';
 
@@ -72,7 +72,7 @@ const App = () => {
 					onClick={() => {
 						setActivePageIndex(1);
 					}}>
-					1. Movement
+					1. Motion
 				</div>
 				<div
 					className={cx(styles.navItem, activePageIndex === 2 && styles.active)}
@@ -91,7 +91,7 @@ const App = () => {
 			</div>
 			<div className={styles.PagesContainer}>
 				<ShapesPage isActive={activePageIndex === 0} />
-				<MovementPage isActive={activePageIndex === 1} />
+				<MotionPage isActive={activePageIndex === 1} />
 				<DepthPage isActive={activePageIndex === 2} />
 			</div>
 		</div>
