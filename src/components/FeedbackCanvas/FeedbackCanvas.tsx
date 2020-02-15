@@ -3,6 +3,7 @@ import {UniformSetting, Vector2, UNIFORM_TYPE, FBO} from '../../../types';
 import {useInitializeGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
 import styles from './FeedbackCanvas.module.scss';
+import {useWindowSize} from '../../hooks/general';
 
 interface Props {
 	fragmentShader: string;
@@ -18,12 +19,14 @@ interface RenderProps {
 	uniforms: UniformSetting[];
 	time: number;
 	mousePos: Vector2;
-	FBOA: FBO;
-	FBOB: FBO;
+	FBOA: React.MutableRefObject<FBO>;
+	FBOB: React.MutableRefObject<FBO>;
 	pingPong: number;
+	width: number;
+	height: number;
 }
 
-const render = ({gl, uniformLocations, uniforms, time, mousePos, FBOA, FBOB, pingPong}: RenderProps) => {
+const render = ({gl, uniformLocations, uniforms, time, mousePos, FBOA, FBOB, pingPong, width, height}: RenderProps) => {
 	uniforms.forEach((uniform: UniformSetting) => {
 		switch (uniform.type) {
 			case UNIFORM_TYPE.FLOAT_1:
@@ -49,43 +52,51 @@ const render = ({gl, uniformLocations, uniforms, time, mousePos, FBOA, FBOB, pin
 		}
 	});
 
-	const buffer: WebGLFramebuffer = pingPong === 0 ? FBOA.buffer : FBOB.buffer;
-	const targetTexture: WebGLTexture = pingPong === 0 ? FBOA.targetTexture : FBOB.targetTexture;
+	const buffer: WebGLFramebuffer = pingPong === 0 ? FBOA.current.buffer : FBOB.current.buffer;
+	const targetTexture: WebGLTexture = pingPong === 0 ? FBOA.current.targetTexture : FBOB.current.targetTexture;
+
+	// console.log(FBOA.current.buffer, FBOB.current.buffer);
+
+	// gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+	// gl.bindTexture(gl.TEXTURE_2D, null);
 
 	// Draw to frame buffer
 	gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
-	gl.viewport(0, 0, 400, 400);
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
 	// Draw to canvas
 	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
 	gl.uniform1i(uniformLocations.frameBufferTexture0, 0);
 	gl.activeTexture(gl.TEXTURE0 + 0);
-	gl.bindTexture(gl.TEXTURE_2D, targetTexture);
 
+	gl.bindTexture(gl.TEXTURE_2D, targetTexture);
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 };
 
 const FeedbackCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef}: Props) => {
-	const targetWidth = Math.round(uniforms.current[0].value.x * window.devicePixelRatio);
-	const targetHeight = Math.round(uniforms.current[0].value.y * window.devicePixelRatio);
+	const targetWidthRef: React.MutableRefObject<number> = React.useRef<number>(uniforms.current[0].value.x * window.devicePixelRatio);
+	const targetHeightRef: React.MutableRefObject<number> = React.useRef<number>(uniforms.current[0].value.y * window.devicePixelRatio);
 	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
 	const mouseDownRef: React.MutableRefObject<boolean> = React.useRef<boolean>(false);
-	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: targetWidth * 0.5, y: targetHeight * -0.5});
+	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: targetWidthRef.current * 0.5, y: targetHeightRef.current * -0.5});
 
-	const {gl, uniformLocations, vertexBuffer, FBOA, FBOB} = useInitializeGL({
+	const {gl, program, uniformLocations, vertexBuffer, FBOA, FBOB} = useInitializeGL({
 		canvasRef,
 		fragmentSource: fragmentShader,
 		vertexSource: vertexShader,
 		uniforms: uniforms.current,
-		targetWidth,
-		targetHeight,
+		targetWidth: targetWidthRef.current,
+		targetHeight: targetHeightRef.current,
 		useFrameBuffer: true
 	});
+	console.log('render');
 
 	React.useEffect(() => {
 		setAttributes([{name: 'aVertexPosition', value: vertexBuffer.current.join(', ')}]);
 	}, []);
+
+	useWindowSize(canvasRef.current, gl.current, uniforms.current, targetWidthRef, targetHeightRef, FBOA, FBOB);
 
 	useAnimationFrame((time: number, pingPong: number) => {
 		render({
@@ -94,17 +105,19 @@ const FeedbackCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, 
 			uniforms: uniforms.current,
 			time,
 			mousePos: mousePosRef.current,
-			FBOA: FBOA.current,
-			FBOB: FBOB.current,
-			pingPong
+			FBOA,
+			FBOB,
+			pingPong,
+			width: targetWidthRef.current,
+			height: targetHeightRef.current
 		});
 	});
 
 	return (
 		<canvas
 			ref={canvasRef}
-			width={uniforms.current[0].value.x}
-			height={uniforms.current[0].value.y}
+			width={targetWidthRef.current}
+			height={targetHeightRef.current}
 			className={styles.canvas}
 			onMouseDown={() => {
 				mouseDownRef.current = true;

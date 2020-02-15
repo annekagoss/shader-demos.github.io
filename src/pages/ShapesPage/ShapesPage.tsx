@@ -157,31 +157,42 @@ const ShapesPage = ({isActive}: Props) => {
 				<Inputs uniforms={baseUniforms} attributes={attributes} />
 			</Section>
 
-			<Section title='0.1: Step' notes={` Step is one of the hardware accelerated functions that are native to GLSL. It returns either 1.0 or 0.0 based on whether a value has passed a given threshold.`}>
+			<Section
+				title='0.1: Step'
+				notes={` Step is one of the hardware accelerated functions that are native to GLSL. It returns either 1.0 or 0.0 based on whether a value has passed a given threshold.`}>
 				<BaseCanvas fragmentShader={stepFragmentShader} vertexShader={baseVertexShader} uniforms={stepUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={stepFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={stepUniforms} />
 			</Section>
 
-			<Section title='0.2: Line' notes={' Smoothstep is another hardware accelerated function.  It performs a smooth interpolation between 0 and 1 for a given value (in this case, y.)  Notice the anti-aliasing benefit smoothstep adds by toggling uSmooth on and off.'}>
+			<Section
+				title='0.2: Line'
+				notes={
+					' Smoothstep is another hardware accelerated function.  It performs a smooth interpolation between 0 and 1 for a given value (in this case, y.)  Notice the anti-aliasing benefit smoothstep adds by toggling uSmooth on and off.'
+				}>
 				<BaseCanvas fragmentShader={lineFragmentShader} vertexShader={baseVertexShader} uniforms={lineUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={lineFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={lineUniforms} />
 			</Section>
 
-			<Section title='0.3: Rectangle' notes={`Adding, subtracting, multiplying and dividing operations work exactly like blending modes in CSS or Photoshop.  Here we're using multiply  to combine the dark edges around the rectangle.`}>
+			<Section
+				title='0.3: Rectangle'
+				notes={`Adding, subtracting, multiplying and dividing operations work exactly like blending modes in CSS or Photoshop.  Here we're using multiply  to combine the dark edges around the rectangle.`}>
 				<BaseCanvas fragmentShader={rectangleFragmentShader} vertexShader={baseVertexShader} uniforms={rectUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={rectangleFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={rectUniforms} />
 			</Section>
 
-			<Section title='0.4: Circle' notes={`Distance is a very useful hardware accelerated function that return the distance between two points.  The points can be represented as two floats or two n-dimensional vectors.`}>
+			<Section
+				title='0.4: Circle'
+				notes={`Distance is a very useful hardware accelerated function that return the distance between two points.  The points can be represented as two floats or two n-dimensional vectors.`}>
 				<BaseCanvas fragmentShader={circleFragmentShader} vertexShader={baseVertexShader} uniforms={circleUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={circleFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={circleUniforms} />
 			</Section>
-
-			<Section title='0.5: Polygon' notes={`Signed Distance Functions are tricky, but very powerful.  They define a field of values based on each point's distance from a given boundary, where the sign determined whether the point is within the boundary.  Here we have a function that determines if a pixel is inside the boundaries of an n-sided polygon.`}>
+			<Section
+				title='0.5: Polygon'
+				notes={`Signed Distance Functions are tricky, but very powerful.  They define a field of values based on each point's distance from a given boundary, where the sign determined whether the point is within the boundary.  Here we have a function that determines if a pixel is inside the boundaries of an n-sided polygon.`}>
 				<BaseCanvas fragmentShader={polygonFragmentShader} vertexShader={baseVertexShader} uniforms={polygonUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={polygonFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={polygonUniforms} />

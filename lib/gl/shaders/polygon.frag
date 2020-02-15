@@ -11,6 +11,7 @@ uniform int uNumSides;
 
 float SDFPolygon(vec2 _st) {
 	_st = _st * 2. - 1.;
+	_st.x *= uResolution.x/uResolution.y;
 	float angle = atan(_st.x, _st.y) + PI;
 	float radius = TAU / float(uNumSides);
 	return cos(floor(.5+angle/radius)*radius-angle)*length(_st);

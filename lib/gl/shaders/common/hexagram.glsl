@@ -1,7 +1,8 @@
-float SDFHexagram(vec2 _st, float radius )
+float SDFHexagram(vec2 _st, float radius, vec2 resolution)
 {
-	_st -= .5;
-	_st.y *= -1.;
+	_st.x -= 0.5 * (resolution.x/resolution.y);
+	_st.y -= .5;
+	_st.y *= -1.;	
     const vec4 k = vec4(-0.5,0.8660254038,0.5773502692,1.7320508076);
     _st = abs(_st);
     _st -= 2.0*min(dot(k.xy,_st),0.0)*k.xy;

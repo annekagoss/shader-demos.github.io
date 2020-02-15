@@ -63,7 +63,7 @@ export const useInitializeGL = ({canvasRef, fragmentSource, vertexSource, unifor
 		gl.current = tempGl;
 		program.current = tempProgram;
 		vertexBuffer.current = bufferData;
-	}, [canvasRef.current]);
+	}, []);
 
 	return {
 		gl,
@@ -116,7 +116,7 @@ export const useInitializeDepthGL = ({canvasRef, fragmentSource, vertexSource, u
 		program.current = tempProgram;
 		vertexPositionBuffer.current = positionBufferData;
 		vertexNormalBuffer.current = normalBufferData;
-	}, [canvasRef.current]);
+	}, []);
 
 	return {
 		gl,

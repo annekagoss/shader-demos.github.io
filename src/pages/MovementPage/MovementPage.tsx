@@ -195,12 +195,14 @@ const MovementPage = ({isActive}: Props) => {
 
 	return (
 		<div className={styles.page}>
-			<Section title='1.0: Translation' notes={`To change the position of a shape in a shader, you actually change the coordinate system itself.  In this example we move the screen space around in a circle, and then draw the square inside it.  If there are multiple shapes that are moving independantly would each have their own unique coordinate system.`}>
+			{/* <Section title='1.0: Translation' notes={`To change the position of a shape in a shader, you actually change the coordinate system itself.  In this example we move the screen space around in a circle, and then draw the square inside it.  If there are multiple shapes that are moving independantly would each have their own unique coordinate system.`}>
 				<BaseCanvas fragmentShader={translationFragmentShader} vertexShader={baseVertexShader} uniforms={translationUniforms} setAttributes={setAttributes} pageMousePosRef={pageMousePosRef} />
 				<ShaderText fragmentShader={translationFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={translationUniforms} pageMousePosRef={pageMousePosRef} />
-			</Section>
-			<Section title='1.1: Scale' notes={`GLSL's native support for matrices allows us to apply complex spatial transformations efficiently. Scaling is probably the simplest of these transformations.  Notice that we need to normalize and then re-center the coordinate system before and after applying the matrix.`}>
+			</Section> */}
+			{/* <Section
+				title='1.1: Scale'
+				notes={`GLSL's native support for matrices allows us to apply complex spatial transformations efficiently. Scaling is probably the simplest of these transformations.  Notice that we need to normalize and then re-center the coordinate system before and after applying the matrix.`}>
 				<BaseCanvas fragmentShader={scaleFragmentShader} vertexShader={baseVertexShader} uniforms={scaleUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={scaleFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={scaleUniforms} />
@@ -210,17 +212,23 @@ const MovementPage = ({isActive}: Props) => {
 				<ShaderText fragmentShader={rotationFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={rotationUniforms} />
 			</Section>
-			<Section title='1.3: Signal' notes={`Like noise, signals can be a powerful tool for generating and animating graphics. If with think of the x-axis as the time domain we can draw signals by offsetting them in time instead of space.`}>
+			<Section
+				title='1.3: Signal'
+				notes={`Like noise, signals can be a powerful tool for generating and animating graphics. If with think of the x-axis as the time domain we can draw signals by offsetting them in time instead of space.`}>
 				<BaseCanvas fragmentShader={signalFragmentShader} vertexShader={baseVertexShader} uniforms={signalUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={signalFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={signalUniforms} />
 			</Section>
-			<Section title='1.4: Noise' notes={`Noise is a powerful tool to create organic effects.  This is an example of 3D Simplex Noise, where we animate the noise by mapping the 3rd dimension to time.`}>
+			<Section
+				title='1.4: Noise'
+				notes={`Noise is a powerful tool to create organic effects.  This is an example of 3D Simplex Noise, where we animate the noise by mapping the 3rd dimension to time.`}>
 				<BaseCanvas fragmentShader={noiseFragmentShader} vertexShader={baseVertexShader} uniforms={noiseUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={noiseFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={noiseUniforms} />
-			</Section>
-			<Section title='1.5: Feedback' notes={`This shader takes in itself as in input to generate this tail. On each frame it recursively applies an offset and opacity to the frame before it.  To achieve this we need two offscreen frame buffers and target textures that are alternated each frame (called PingPonging.)`}>
+			</Section> */}
+			<Section
+				title='1.5: Feedback'
+				notes={`This shader takes in itself as in input to generate this tail. On each frame it recursively applies an offset and opacity to the frame before it.  To achieve this we need two offscreen frame buffers and target textures that are alternated each frame (called PingPonging.)`}>
 				<FeedbackCanvas fragmentShader={feedbackFragmentShader} vertexShader={baseVertexShader} uniforms={feedbackUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={feedbackFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={feedbackUniforms} />

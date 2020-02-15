@@ -8,7 +8,10 @@ uniform vec2 uCenter;
 uniform int uSmooth;
 
 float circle(vec2 st) {
-	float dist = distance(st, uCenter);
+	st.x *= uResolution.x/uResolution.y;
+	vec2 proportionalCenter = uCenter;
+	proportionalCenter.x *= uResolution.x/uResolution.y;
+	float dist = distance(st, proportionalCenter);
 	if (uSmooth == 1) {
 		return smoothstep(dist - 0.005, dist, uRadius);
 	}

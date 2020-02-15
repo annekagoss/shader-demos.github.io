@@ -383,7 +383,10 @@ export const initFrameBufferObject = (gl: WebGLRenderingContext, textureWidth: n
 	const type: number = gl.UNSIGNED_BYTE;
 	const data: ArrayBufferView | null = null;
 
+	console.log('init', textureWidth, textureHeight);
+
 	const targetTexture: WebGLTexture = gl.createTexture();
+	gl.bindTexture(gl.TEXTURE_2D, null);
 	gl.bindTexture(gl.TEXTURE_2D, targetTexture);
 	gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureWidth, textureHeight, border, format, type, data);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);

@@ -2,6 +2,7 @@ import * as React from 'react';
 import {UniformSetting, Vector2, UNIFORM_TYPE} from '../../../types';
 import {useInitializeGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
+import {useWindowSize} from '../../hooks/general';
 import styles from './BaseCanvas.module.scss';
 
 interface Props {
@@ -49,24 +50,26 @@ const render = ({gl, uniformLocations, uniforms, time, mousePos}: RenderProps) =
 };
 
 const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef}: Props) => {
-	const targetWidth = Math.round(uniforms.current[0].value.x * window.devicePixelRatio);
-	const targetHeight = Math.round(uniforms.current[0].value.y * window.devicePixelRatio);
+	const targetWidthRef: React.MutableRefObject<number> = React.useRef<number>(uniforms.current[0].value.x * window.devicePixelRatio);
+	const targetHeightRef: React.MutableRefObject<number> = React.useRef<number>(uniforms.current[0].value.y * window.devicePixelRatio);
 	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
 	const mouseDownRef: React.MutableRefObject<boolean> = React.useRef<boolean>(false);
-	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: targetWidth * 0.5, y: targetHeight * -0.5});
+	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: targetWidthRef.current * 0.5, y: targetHeightRef.current * -0.5});
 
 	const {gl, uniformLocations, vertexBuffer} = useInitializeGL({
 		canvasRef,
 		fragmentSource: fragmentShader,
 		vertexSource: vertexShader,
 		uniforms: uniforms.current,
-		targetWidth,
-		targetHeight
+		targetWidth: targetWidthRef.current,
+		targetHeight: targetHeightRef.current
 	});
 
 	React.useEffect(() => {
 		setAttributes([{name: 'aVertexPosition', value: vertexBuffer.current.join(', ')}]);
 	}, []);
+
+	useWindowSize(canvasRef.current, gl.current, uniforms.current, targetWidthRef, targetHeightRef);
 
 	useAnimationFrame((time: number) => {
 		render({
@@ -81,8 +84,8 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, page
 	return (
 		<canvas
 			ref={canvasRef}
-			width={uniforms.current[0].value.x}
-			height={uniforms.current[0].value.y}
+			width={targetWidthRef.current}
+			height={targetHeightRef.current}
 			className={styles.canvas}
 			onMouseDown={() => {
 				mouseDownRef.current = true;

@@ -14,17 +14,22 @@ mat2 matRotate2d(float angle){
 }
 
 vec2 rotate(vec2 _st, float angle) {
-	_st -= vec2(.5);
+	vec2 rotationCenter = vec2(0.5);
+	rotationCenter.x *= uResolution.x/uResolution.y;
+	_st -= rotationCenter;
 	_st = matRotate2d(angle) * _st;
-	_st += vec2(.5);
+	_st += rotationCenter;
 	return _st;
 }
 
 void main() {
     vec2 st = gl_FragCoord.xy/uResolution;
+	st.x *= uResolution.x/uResolution.y;
+	
 	float speedMultiplier = -0.001 * uSpeed;
 	st = rotate(st, uTime*speedMultiplier);
-	float pentagon = abs(SDFHexagram(st, .15)) - .01;
+	
+	float pentagon = abs(SDFHexagram(st, .15, uResolution)) - .01;
 	float value = smoothstep(-0.0025, 0.0025, -pentagon);
 	gl_FragColor = vec4(vec3(value), 1.0);
 }

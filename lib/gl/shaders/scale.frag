@@ -30,7 +30,7 @@ void main() {
     vec2 st = gl_FragCoord.xy/uResolution;
 	float sineScalar = sin(TAU + (uTime * SPEED)) * .5 + .5;
 	st = scale(st, uMaxScale * sineScalar);
-	float pentagon = abs(SDFPentagon(st, .25)) - .01;
+	float pentagon = abs(SDFPentagon(st, .25, uResolution)) - .01;
 	float value = smoothstep(-0.0025, 0.0025, -pentagon);
 	gl_FragColor = vec4(vec3(value), 1.0);
 }

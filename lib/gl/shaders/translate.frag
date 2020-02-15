@@ -28,8 +28,8 @@ void main() {
     vec2 st = gl_FragCoord.xy/uResolution;
 	vec2 circleSt = translateInCircle(st);
 	vec2 mouseSt = translateWithMouse(st);
-	float rect = rectangle(circleSt, uRectDimensions);
-	float c = circle(mouseSt, vec2(.5), .25);
+	float rect = rectangle(circleSt, uRectDimensions, uResolution);
+	float c = circle(mouseSt, vec2(.5), .25, uResolution);
 	vec3 color = overlapShapes(rect, c);
 	gl_FragColor = vec4(color, 1.0);
 }

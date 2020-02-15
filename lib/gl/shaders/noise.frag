@@ -14,6 +14,7 @@ const float SPEED = 0.00025;
 
 void main() {
 	vec2 st = gl_FragCoord.xy/uResolution;
+	st.x *= uResolution.x/uResolution.y;
 	float value = fractalNoise(st, uTime*SPEED, uFractal, SCALE, uOctaves);
 	gl_FragColor = vec4(vec3(value), 1.0);
 }

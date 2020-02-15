@@ -1,5 +1,8 @@
-float circle(vec2 st, vec2 center, float radius) {
-	float dist = distance(st, center);
+float circle(vec2 st, vec2 center, float radius, vec2 resolution) {
+	st.x *= resolution.x/resolution.y;
+	vec2 proportionalCenter = center;
+	proportionalCenter.x *= resolution.x/resolution.y;
+	float dist = distance(st, proportionalCenter);
 	return smoothstep(dist - 0.0025, dist + 0.0025, radius);
 }
 

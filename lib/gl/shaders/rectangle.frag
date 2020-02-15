@@ -9,6 +9,6 @@ uniform vec2 uRectDimensions;
 
 void main() {
     vec2 st = gl_FragCoord.xy/uResolution;
-	float value = rectangle(st, uRectDimensions);
+	float value = rectangle(st, uRectDimensions, uResolution);
 	gl_FragColor = vec4(vec3(value), 1.0);
 }
