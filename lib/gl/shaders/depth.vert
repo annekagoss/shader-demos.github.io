@@ -13,6 +13,7 @@ uniform vec3 uLightColorB;
 
 varying vec3 vLighting;
 varying vec3 vBarycentric;
+varying vec3 vVertexPosition;
 
 vec3 calculateLighting() {
 	vec4 normal = uModelViewMatrix * vec4(aVertexNormal, 1.);
@@ -25,4 +26,5 @@ void main() {
 	gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
 	vLighting = calculateLighting();
 	vBarycentric = aBarycentric;
+	vVertexPosition = aVertexPosition.xyz * .5 + .5;
 }
