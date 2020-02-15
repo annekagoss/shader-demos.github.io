@@ -159,7 +159,7 @@ const DepthPage = ({isActive}: Props) => {
 				<ShaderText fragmentShader={meshFragmentShader} vertexShader={meshVertexShader} />
 				<Inputs attributes={attributes} uniforms={meshUniforms} pageMousePosRef={pageMousePosRef} />
 			</Section>
-			<Section title='2.1: File Loader' notes={``}>
+			{/* <Section title='2.1: File Loader' notes={``}>
 				<LoaderCanvas
 					fragmentShader={meshFragmentShader}
 					vertexShader={meshVertexShader}
@@ -170,7 +170,7 @@ const DepthPage = ({isActive}: Props) => {
 				/>
 				<ShaderText fragmentShader={meshFragmentShader} vertexShader={meshVertexShader} />
 				<Inputs attributes={attributes} uniforms={meshUniforms} pageMousePosRef={pageMousePosRef} />
-			</Section>
+			</Section> */}
 		</div>
 	);
 };

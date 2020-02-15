@@ -55,11 +55,6 @@ const render = ({gl, uniformLocations, uniforms, time, mousePos, FBOA, FBOB, pin
 	const buffer: WebGLFramebuffer = pingPong === 0 ? FBOA.current.buffer : FBOB.current.buffer;
 	const targetTexture: WebGLTexture = pingPong === 0 ? FBOA.current.targetTexture : FBOB.current.targetTexture;
 
-	// console.log(FBOA.current.buffer, FBOB.current.buffer);
-
-	// gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-	// gl.bindTexture(gl.TEXTURE_2D, null);
-
 	// Draw to frame buffer
 	gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -75,28 +70,37 @@ const render = ({gl, uniformLocations, uniforms, time, mousePos, FBOA, FBOB, pin
 };
 
 const FeedbackCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef}: Props) => {
-	const targetWidthRef: React.MutableRefObject<number> = React.useRef<number>(uniforms.current[0].value.x * window.devicePixelRatio);
-	const targetHeightRef: React.MutableRefObject<number> = React.useRef<number>(uniforms.current[0].value.y * window.devicePixelRatio);
 	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
+	const size: React.MutableRefObject<Vector2> = React.useRef<Vector2>({
+		x: uniforms.current[0].value.x * window.devicePixelRatio,
+		y: uniforms.current[0].value.y * window.devicePixelRatio
+	});
+	const gl = React.useRef<WebGLRenderingContext>();
+	const uniformLocations = React.useRef<Record<string, WebGLUniformLocation>>();
+	const vertexPositionBuffer = React.useRef([]);
 	const mouseDownRef: React.MutableRefObject<boolean> = React.useRef<boolean>(false);
-	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: targetWidthRef.current * 0.5, y: targetHeightRef.current * -0.5});
+	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: size.current.x * 0.5, y: size.current.y * -0.5});
+	const FBOA: React.MutableRefObject<FBO> = React.useRef();
+	const FBOB: React.MutableRefObject<FBO> = React.useRef();
 
-	const {gl, program, uniformLocations, vertexBuffer, FBOA, FBOB} = useInitializeGL({
+	useInitializeGL({
+		gl,
+		uniformLocations,
 		canvasRef,
+		vertexPositionBuffer,
 		fragmentSource: fragmentShader,
 		vertexSource: vertexShader,
 		uniforms: uniforms.current,
-		targetWidth: targetWidthRef.current,
-		targetHeight: targetHeightRef.current,
-		useFrameBuffer: true
+		size,
+		FBOA,
+		FBOB
 	});
-	console.log('render');
 
 	React.useEffect(() => {
-		setAttributes([{name: 'aVertexPosition', value: vertexBuffer.current.join(', ')}]);
+		setAttributes([{name: 'aVertexPosition', value: vertexPositionBuffer.current.join(', ')}]);
 	}, []);
 
-	useWindowSize(canvasRef.current, gl.current, uniforms.current, targetWidthRef, targetHeightRef, FBOA, FBOB);
+	useWindowSize(canvasRef.current, gl.current, uniforms.current, size);
 
 	useAnimationFrame((time: number, pingPong: number) => {
 		render({
@@ -108,16 +112,16 @@ const FeedbackCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, 
 			FBOA,
 			FBOB,
 			pingPong,
-			width: targetWidthRef.current,
-			height: targetHeightRef.current
+			width: size.current.x,
+			height: size.current.y
 		});
 	});
 
 	return (
 		<canvas
 			ref={canvasRef}
-			width={targetWidthRef.current}
-			height={targetHeightRef.current}
+			width={size.current.x}
+			height={size.current.y}
 			className={styles.canvas}
 			onMouseDown={() => {
 				mouseDownRef.current = true;

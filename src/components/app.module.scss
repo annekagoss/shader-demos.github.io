@@ -35,7 +35,16 @@ body {
 
 canvas {
 	border: solid 1px rgb(127, 127, 127);
+	width: 400px;
+	height: 400px;
 	max-height: 400px;
+	min-width: 400px;
+	min-height: 400px;
+
+	@media (max-width: 900px) {
+		width: auto;
+		height: auto;
+	}
 }
 
 input {

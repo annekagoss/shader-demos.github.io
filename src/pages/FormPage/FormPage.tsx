@@ -13,7 +13,7 @@ import lineFragmentShader from '../../../lib/gl/shaders/line.frag';
 import rectangleFragmentShader from '../../../lib/gl/shaders/rectangle.frag';
 import circleFragmentShader from '../../../lib/gl/shaders/circle.frag';
 import polygonFragmentShader from '../../../lib/gl/shaders/polygon.frag';
-import styles from './ShapesPage.module.scss';
+import styles from './FormPage.module.scss';
 
 const BASE_STEP_UNIFORMS: UniformSetting[] = [
 	...BASE_UNIFORMS,
@@ -133,7 +133,7 @@ interface Props {
 	isActive: boolean;
 }
 
-const ShapesPage = ({isActive}: Props) => {
+const FormPage = ({isActive}: Props) => {
 	const baseUniforms = React.useRef<UniformSetting[]>(BASE_UNIFORMS);
 	const stepUniforms = React.useRef<UniformSetting[]>(BASE_STEP_UNIFORMS);
 	const lineUniforms = React.useRef<UniformSetting[]>(BASE_LINE_UNIFORMS);
@@ -155,8 +155,7 @@ const ShapesPage = ({isActive}: Props) => {
 				<BaseCanvas fragmentShader={helloWorldFragmentShader} vertexShader={baseVertexShader} uniforms={stepUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={helloWorldFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs uniforms={baseUniforms} attributes={attributes} />
-			</Section>
-
+			</Section>{' '}
 			<Section
 				title='0.1: Step'
 				notes={` Step is one of the hardware accelerated functions that are native to GLSL. It returns either 1.0 or 0.0 based on whether a value has passed a given threshold.`}>
@@ -164,7 +163,6 @@ const ShapesPage = ({isActive}: Props) => {
 				<ShaderText fragmentShader={stepFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={stepUniforms} />
 			</Section>
-
 			<Section
 				title='0.2: Line'
 				notes={
@@ -174,7 +172,6 @@ const ShapesPage = ({isActive}: Props) => {
 				<ShaderText fragmentShader={lineFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={lineUniforms} />
 			</Section>
-
 			<Section
 				title='0.3: Rectangle'
 				notes={`Adding, subtracting, multiplying and dividing operations work exactly like blending modes in CSS or Photoshop.  Here we're using multiply  to combine the dark edges around the rectangle.`}>
@@ -182,7 +179,6 @@ const ShapesPage = ({isActive}: Props) => {
 				<ShaderText fragmentShader={rectangleFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={rectUniforms} />
 			</Section>
-
 			<Section
 				title='0.4: Circle'
 				notes={`Distance is a very useful hardware accelerated function that return the distance between two points.  The points can be represented as two floats or two n-dimensional vectors.`}>
@@ -201,4 +197,4 @@ const ShapesPage = ({isActive}: Props) => {
 	);
 };
 
-export default ShapesPage;
+export default FormPage;

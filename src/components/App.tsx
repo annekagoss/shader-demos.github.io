@@ -9,7 +9,7 @@ import ShaderText from './ShaderText/ShaderText';
 import Inputs from './Inputs/Inputs';
 import baseVertexShader from '../../lib/gl/shaders/base.vert';
 import {BASE_UNIFORMS} from '../utils/general';
-import ShapesPage from '../pages/ShapesPage/ShapesPage';
+import FormPage from '../pages/FormPage/FormPage';
 import MotionPage from '../pages/MotionPage/MotionPage';
 import DepthPage from '../pages/DepthPage/DepthPage';
 import styles from './app.module.scss';
@@ -90,7 +90,7 @@ const App = () => {
 				</div>
 			</div>
 			<div className={styles.PagesContainer}>
-				<ShapesPage isActive={activePageIndex === 0} />
+				<FormPage isActive={activePageIndex === 0} />
 				<MotionPage isActive={activePageIndex === 1} />
 				<DepthPage isActive={activePageIndex === 2} />
 			</div>

@@ -156,11 +156,12 @@ export const legacyAssignProjectionMatrix = (glContext: GLContext): void => {
 	gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
 };
 
-export const assignProjectionMatrix = (gl: WebGLRenderingContext, uniformLocations: Record<string, WebGLUniformLocation>, canvasSize: Vector2) => {
+export const assignProjectionMatrix = (gl: WebGLRenderingContext, uniformLocations: Record<string, WebGLUniformLocation>, size: Vector2) => {
+	console.log(size);
 	let projectionMatrix: Matrix = applyPerspective({
 		sourceMatrix: createMat4(),
 		fieldOfView: degreesToRadians(40),
-		aspect: canvasSize.x / canvasSize.y,
+		aspect: size.x / size.y,
 		near: 0.01,
 		far: 100
 	});
@@ -376,14 +377,13 @@ export const initMesh = (gl: WebGLRenderingContext, program: WebGLProgram, mesh:
 };
 
 export const initFrameBufferObject = (gl: WebGLRenderingContext, textureWidth: number, textureHeight: number): FBO => {
+	// Todo move to global constants
 	const level: number = 0;
 	const internalFormat: number = gl.RGBA;
 	const border: number = 0;
 	const format: number = gl.RGBA;
 	const type: number = gl.UNSIGNED_BYTE;
 	const data: ArrayBufferView | null = null;
-
-	console.log('init', textureWidth, textureHeight);
 
 	const targetTexture: WebGLTexture = gl.createTexture();
 	gl.bindTexture(gl.TEXTURE_2D, null);

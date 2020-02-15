@@ -41,6 +41,7 @@ module.exports = {
 	},
 	context: resolve(__dirname, '../../src'),
 	entry: './index.tsx',
+	devtool: 'eval-source-map',
 	module: {
 		rules: [
 			{

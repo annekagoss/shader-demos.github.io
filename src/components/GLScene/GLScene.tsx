@@ -148,9 +148,8 @@ export default class GLScene extends Component<SceneProps> {
 			window.addEventListener('scroll', this.handleScroll);
 		}
 
-		const worker: any = new WebWorker(loadMeshWorker); /* tslint:disable-line no-any */
+		const worker: any = new WebWorker(loadMeshWorker);
 		worker.addEventListener('message', (event: {data: LoadedMesh}) => {
-			/* tslint:disable-line no-unsafe-any */
 			this.init(event.data);
 		});
 

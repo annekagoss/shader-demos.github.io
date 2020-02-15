@@ -1,19 +1,17 @@
 import {useEffect} from 'react';
-import {UniformSetting, FBO} from '../../types';
+import {UniformSetting, FBO, Vector2} from '../../types';
 import {initFrameBufferObject} from '../../lib/gl/initialize';
 
 export const useWindowSize = (
 	canvas: HTMLCanvasElement,
 	gl: WebGLRenderingContext,
 	uniforms: UniformSetting[],
-	targetWidthRef: React.MutableRefObject<number>,
-	targetHeightRef: React.MutableRefObject<number>,
+	size: React.MutableRefObject<Vector2>,
 	FBOA?: React.MutableRefObject<FBO>,
 	FBOB?: React.MutableRefObject<FBO>
 ) => {
-	const handleResize = () => updateRendererSize(canvas, gl, uniforms, targetWidthRef, targetHeightRef, FBOA, FBOB);
+	const handleResize = () => updateRendererSize(canvas, gl, uniforms, size, FBOA, FBOB);
 	useEffect(() => {
-		handleResize();
 		window.addEventListener('resize', handleResize);
 		return () => {
 			window.removeEventListener('resize', handleResize);
@@ -25,17 +23,18 @@ const updateRendererSize = (
 	canvas: HTMLCanvasElement,
 	gl: WebGLRenderingContext,
 	uniforms: UniformSetting[],
-	targetWidthRef: React.MutableRefObject<number>,
-	targetHeightRef: React.MutableRefObject<number>,
+	size: React.MutableRefObject<Vector2>,
 	FBOA?: React.MutableRefObject<FBO>,
 	FBOB?: React.MutableRefObject<FBO>
 ) => {
 	if (!canvas) return;
 	const {width, height} = canvas.getBoundingClientRect();
-	targetWidthRef.current = width * window.devicePixelRatio;
-	targetHeightRef.current = height * window.devicePixelRatio;
-	canvas.width = targetWidthRef.current;
-	canvas.height = targetHeightRef.current;
-	uniforms[0].value = {x: targetWidthRef.current, y: targetHeightRef.current};
-	gl.viewport(0, 0, targetWidthRef.current, targetHeightRef.current);
+	size.current = {
+		x: width * window.devicePixelRatio,
+		y: height * window.devicePixelRatio
+	};
+	canvas.width = size.current.x;
+	canvas.height = size.current.y;
+	uniforms[0].value = size.current;
+	gl.viewport(0, 0, size.current.x, size.current.y);
 };

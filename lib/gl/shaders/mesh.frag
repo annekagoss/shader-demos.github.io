@@ -29,6 +29,7 @@ vec4 wireframe() {
 }
 
 void main() {  
+	vec2 st = gl_FragCoord.xy/uResolution;
 	if (uMaterialType == 0) {
 		gl_FragColor = vec4(vVertexPosition, 1.0);
 		return;

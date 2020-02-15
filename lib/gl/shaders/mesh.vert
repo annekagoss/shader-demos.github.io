@@ -10,6 +10,7 @@ uniform vec3 uLightPositionA;
 uniform vec3 uLightPositionB;
 uniform vec3 uLightColorA;
 uniform vec3 uLightColorB;
+uniform vec2 uResolution;
 
 varying vec3 vLighting;
 varying vec3 vBarycentric;

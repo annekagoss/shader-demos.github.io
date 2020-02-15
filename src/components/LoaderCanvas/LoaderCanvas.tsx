@@ -5,6 +5,8 @@ import {useAnimationFrame} from '../../hooks/animation';
 import {assignProjectionMatrix} from '../../../lib/gl/initialize';
 import {applyRotation, createMat4} from '../../../lib/gl/matrix';
 import {addVectors} from '../../../lib/gl/helpers';
+import loadMeshWorker from '../../../lib/gl/loadMeshWorker';
+import WebWorker from '../../../lib/gl/WebWorker';
 import styles from './LoaderCanvas.module.scss';
 
 interface Props {

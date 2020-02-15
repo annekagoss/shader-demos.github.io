@@ -1,15 +1,20 @@
 import * as React from 'react';
-import {FBO, UniformSetting, Vector3} from '../../types';
+import {FBO, UniformSetting, Vector3, Vector2} from '../../types';
 import {initShaderProgram, initBaseMesh, initMesh, initFrameBufferObject} from '../../lib/gl/initialize';
 
 interface InitializeProps {
+	gl: React.MutableRefObject<WebGLRenderingContext>;
+	uniformLocations: React.MutableRefObject<Record<string, WebGLUniformLocation>>;
 	canvasRef: React.MutableRefObject<HTMLCanvasElement>;
 	fragmentSource: string;
 	vertexSource: string;
 	uniforms: UniformSetting[];
-	targetWidth: number;
-	targetHeight: number;
-	useFrameBuffer?: boolean;
+	size: React.MutableRefObject<Vector2>;
+	FBOA?: React.MutableRefObject<FBO>;
+	FBOB?: React.MutableRefObject<FBO>;
+	mesh?: Vector3[][];
+	vertexPositionBuffer: React.MutableRefObject<any>;
+	vertexNormalBuffer?: React.MutableRefObject<any>;
 }
 
 interface InitializeDepthProps extends InitializeProps {
@@ -29,17 +34,17 @@ const mapUniformSettingsToLocations = (settings: UniformSetting[], gl: WebGLRend
 	}, locations);
 };
 
-export const useInitializeGL = ({canvasRef, fragmentSource, vertexSource, uniforms, targetWidth, targetHeight, useFrameBuffer = false}: InitializeProps) => {
-	const gl = React.useRef<WebGLRenderingContext>();
-	const program = React.useRef<WebGLProgram>();
-	const attributeLocations = React.useRef<Record<string, number>>();
-	const uniformLocations = React.useRef<Record<string, WebGLUniformLocation>>();
-	const vertexBuffer = React.useRef<any>();
-	const FBOA = React.useRef<FBO>();
-	const FBOB = React.useRef<FBO>();
-
+export const useInitializeGL = ({gl, uniformLocations, canvasRef, fragmentSource, vertexSource, uniforms, size, FBOA, FBOB, mesh, vertexPositionBuffer, vertexNormalBuffer}: InitializeProps) => {
 	React.useEffect(() => {
 		if (canvasRef.current === undefined) return;
+		const {width, height} = canvasRef.current.getBoundingClientRect();
+		size.current = {
+			x: width * window.devicePixelRatio,
+			y: height * window.devicePixelRatio
+		};
+		canvasRef.current.width = size.current.x;
+		canvasRef.current.height = size.current.y;
+
 		const tempGl: WebGLRenderingContext = (canvasRef.current.getContext('experimental-webgl') as WebGLRenderingContext) || (canvasRef.current.getContext('webgl') as WebGLRenderingContext);
 
 		tempGl.clearColor(0, 0, 0, 0);
@@ -47,84 +52,32 @@ export const useInitializeGL = ({canvasRef, fragmentSource, vertexSource, unifor
 		tempGl.enable(tempGl.DEPTH_TEST);
 		tempGl.depthFunc(tempGl.LEQUAL);
 		tempGl.clear(tempGl.COLOR_BUFFER_BIT | tempGl.DEPTH_BUFFER_BIT);
-		tempGl.viewport(0, 0, targetWidth, targetHeight);
-
-		const tempProgram: WebGLProgram = initShaderProgram(tempGl, vertexSource, fragmentSource);
-		tempGl.useProgram(tempProgram);
-		const {bufferData, vertexPosition} = initBaseMesh(tempGl, tempProgram);
-		attributeLocations.current = {vertexPosition};
-		uniformLocations.current = mapUniformSettingsToLocations(uniforms, tempGl, tempProgram, useFrameBuffer);
-
-		if (useFrameBuffer) {
-			FBOA.current = initFrameBufferObject(tempGl, targetWidth, targetHeight);
-			FBOB.current = initFrameBufferObject(tempGl, targetWidth, targetHeight);
-		}
-
-		gl.current = tempGl;
-		program.current = tempProgram;
-		vertexBuffer.current = bufferData;
-	}, []);
-
-	return {
-		gl,
-		program,
-		attributeLocations,
-		uniformLocations,
-		vertexBuffer,
-		FBOA,
-		FBOB
-	};
-};
-
-export const useInitializeDepthGL = ({canvasRef, fragmentSource, vertexSource, uniforms, targetWidth, targetHeight, mesh, useFrameBuffer = false}: InitializeDepthProps) => {
-	const gl = React.useRef<WebGLRenderingContext>();
-	const program = React.useRef<WebGLProgram>();
-	const uniformLocations = React.useRef<Record<string, WebGLUniformLocation>>();
-	const vertexPositionBuffer = React.useRef<any>();
-	const vertexNormalBuffer = React.useRef<any>();
-	const FBOA = React.useRef<FBO>();
-	const FBOB = React.useRef<FBO>();
-
-	React.useEffect(() => {
-		if (canvasRef.current === undefined) return;
-		const tempGl: WebGLRenderingContext = (canvasRef.current.getContext('experimental-webgl') as WebGLRenderingContext) || (canvasRef.current.getContext('webgl') as WebGLRenderingContext);
-
-		tempGl.clearColor(0, 0, 0, 0);
-		tempGl.clearDepth(1);
-		tempGl.enable(tempGl.DEPTH_TEST);
-		tempGl.depthFunc(tempGl.LEQUAL);
-		tempGl.clear(tempGl.COLOR_BUFFER_BIT | tempGl.DEPTH_BUFFER_BIT);
-		tempGl.viewport(0, 0, targetWidth, targetHeight);
+		tempGl.viewport(0, 0, size.current.x, size.current.y);
 		tempGl.enable(tempGl.SAMPLE_ALPHA_TO_COVERAGE);
 
 		const tempProgram: WebGLProgram = initShaderProgram(tempGl, vertexSource, fragmentSource);
 		tempGl.useProgram(tempProgram);
-		const {positionBufferData, normalBufferData} = initMesh(tempGl, tempProgram, mesh, true);
 
+		const useFrameBuffer: boolean = Boolean(FBOA && FBOB);
 		uniformLocations.current = {
 			...mapUniformSettingsToLocations(uniforms, tempGl, tempProgram, useFrameBuffer),
 			uProjectionMatrix: tempGl.getUniformLocation(tempProgram, 'uProjectionMatrix'),
 			uModelViewMatrix: tempGl.getUniformLocation(tempProgram, 'uModelViewMatrix')
 		};
-
 		if (useFrameBuffer) {
-			FBOA.current = initFrameBufferObject(tempGl, targetWidth, targetHeight);
-			FBOB.current = initFrameBufferObject(tempGl, targetWidth, targetHeight);
+			FBOA.current = initFrameBufferObject(tempGl, size.current.x, size.current.y);
+			FBOB.current = initFrameBufferObject(tempGl, size.current.x, size.current.y);
+		}
+
+		if (Boolean(mesh)) {
+			const {positionBufferData, normalBufferData} = initMesh(tempGl, tempProgram, mesh, true);
+			vertexPositionBuffer.current = positionBufferData;
+			vertexNormalBuffer.current = normalBufferData;
+		} else {
+			const {bufferData, vertexPosition} = initBaseMesh(tempGl, tempProgram);
+			vertexPositionBuffer.current = bufferData;
 		}
 
 		gl.current = tempGl;
-		program.current = tempProgram;
-		vertexPositionBuffer.current = positionBufferData;
-		vertexNormalBuffer.current = normalBufferData;
 	}, []);
-
-	return {
-		gl,
-		program,
-		uniformLocations,
-		vertexPositionBuffer,
-		vertexNormalBuffer,
-		FBOA,
-		FBOB
-	};
 };
