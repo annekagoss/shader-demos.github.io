@@ -52,3 +52,10 @@ input {
 	color: white;
 	opacity: 1; /* Firefox */
 }
+
+.GLScene {
+	height: 600px;
+	.section {
+		height: 100%;
+	}
+}

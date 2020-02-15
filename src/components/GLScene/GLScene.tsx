@@ -1,10 +1,7 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import classnames from 'classnames';
 // import glslify from 'glslify';
-import {
-	calcWindowDiagonalAngle,
-	calcWindowHypotenuse
-} from '../../utils/general';
+import {calcWindowDiagonalAngle, calcWindowHypotenuse} from '../../utils/general';
 import styles from './GLScene.module.scss';
 
 import {
@@ -25,38 +22,16 @@ import {
 	Vector3
 } from '../../../types';
 
-import {
-	glslColors,
-	supportsDepth,
-	applyBrightness
-} from '../../../lib/gl/helpers';
-import { loadTextures } from '../../../lib/gl/loader';
-import {
-	assignStaticUniforms,
-	assignProjectionMatrix,
-	initShaderProgram,
-	initBuffers,
-	initFrameBufferObject,
-	initPlaceholderTexture
-} from '../../../lib/gl/initialize';
-import {
-	updateColors,
-	updateLightSettings,
-	updateMaterials,
-	removeMaterials
-} from '../../../lib/gl/update';
-import { render } from '../../../lib/gl/render';
+import {glslColors, supportsDepth, applyBrightness} from '../../../lib/gl/helpers';
+import {loadTextures} from '../../../lib/gl/loader';
+import {assignStaticUniforms, legacyAssignProjectionMatrix, initShaderProgram, initBuffers, legacyInitFrameBufferObject, initPlaceholderTexture} from '../../../lib/gl/initialize';
+import {updateColors, updateLightSettings, updateMaterials, removeMaterials} from '../../../lib/gl/update';
+import {render} from '../../../lib/gl/render';
 
 import loadMeshWorker from '../../../lib/gl/loadMeshWorker';
 import WebWorker from '../../../lib/gl/WebWorker';
 
-import {
-	startInteraction,
-	stopInteraction,
-	updateMouseInteraction,
-	updateDeviceInteraction,
-	applyInteraction
-} from '../../../lib/gl/interaction';
+import {startInteraction, stopInteraction, updateMouseInteraction, updateDeviceInteraction, applyInteraction} from '../../../lib/gl/interaction';
 
 import vertSource from '../../../lib/gl/shaders/phong.vert';
 import shadowVert from '../../../lib/gl/shaders/shadow.vert';
@@ -138,18 +113,14 @@ export default class GLScene extends Component<SceneProps> {
 			shininess
 		} = this.props;
 
-		this.colors = { ...glslColors(DEFAULT_COLORS), ...glslColors(colors) };
+		this.colors = {...glslColors(DEFAULT_COLORS), ...glslColors(colors)};
 
 		const positions: LightPositions = {
 			...DEFAULT_LIGHT_POSITIONS,
 			...lightPositions
 		};
-		const intensities: LightIntensities = applyBrightness(
-			brightness,
-			DEFAULT_LIGHT_INTENSITIES
-		);
-		const customShininess: number =
-			shininess !== undefined ? shininess : DEFAULT_SHININESS;
+		const intensities: LightIntensities = applyBrightness(brightness, DEFAULT_LIGHT_INTENSITIES);
+		const customShininess: number = shininess !== undefined ? shininess : DEFAULT_SHININESS;
 
 		this.lightSettings = {
 			positions,
@@ -168,24 +139,17 @@ export default class GLScene extends Component<SceneProps> {
 		this.transformation.scale = scale || DEFAULT_SCALE;
 
 		this.glContext.hasMaterial = !!MTLSource;
-		this.glContext.textureCount = diffuseSources
-			? parseFloat(diffuseSources.length)
-			: 0;
+		this.glContext.textureCount = diffuseSources ? parseFloat(diffuseSources.length) : 0;
 
 		window.addEventListener('resize', this.updateRendererSize);
 
 		if ('ondeviceorientation' in window) {
-			window.addEventListener(
-				'deviceorientation',
-				this.handleDeviceOrientation
-			);
+			window.addEventListener('deviceorientation', this.handleDeviceOrientation);
 			window.addEventListener('scroll', this.handleScroll);
 		}
 
-		const worker: any = new WebWorker(
-			loadMeshWorker
-		); /* tslint:disable-line no-any */
-		worker.addEventListener('message', (event: { data: LoadedMesh }) => {
+		const worker: any = new WebWorker(loadMeshWorker); /* tslint:disable-line no-any */
+		worker.addEventListener('message', (event: {data: LoadedMesh}) => {
 			/* tslint:disable-line no-unsafe-any */
 			this.init(event.data);
 		});
@@ -212,16 +176,13 @@ export default class GLScene extends Component<SceneProps> {
 
 	componentWillUnmount(): void {
 		this.stop();
-		window.removeEventListener(
-			'deviceorientation',
-			this.handleDeviceOrientation
-		);
+		window.removeEventListener('deviceorientation', this.handleDeviceOrientation);
 		window.removeEventListener('scroll', this.handleScroll);
 		window.removeEventListener('resize', this.updateRendererSize);
 	}
 
 	componentDidUpdate(): void {
-		const { loaded } = this.state;
+		const {loaded} = this.state;
 		if (!loaded) return;
 
 		this.updateColors();
@@ -232,28 +193,24 @@ export default class GLScene extends Component<SceneProps> {
 	}
 
 	updateColors(): void {
-		const { colors } = this.props;
+		const {colors} = this.props;
 		const newColors: GLSLColors = glslColors(colors);
 		if (!newColors) return;
 
-		this.colors = { ...glslColors(DEFAULT_COLORS), ...newColors };
+		this.colors = {...glslColors(DEFAULT_COLORS), ...newColors};
 		updateColors(this.colors, this.glContext);
 	}
 
 	updateLightSettings(): void {
-		const { brightness, shininess, shadowStrength } = this.props;
+		const {brightness, shininess, shadowStrength} = this.props;
 		this.lightSettings.shadowStrength = shadowStrength;
-		this.lightSettings.intensities = applyBrightness(
-			brightness,
-			DEFAULT_LIGHT_INTENSITIES
-		);
-		this.lightSettings.customShininess =
-			shininess || this.lightSettings.customShininess;
+		this.lightSettings.intensities = applyBrightness(brightness, DEFAULT_LIGHT_INTENSITIES);
+		this.lightSettings.customShininess = shininess || this.lightSettings.customShininess;
 		updateLightSettings(this.lightSettings, this.glContext);
 	}
 
 	updateTransformation(): void {
-		const { positionOffset, rotationOffset, scale } = this.props;
+		const {positionOffset, rotationOffset, scale} = this.props;
 		this.transformation.translation = {
 			...this.transformation.translation,
 			...positionOffset
@@ -266,8 +223,8 @@ export default class GLScene extends Component<SceneProps> {
 	}
 
 	updateTextures(): void {
-		const { diffuseSources } = this.props;
-		const { textureCount } = this.glContext;
+		const {diffuseSources} = this.props;
+		const {textureCount} = this.glContext;
 
 		const diffuseCount: number = Object.keys(diffuseSources).length;
 		if (diffuseCount > 0 && textureCount !== diffuseCount) {
@@ -277,24 +234,20 @@ export default class GLScene extends Component<SceneProps> {
 	}
 
 	updateMaterials(): void {
-		const { MTLSource } = this.props;
-		const { hasMaterial } = this.glContext;
+		const {MTLSource} = this.props;
+		const {hasMaterial} = this.glContext;
 
 		if (hasMaterial !== !!MTLSource) {
 			this.glContext.hasMaterial = !hasMaterial;
-			this.glContext.hasMaterial
-				? this.addMaterial()
-				: removeMaterials(this.glContext);
+			this.glContext.hasMaterial ? this.addMaterial() : removeMaterials(this.glContext);
 		}
 	}
 
 	addMaterial(): void {
-		const { diffuseSources, MTLSource } = this.props;
+		const {diffuseSources, MTLSource} = this.props;
 
-		const MTLWorker: any = new WebWorker(
-			loadMeshWorker
-		); /* tslint:disable-line no-any */
-		MTLWorker.addEventListener('message', (event: { data: Materials }) => {
+		const MTLWorker: any = new WebWorker(loadMeshWorker); /* tslint:disable-line no-any */
+		MTLWorker.addEventListener('message', (event: {data: Materials}) => {
 			/* tslint:disable-line no-unsafe-any */
 			this.glContext.mesh.materials = event.data;
 			updateMaterials(this.glContext, null);
@@ -307,16 +260,14 @@ export default class GLScene extends Component<SceneProps> {
 	}
 
 	init = (mesh: LoadedMesh): void => {
-		const { width, height } = this.$container.getBoundingClientRect();
+		const {width, height} = this.$container.getBoundingClientRect();
 		this.$canvas.width = Math.round(width * window.devicePixelRatio);
 		this.$canvas.height = Math.round(height * window.devicePixelRatio);
 		this.glContext.$canvas = this.$canvas;
 
 		/* WebGL glContext is called 'experimental-webgl' in Edge, IE, Chrome 8 - 32, Firefox 4 - 23, and Safari 5.1 - 7.1.
     Older versions than this will not support WebGL. */
-		const gl: WebGLRenderingContext =
-			this.$canvas.getContext('webgl') ||
-			this.$canvas.getContext('experimental-webgl');
+		const gl: WebGLRenderingContext = this.$canvas.getContext('webgl') || this.$canvas.getContext('experimental-webgl');
 		if (!gl) {
 			// this.props.onError('WebGL is not supported on this device.')
 			return;
@@ -332,182 +283,67 @@ export default class GLScene extends Component<SceneProps> {
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		gl.viewport(0, 0, this.$canvas.width, this.$canvas.height);
 
-		const mainProgram: WebGLProgram = initShaderProgram(
-			gl,
-			vertSource,
-			fragSource
-		);
+		const mainProgram: WebGLProgram = initShaderProgram(gl, vertSource, fragSource);
 
 		this.glContext.programInfo = {
 			program: mainProgram,
 			attribLocations: {
-				vertexPosition: gl.getAttribLocation(
-					mainProgram,
-					'aVertexPosition'
-				),
-				textureCoord: gl.getAttribLocation(
-					mainProgram,
-					'aTextureCoord'
-				), // vUv
+				vertexPosition: gl.getAttribLocation(mainProgram, 'aVertexPosition'),
+				textureCoord: gl.getAttribLocation(mainProgram, 'aTextureCoord'), // vUv
 				normal: gl.getAttribLocation(mainProgram, 'aVertexNormal'),
-				textureAddress: gl.getAttribLocation(
-					mainProgram,
-					'aTextureAddress'
-				)
+				textureAddress: gl.getAttribLocation(mainProgram, 'aTextureAddress')
 			},
 			uniformLocations: {
-				projectionMatrix: gl.getUniformLocation(
-					mainProgram,
-					'uProjectionMatrix'
-				),
-				modelViewMatrix: gl.getUniformLocation(
-					mainProgram,
-					'uModelViewMatrix'
-				),
-				normalMatrix: gl.getUniformLocation(
-					mainProgram,
-					'uNormalMatrix'
-				),
+				projectionMatrix: gl.getUniformLocation(mainProgram, 'uProjectionMatrix'),
+				modelViewMatrix: gl.getUniformLocation(mainProgram, 'uModelViewMatrix'),
+				normalMatrix: gl.getUniformLocation(mainProgram, 'uNormalMatrix'),
 
-				leftLightMatrix: gl.getUniformLocation(
-					mainProgram,
-					'uLeftLightMatrix'
-				),
+				leftLightMatrix: gl.getUniformLocation(mainProgram, 'uLeftLightMatrix'),
 
 				uHasTexture: gl.getUniformLocation(mainProgram, 'uHasTexture'),
 				uSampler0: gl.getUniformLocation(mainProgram, 'uSampler0'),
 				uSampler1: gl.getUniformLocation(mainProgram, 'uSampler1'),
 
-				uDiffuseColor0: gl.getUniformLocation(
-					mainProgram,
-					'uDiffuseColor0'
-				),
-				uEmissiveColor0: gl.getUniformLocation(
-					mainProgram,
-					'uEmissiveColor0'
-				),
-				uSpecularColor0: gl.getUniformLocation(
-					mainProgram,
-					'uSpecularColor0'
-				),
-				uReflectivity0: gl.getUniformLocation(
-					mainProgram,
-					'uReflectivity0'
-				),
+				uDiffuseColor0: gl.getUniformLocation(mainProgram, 'uDiffuseColor0'),
+				uEmissiveColor0: gl.getUniformLocation(mainProgram, 'uEmissiveColor0'),
+				uSpecularColor0: gl.getUniformLocation(mainProgram, 'uSpecularColor0'),
+				uReflectivity0: gl.getUniformLocation(mainProgram, 'uReflectivity0'),
 				uOpacity0: gl.getUniformLocation(mainProgram, 'uOpacity0'),
 
-				uDiffuseColor1: gl.getUniformLocation(
-					mainProgram,
-					'uDiffuseColor1'
-				),
-				uEmissiveColor1: gl.getUniformLocation(
-					mainProgram,
-					'uEmissiveColor1'
-				),
-				uSpecularColor1: gl.getUniformLocation(
-					mainProgram,
-					'uSpecularColor1'
-				),
-				uReflectivity1: gl.getUniformLocation(
-					mainProgram,
-					'uReflectivity1'
-				),
+				uDiffuseColor1: gl.getUniformLocation(mainProgram, 'uDiffuseColor1'),
+				uEmissiveColor1: gl.getUniformLocation(mainProgram, 'uEmissiveColor1'),
+				uSpecularColor1: gl.getUniformLocation(mainProgram, 'uSpecularColor1'),
+				uReflectivity1: gl.getUniformLocation(mainProgram, 'uReflectivity1'),
 				uOpacity1: gl.getUniformLocation(mainProgram, 'uOpacity1'),
 
-				uDiffuseColor2: gl.getUniformLocation(
-					mainProgram,
-					'uDiffuseColor2'
-				),
-				uEmissiveColor2: gl.getUniformLocation(
-					mainProgram,
-					'uEmissiveColor2'
-				),
-				uSpecularColor2: gl.getUniformLocation(
-					mainProgram,
-					'uSpecularColor2'
-				),
-				uReflectivity2: gl.getUniformLocation(
-					mainProgram,
-					'uReflectivity2'
-				),
+				uDiffuseColor2: gl.getUniformLocation(mainProgram, 'uDiffuseColor2'),
+				uEmissiveColor2: gl.getUniformLocation(mainProgram, 'uEmissiveColor2'),
+				uSpecularColor2: gl.getUniformLocation(mainProgram, 'uSpecularColor2'),
+				uReflectivity2: gl.getUniformLocation(mainProgram, 'uReflectivity2'),
 				uOpacity2: gl.getUniformLocation(mainProgram, 'uOpacity2'),
 
-				uCustomShininess: gl.getUniformLocation(
-					mainProgram,
-					'uCustomShininess'
-				),
-				uShadowStrength: gl.getUniformLocation(
-					mainProgram,
-					'uShadowStrength'
-				),
+				uCustomShininess: gl.getUniformLocation(mainProgram, 'uCustomShininess'),
+				uShadowStrength: gl.getUniformLocation(mainProgram, 'uShadowStrength'),
 
-				uAmbientLightColor: gl.getUniformLocation(
-					mainProgram,
-					'uAmbientLightColor'
-				),
-				uLeftLightColor: gl.getUniformLocation(
-					mainProgram,
-					'uLeftLightColor'
-				),
-				uRightLightColor: gl.getUniformLocation(
-					mainProgram,
-					'uRightLightColor'
-				),
-				uTopLightColor: gl.getUniformLocation(
-					mainProgram,
-					'uTopLightColor'
-				),
-				uBottomLightColor: gl.getUniformLocation(
-					mainProgram,
-					'uBottomLightColor'
-				),
+				uAmbientLightColor: gl.getUniformLocation(mainProgram, 'uAmbientLightColor'),
+				uLeftLightColor: gl.getUniformLocation(mainProgram, 'uLeftLightColor'),
+				uRightLightColor: gl.getUniformLocation(mainProgram, 'uRightLightColor'),
+				uTopLightColor: gl.getUniformLocation(mainProgram, 'uTopLightColor'),
+				uBottomLightColor: gl.getUniformLocation(mainProgram, 'uBottomLightColor'),
 
-				uAmbientLightIntensity: gl.getUniformLocation(
-					mainProgram,
-					'uAmbientLightIntensity'
-				),
-				uLeftLightIntensity: gl.getUniformLocation(
-					mainProgram,
-					'uLeftLightIntensity'
-				),
-				uRightLightIntensity: gl.getUniformLocation(
-					mainProgram,
-					'uRightLightIntensity'
-				),
-				uTopLightIntensity: gl.getUniformLocation(
-					mainProgram,
-					'uTopLightIntensity'
-				),
-				uBottomLightIntensity: gl.getUniformLocation(
-					mainProgram,
-					'uBottomLightIntensity'
-				),
+				uAmbientLightIntensity: gl.getUniformLocation(mainProgram, 'uAmbientLightIntensity'),
+				uLeftLightIntensity: gl.getUniformLocation(mainProgram, 'uLeftLightIntensity'),
+				uRightLightIntensity: gl.getUniformLocation(mainProgram, 'uRightLightIntensity'),
+				uTopLightIntensity: gl.getUniformLocation(mainProgram, 'uTopLightIntensity'),
+				uBottomLightIntensity: gl.getUniformLocation(mainProgram, 'uBottomLightIntensity'),
 
-				uAmbientLightPosition: gl.getUniformLocation(
-					mainProgram,
-					'uAmbientLightPosition'
-				),
-				uLeftLightPosition: gl.getUniformLocation(
-					mainProgram,
-					'uLeftLightPosition'
-				),
-				uRightLightPosition: gl.getUniformLocation(
-					mainProgram,
-					'uRightLightPosition'
-				),
-				uTopLightPosition: gl.getUniformLocation(
-					mainProgram,
-					'uTopLightPosition'
-				),
-				uBottomLightPosition: gl.getUniformLocation(
-					mainProgram,
-					'uBottomLightPosition'
-				),
+				uAmbientLightPosition: gl.getUniformLocation(mainProgram, 'uAmbientLightPosition'),
+				uLeftLightPosition: gl.getUniformLocation(mainProgram, 'uLeftLightPosition'),
+				uRightLightPosition: gl.getUniformLocation(mainProgram, 'uRightLightPosition'),
+				uTopLightPosition: gl.getUniformLocation(mainProgram, 'uTopLightPosition'),
+				uBottomLightPosition: gl.getUniformLocation(mainProgram, 'uBottomLightPosition'),
 
-				uDepthEnabled: gl.getUniformLocation(
-					mainProgram,
-					'uDepthEnabled'
-				),
+				uDepthEnabled: gl.getUniformLocation(mainProgram, 'uDepthEnabled'),
 				uDepthMap: gl.getUniformLocation(mainProgram, 'uDepthMap'),
 
 				uTime: gl.getUniformLocation(mainProgram, 'uTime')
@@ -515,29 +351,16 @@ export default class GLScene extends Component<SceneProps> {
 		};
 
 		if (this.glContext.supportsDepth) {
-			const shadowProgram: WebGLProgram = initShaderProgram(
-				gl,
-				shadowVert,
-				shadowFrag
-			);
-			this.glContext.fbo = initFrameBufferObject(gl);
+			const shadowProgram: WebGLProgram = initShaderProgram(gl, shadowVert, shadowFrag);
+			this.glContext.fbo = legacyInitFrameBufferObject(gl);
 			this.glContext.shadowProgramInfo = {
 				program: shadowProgram,
 				attribLocations: {
-					vertexPosition: gl.getAttribLocation(
-						shadowProgram,
-						'aVertexPosition'
-					)
+					vertexPosition: gl.getAttribLocation(shadowProgram, 'aVertexPosition')
 				},
 				uniformLocations: {
-					modelViewMatrix: gl.getUniformLocation(
-						shadowProgram,
-						'uModelViewMatrix'
-					),
-					leftLightMatrix: gl.getUniformLocation(
-						shadowProgram,
-						'uLeftLightMatrix'
-					)
+					modelViewMatrix: gl.getUniformLocation(shadowProgram, 'uModelViewMatrix'),
+					leftLightMatrix: gl.getUniformLocation(shadowProgram, 'uLeftLightMatrix')
 				}
 			};
 		}
@@ -552,12 +375,7 @@ export default class GLScene extends Component<SceneProps> {
 				this.glContext.mesh = mesh;
 				this.glContext.buffers = initBuffers(gl, mesh);
 				this.glContext.gl = gl;
-				assignStaticUniforms(
-					this.glContext,
-					this.lightSettings,
-					this.colors,
-					this.transformation
-				);
+				assignStaticUniforms(this.glContext, this.lightSettings, this.colors, this.transformation);
 				this.start();
 			})
 			.catch((_err: string) => {
@@ -570,12 +388,7 @@ export default class GLScene extends Component<SceneProps> {
 		this.glContext.mesh = mesh;
 		this.glContext.buffers = initBuffers(gl, mesh);
 		this.glContext.gl = gl;
-		assignStaticUniforms(
-			this.glContext,
-			this.lightSettings,
-			this.colors,
-			this.transformation
-		);
+		assignStaticUniforms(this.glContext, this.lightSettings, this.colors, this.transformation);
 		this.start();
 	}
 
@@ -613,16 +426,10 @@ export default class GLScene extends Component<SceneProps> {
 	};
 
 	renderGL = (): void => {
-		const {
-			glContext,
-			transformation,
-			colors,
-			lightSettings,
-			interaction
-		} = this;
-		const { loaded } = this.state;
-		const { needsFrameCapture } = this.props;
-		const { newTransformation, newInteraction } = applyInteraction({
+		const {glContext, transformation, colors, lightSettings, interaction} = this;
+		const {loaded} = this.state;
+		const {needsFrameCapture} = this.props;
+		const {newTransformation, newInteraction} = applyInteraction({
 			transformation,
 			interaction
 		});
@@ -654,23 +461,21 @@ export default class GLScene extends Component<SceneProps> {
 	updateRendererSize = (): void => {
 		console.log(this.$container);
 		if (!this.$container) return;
-		const { gl, $canvas } = this.glContext;
-		const { width, height } = this.$container.getBoundingClientRect();
+		const {gl, $canvas} = this.glContext;
+		const {width, height} = this.$container.getBoundingClientRect();
 		const targetWidth: number = Math.round(width * window.devicePixelRatio);
-		const targetHeight: number = Math.round(
-			height * window.devicePixelRatio
-		);
+		const targetHeight: number = Math.round(height * window.devicePixelRatio);
 		console.log({
 			targetWidth,
 			canvasWidth: $canvas.width,
 			devicePixeRatio: window.devicePixelRatio
 		});
 		if ($canvas.width !== targetWidth || $canvas.height !== targetHeight) {
-			console.log({ targetWidth, width });
+			console.log({targetWidth, width});
 			$canvas.width = targetWidth;
 			$canvas.height = targetHeight;
 			gl.viewport(0, 0, $canvas.width, $canvas.height);
-			assignProjectionMatrix(this.glContext);
+			legacyAssignProjectionMatrix(this.glContext);
 		}
 	};
 
@@ -680,11 +485,7 @@ export default class GLScene extends Component<SceneProps> {
 
 	handleMouseMove = (e: React.MouseEvent): void => {
 		if (!('ontouchstart' in window)) {
-			this.interaction = updateMouseInteraction(
-				e,
-				this.interaction,
-				this.$container
-			);
+			this.interaction = updateMouseInteraction(e, this.interaction, this.$container);
 		}
 		this.resetIdleTimer();
 	};
@@ -698,11 +499,8 @@ export default class GLScene extends Component<SceneProps> {
 	};
 
 	handleScroll = (): void => {
-		const { idle } = this.state;
-		const {
-			y,
-			height
-		} = this.$container.getBoundingClientRect() as DOMRect;
+		const {idle} = this.state;
+		const {y, height} = this.$container.getBoundingClientRect() as DOMRect;
 		const inView: boolean = y > 0 || y + height > 0;
 
 		if (!inView && !idle) {
@@ -713,24 +511,23 @@ export default class GLScene extends Component<SceneProps> {
 	};
 
 	captureFrame(): void {
-		const { onFrameCapture } = this.props;
+		const {onFrameCapture} = this.props;
 		if (!onFrameCapture) return;
 		const frameExport = this.$canvas.toDataURL('image/png', 0.25);
 		onFrameCapture(frameExport);
 	}
 
 	render(): React.ReactNode {
-		const { placeholderImage, colors } = this.props;
-		const { backgroundA, backgroundB } = colors;
-		const { loaded } = this.state;
+		const {placeholderImage, colors} = this.props;
+		const {backgroundA, backgroundB} = colors;
+		const {loaded} = this.state;
 		return (
 			<div
 				className={classnames(styles.scene, loaded && styles.loaded)}
 				ref={el => (this.$container = el)}
 				onMouseEnter={this.handleMouseEnter}
 				onMouseMove={this.handleMouseMove}
-				onMouseLeave={this.handleMouseLeave}
-			>
+				onMouseLeave={this.handleMouseLeave}>
 				<canvas
 					ref={el => {
 						this.$canvas = el;
@@ -738,12 +535,7 @@ export default class GLScene extends Component<SceneProps> {
 					width='280'
 					height='280'
 				/>
-				{placeholderImage && (
-					<img
-						className={styles.placeholder}
-						src={placeholderImage}
-					/>
-				)}
+				{placeholderImage && <img className={styles.placeholder} src={placeholderImage} />}
 				<div
 					className={styles.background}
 					style={{

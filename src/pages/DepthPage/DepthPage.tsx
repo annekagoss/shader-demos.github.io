@@ -2,6 +2,7 @@ import * as React from 'react';
 import Section from '../../components/Section/Section';
 import BaseCanvas from '../../components/BaseCanvas/BaseCanvas';
 import DepthCanvas from '../../components/DepthCanvas/DepthCanvas';
+import LoaderCanvas from '../../components/LoaderCanvas/LoaderCanvas';
 import ShaderText from '../../components/ShaderText/ShaderText';
 import Inputs from '../../components/Inputs/Inputs';
 import meshFragmentShader from '../../../lib/gl/shaders/mesh.frag';
@@ -146,8 +147,20 @@ const DepthPage = ({isActive}: Props) => {
 
 	return (
 		<div className={styles.page}>
-			<Section title='2.0: Mesh' notes={``}>
+			{/* <Section title='2.0: Mesh' notes={``}>
 				<DepthCanvas
+					fragmentShader={meshFragmentShader}
+					vertexShader={meshVertexShader}
+					uniforms={meshUniforms}
+					setAttributes={setAttributes}
+					mesh={CUBE_MESH}
+					rotationDelta={CUBE_ROTATION_DELTA}
+				/>
+				<ShaderText fragmentShader={meshFragmentShader} vertexShader={meshVertexShader} />
+				<Inputs attributes={attributes} uniforms={meshUniforms} pageMousePosRef={pageMousePosRef} />
+			</Section> */}
+			<Section title='2.1: File Loader' notes={``}>
+				<LoaderCanvas
 					fragmentShader={meshFragmentShader}
 					vertexShader={meshVertexShader}
 					uniforms={meshUniforms}

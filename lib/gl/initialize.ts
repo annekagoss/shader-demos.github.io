@@ -1,4 +1,4 @@
-import {Buffer, Buffers, GLSLColors, FBO, GLContext, LightSettings, LoadedMesh, Material, Matrix, Transformation, Vector3} from '../../types';
+import {Buffer, Buffers, GLSLColors, FBO, GLContext, LightSettings, LoadedMesh, Material, Matrix, Transformation, Vector3, Vector2} from '../../types';
 
 import {degreesToRadians, normalizeVector, subtractVectors, crossVectors} from './helpers';
 import {createMat4, applyPerspective, lookAt} from './matrix';
@@ -98,7 +98,7 @@ export function buildBuffer({gl, type, data, itemSize}: BufferInput): Buffer {
 	};
 }
 
-export function initFrameBufferObject(gl: WebGLRenderingContext): FBO {
+export function legacyInitFrameBufferObject(gl: WebGLRenderingContext): FBO {
 	const level: number = 0;
 	const internalFormat: number = gl.RGBA;
 	const border: number = 0;
@@ -138,7 +138,7 @@ export function initFrameBufferObject(gl: WebGLRenderingContext): FBO {
 	};
 }
 
-export const assignProjectionMatrix = (glContext: GLContext): void => {
+export const legacyAssignProjectionMatrix = (glContext: GLContext): void => {
 	const {gl, programInfo} = glContext;
 	let projectionMatrix: Matrix = applyPerspective({
 		sourceMatrix: createMat4(),
@@ -154,6 +154,23 @@ export const assignProjectionMatrix = (glContext: GLContext): void => {
 	});
 	gl.useProgram(programInfo.program);
 	gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
+};
+
+export const assignProjectionMatrix = (gl: WebGLRenderingContext, uniformLocations: Record<string, WebGLUniformLocation>, canvasSize: Vector2) => {
+	let projectionMatrix: Matrix = applyPerspective({
+		sourceMatrix: createMat4(),
+		fieldOfView: degreesToRadians(40),
+		aspect: canvasSize.x / canvasSize.y,
+		near: 0.01,
+		far: 100
+	});
+	projectionMatrix = lookAt(projectionMatrix, {
+		target: {x: 0, y: 0, z: 0},
+		origin: {x: 0, y: 0, z: 6},
+		up: {x: 0, y: 1, z: 0}
+	});
+
+	gl.uniformMatrix4fv(uniformLocations.uProjectionMatrix, false, projectionMatrix);
 };
 
 export function assignStaticUniforms(glContext: GLContext, lightSettings: LightSettings, colors: GLSLColors, transformation: Transformation): void {
@@ -355,5 +372,39 @@ export const initMesh = (gl: WebGLRenderingContext, program: WebGLProgram, mesh:
 	return {
 		positionBufferData: positions,
 		normalBufferData: normals
+	};
+};
+
+export const initFrameBufferObject = (gl: WebGLRenderingContext, textureWidth: number, textureHeight: number): FBO => {
+	const level: number = 0;
+	const internalFormat: number = gl.RGBA;
+	const border: number = 0;
+	const format: number = gl.RGBA;
+	const type: number = gl.UNSIGNED_BYTE;
+	const data: ArrayBufferView | null = null;
+
+	const targetTexture: WebGLTexture = gl.createTexture();
+	gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+	gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureWidth, textureHeight, border, format, type, data);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+	const frameBuffer: WebGLFramebuffer = gl.createFramebuffer();
+	gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
+	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, level);
+
+	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+	gl.bindTexture(gl.TEXTURE_2D, null);
+
+	if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+		console.error(new Error('Could not attach frame buffer'));
+	}
+
+	return {
+		buffer: frameBuffer,
+		targetTexture,
+		textureWidth,
+		textureHeight
 	};
 };

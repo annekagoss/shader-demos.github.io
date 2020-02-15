@@ -1,7 +1,6 @@
 import * as React from 'react';
-import {Buffer, Buffers, FBO, UniformSetting, UNIFORM_TYPE, Vector3} from '../../types';
-import {initShaderProgram, initBaseMesh, initMesh} from '../../lib/gl/initialize';
-import {string} from 'prop-types';
+import {FBO, UniformSetting, Vector3} from '../../types';
+import {initShaderProgram, initBaseMesh, initMesh, initFrameBufferObject} from '../../lib/gl/initialize';
 
 interface InitializeProps {
 	canvasRef: React.MutableRefObject<HTMLCanvasElement>;
@@ -39,7 +38,7 @@ export const useInitializeGL = ({canvasRef, fragmentSource, vertexSource, unifor
 	const FBOA = React.useRef<FBO>();
 	const FBOB = React.useRef<FBO>();
 
-	React.useLayoutEffect(() => {
+	React.useEffect(() => {
 		if (canvasRef.current === undefined) return;
 		const tempGl: WebGLRenderingContext = (canvasRef.current.getContext('experimental-webgl') as WebGLRenderingContext) || (canvasRef.current.getContext('webgl') as WebGLRenderingContext);
 
@@ -57,8 +56,8 @@ export const useInitializeGL = ({canvasRef, fragmentSource, vertexSource, unifor
 		uniformLocations.current = mapUniformSettingsToLocations(uniforms, tempGl, tempProgram, useFrameBuffer);
 
 		if (useFrameBuffer) {
-			FBOA.current = initSimpleFrameBufferObject(tempGl, targetWidth, targetHeight);
-			FBOB.current = initSimpleFrameBufferObject(tempGl, targetWidth, targetHeight);
+			FBOA.current = initFrameBufferObject(tempGl, targetWidth, targetHeight);
+			FBOB.current = initFrameBufferObject(tempGl, targetWidth, targetHeight);
 		}
 
 		gl.current = tempGl;
@@ -86,7 +85,7 @@ export const useInitializeDepthGL = ({canvasRef, fragmentSource, vertexSource, u
 	const FBOA = React.useRef<FBO>();
 	const FBOB = React.useRef<FBO>();
 
-	React.useLayoutEffect(() => {
+	React.useEffect(() => {
 		if (canvasRef.current === undefined) return;
 		const tempGl: WebGLRenderingContext = (canvasRef.current.getContext('experimental-webgl') as WebGLRenderingContext) || (canvasRef.current.getContext('webgl') as WebGLRenderingContext);
 
@@ -109,8 +108,8 @@ export const useInitializeDepthGL = ({canvasRef, fragmentSource, vertexSource, u
 		};
 
 		if (useFrameBuffer) {
-			FBOA.current = initSimpleFrameBufferObject(tempGl, targetWidth, targetHeight);
-			FBOB.current = initSimpleFrameBufferObject(tempGl, targetWidth, targetHeight);
+			FBOA.current = initFrameBufferObject(tempGl, targetWidth, targetHeight);
+			FBOB.current = initFrameBufferObject(tempGl, targetWidth, targetHeight);
 		}
 
 		gl.current = tempGl;
@@ -127,39 +126,5 @@ export const useInitializeDepthGL = ({canvasRef, fragmentSource, vertexSource, u
 		vertexNormalBuffer,
 		FBOA,
 		FBOB
-	};
-};
-
-const initSimpleFrameBufferObject = (gl: WebGLRenderingContext, textureWidth: number, textureHeight: number): FBO => {
-	const level: number = 0;
-	const internalFormat: number = gl.RGBA;
-	const border: number = 0;
-	const format: number = gl.RGBA;
-	const type: number = gl.UNSIGNED_BYTE;
-	const data: ArrayBufferView | null = null;
-
-	const targetTexture: WebGLTexture = gl.createTexture();
-	gl.bindTexture(gl.TEXTURE_2D, targetTexture);
-	gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureWidth, textureHeight, border, format, type, data);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-	const frameBuffer: WebGLFramebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, level);
-
-	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-	gl.bindTexture(gl.TEXTURE_2D, null);
-
-	if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
-		console.error(new Error('Could not attach frame buffer'));
-	}
-
-	return {
-		buffer: frameBuffer,
-		targetTexture,
-		textureWidth,
-		textureHeight
 	};
 };
