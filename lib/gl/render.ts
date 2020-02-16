@@ -1,6 +1,6 @@
 import {createMat4, applyTransformation, invertMatrix, transposeMatrix} from './matrix';
 
-import {AttributeLocations, DrawOptions, GLContext, RenderOptions, Transformation} from '../../types';
+import {AttributeLocations, DrawOptions, GLContext, RenderOptions, Transformation, UniformSetting, UNIFORM_TYPE, Vector2} from '../../types';
 
 export const render = (options: RenderOptions): void => {
 	const {frameId} = options;
@@ -129,4 +129,31 @@ const bindBuffers = (glContext: GLContext): void => {
 	}
 
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer.buffer);
+};
+
+export const assignUniforms = (uniforms: UniformSetting[], uniformLocations: Record<string, WebGLUniformLocation>, gl: WebGLRenderingContext, time: number, mousePos?: Vector2) => {
+	uniforms.forEach((uniform: UniformSetting) => {
+		switch (uniform.type) {
+			case UNIFORM_TYPE.FLOAT_1:
+				if (uniform.name === 'uTime') {
+					uniform.value = time;
+				}
+				gl.uniform1f(uniformLocations[uniform.name], uniform.value);
+				break;
+			case UNIFORM_TYPE.INT_1:
+				gl.uniform1i(uniformLocations[uniform.name], uniform.value);
+				break;
+			case UNIFORM_TYPE.VEC_2:
+				if (uniform.name === 'uMouse') {
+					uniform.value = Object.values(mousePos);
+				}
+				gl.uniform2fv(uniformLocations[uniform.name], Object.values(uniform.value));
+				break;
+			case UNIFORM_TYPE.VEC_3:
+				gl.uniform3fv(uniformLocations[uniform.name], Object.values(uniform.value));
+				break;
+			default:
+				break;
+		}
+	});
 };

@@ -2,7 +2,8 @@ import * as React from 'react';
 import {UniformSetting, Vector2, UNIFORM_TYPE, FBO} from '../../../types';
 import {useInitializeGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
-import {useWindowSize} from '../../hooks/general';
+import {useWindowSize} from '../../hooks/resize';
+import {assignUniforms} from '../../../lib/gl/render';
 import styles from './BaseCanvas.module.scss';
 
 interface Props {
@@ -21,30 +22,7 @@ interface RenderProps {
 }
 
 const render = ({gl, uniformLocations, uniforms, time, mousePos}: RenderProps) => {
-	uniforms.forEach((uniform: UniformSetting) => {
-		switch (uniform.type) {
-			case UNIFORM_TYPE.FLOAT_1:
-				if (uniform.name === 'uTime') {
-					uniform.value = time;
-				}
-				gl.uniform1f(uniformLocations[uniform.name], uniform.value);
-				break;
-			case UNIFORM_TYPE.INT_1:
-				gl.uniform1i(uniformLocations[uniform.name], uniform.value);
-				break;
-			case UNIFORM_TYPE.VEC_2:
-				if (uniform.name === 'uMouse') {
-					uniform.value = Object.values(mousePos);
-				}
-				gl.uniform2fv(uniformLocations[uniform.name], Object.values(uniform.value));
-				break;
-			case UNIFORM_TYPE.VEC_3:
-				gl.uniform3fv(uniformLocations[uniform.name], Object.values(uniform.value));
-				break;
-			default:
-				break;
-		}
-	});
+	assignUniforms(uniforms, uniformLocations, gl, time, mousePos);
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 };
 

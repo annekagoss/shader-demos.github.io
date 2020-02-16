@@ -1,7 +1,8 @@
 import * as React from 'react';
 import {UniformSetting, Vector2, UNIFORM_TYPE, Matrix, Vector3} from '../../../types';
-import {useInitializeDepthGL} from '../../hooks/gl';
+import {useInitializeGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
+import {useWindowSize} from '../../hooks/resize';
 import {assignProjectionMatrix} from '../../../lib/gl/initialize';
 import {applyRotation, createMat4} from '../../../lib/gl/matrix';
 import {addVectors} from '../../../lib/gl/helpers';
@@ -25,13 +26,13 @@ interface RenderProps {
 	uniforms: UniformSetting[];
 	time: number;
 	mousePos: Vector2;
-	canvasSize: Vector2;
+	size: Vector2;
 	numVertices: number;
 	rotation: Vector3;
 }
 
-const render = ({gl, uniformLocations, uniforms, time, mousePos, canvasSize, numVertices, rotation}: RenderProps) => {
-	assignProjectionMatrix(gl, uniformLocations, canvasSize);
+const render = ({gl, uniformLocations, uniforms, time, mousePos, size, numVertices, rotation}: RenderProps) => {
+	assignProjectionMatrix(gl, uniformLocations, size);
 	const modelViewMatrix: Matrix = applyRotation(createMat4().slice(), rotation);
 	gl.uniformMatrix4fv(uniformLocations.uModelViewMatrix, false, modelViewMatrix);
 
@@ -63,22 +64,30 @@ const render = ({gl, uniformLocations, uniforms, time, mousePos, canvasSize, num
 };
 
 const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef, mesh, rotationDelta}: Props) => {
-	const canvasSize: Vector2 = uniforms.current[0].value;
-	const targetWidth: number = Math.round(canvasSize.x * window.devicePixelRatio);
-	const targetHeight: number = Math.round(canvasSize.y * window.devicePixelRatio);
-	const numVertices: number = mesh.flat().length;
 	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
+	const size: React.MutableRefObject<Vector2> = React.useRef<Vector2>({
+		x: uniforms.current[0].value.x * window.devicePixelRatio,
+		y: uniforms.current[0].value.y * window.devicePixelRatio
+	});
 	const mouseDownRef: React.MutableRefObject<boolean> = React.useRef<boolean>(false);
-	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: targetWidth * 0.5, y: targetHeight * -0.5});
+	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: size.current.x * 0.5, y: size.current.y * -0.5});
+	const gl = React.useRef<WebGLRenderingContext>();
+	const uniformLocations = React.useRef<Record<string, WebGLUniformLocation>>();
+	const numVertices: number = mesh.flat().length;
+	const vertexPositionBuffer = React.useRef<any>([]);
+	const vertexNormalBuffer = React.useRef<any>([]);
 	const rotationRef: React.MutableRefObject<Vector3> = React.useRef<Vector3>({x: 0, y: 0, z: 0});
 
-	const {gl, uniformLocations, vertexPositionBuffer, vertexNormalBuffer} = useInitializeDepthGL({
+	useInitializeGL({
+		gl,
+		uniformLocations,
 		canvasRef,
+		vertexPositionBuffer,
+		vertexNormalBuffer,
 		fragmentSource: fragmentShader,
 		vertexSource: vertexShader,
 		uniforms: uniforms.current,
-		targetWidth,
-		targetHeight,
+		size,
 		mesh
 	});
 
@@ -89,6 +98,8 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 		]);
 	}, []);
 
+	useWindowSize(canvasRef.current, gl.current, uniforms.current, size);
+
 	useAnimationFrame((time: number) => {
 		rotationRef.current = addVectors(rotationRef.current, rotationDelta);
 		render({
@@ -97,7 +108,7 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 			uniforms: uniforms.current,
 			time,
 			mousePos: mousePosRef.current,
-			canvasSize,
+			size: size.current,
 			numVertices,
 			rotation: rotationRef.current
 		});
@@ -106,8 +117,8 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 	return (
 		<canvas
 			ref={canvasRef}
-			width={canvasSize.x}
-			height={canvasSize.y}
+			width={size.current.x}
+			height={size.current.y}
 			className={styles.canvas}
 			onMouseDown={() => {
 				mouseDownRef.current = true;

@@ -24,6 +24,7 @@ vec2 translateWithMouse(vec2 st) {
 }
 
 vec2 sampleCoordinate(vec2 st) {
+	st.x *= uResolution.x/uResolution.y;
 	vec2 offset = st + uOffset;
 	if (uSmoke == 0) {
 		return offset;
@@ -50,9 +51,10 @@ vec2 sampleCoordinate(vec2 st) {
 
 void main() {
     vec2 st = gl_FragCoord.xy/uResolution;
+	float frameBufferValue = texture2D(frameBufferTexture0, sampleCoordinate(st)).r * uAlpha;
 	vec2 mouseSt = translateWithMouse(st);
 	float baseShape = circle(mouseSt, vec2(.5), .125, uResolution);
-	st.x *= uResolution.x/uResolution.y;
-	float frameBufferValue = texture2D(frameBufferTexture0, sampleCoordinate(st)).r * uAlpha;
+	
+	
 	gl_FragColor = vec4(vec3(baseShape + frameBufferValue), 1.0);
 }

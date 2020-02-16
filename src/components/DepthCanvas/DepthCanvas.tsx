@@ -1,12 +1,13 @@
 import * as React from 'react';
 import {assignProjectionMatrix} from '../../../lib/gl/initialize';
+import {assignUniforms} from '../../../lib/gl/render';
 import {UniformSetting, Vector2, UNIFORM_TYPE, Matrix, Vector3} from '../../../types';
-import {useInitializeGL, useInitializeDepthGL} from '../../hooks/gl';
+import {useInitializeGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
 import styles from './DepthCanvas.module.scss';
-import {applyPerspective, applyRotation, createMat4, lookAt, invertMatrix, transposeMatrix} from '../../../lib/gl/matrix';
-import {degreesToRadians, addVectors} from '../../../lib/gl/helpers';
-import {useWindowSize} from '../../hooks/general';
+import {applyRotation, createMat4} from '../../../lib/gl/matrix';
+import {addVectors} from '../../../lib/gl/helpers';
+import {useWindowSize} from '../../hooks/resize';
 
 interface Props {
 	fragmentShader: string;
@@ -33,31 +34,7 @@ const render = ({gl, uniformLocations, uniforms, time, mousePos, size, numVertic
 	assignProjectionMatrix(gl, uniformLocations, size);
 	const modelViewMatrix: Matrix = applyRotation(createMat4().slice(), rotation);
 	gl.uniformMatrix4fv(uniformLocations.uModelViewMatrix, false, modelViewMatrix);
-
-	uniforms.forEach((uniform: UniformSetting) => {
-		switch (uniform.type) {
-			case UNIFORM_TYPE.FLOAT_1:
-				if (uniform.name === 'uTime') {
-					uniform.value = time;
-				}
-				gl.uniform1f(uniformLocations[uniform.name], uniform.value);
-				break;
-			case UNIFORM_TYPE.INT_1:
-				gl.uniform1i(uniformLocations[uniform.name], uniform.value);
-				break;
-			case UNIFORM_TYPE.VEC_2:
-				if (uniform.name === 'uMouse') {
-					uniform.value = Object.values(mousePos);
-				}
-				gl.uniform2fv(uniformLocations[uniform.name], Object.values(uniform.value));
-				break;
-			case UNIFORM_TYPE.VEC_3:
-				gl.uniform3fv(uniformLocations[uniform.name], Object.values(uniform.value));
-				break;
-			default:
-				break;
-		}
-	});
+	assignUniforms(uniforms, uniformLocations, gl, time, mousePos);
 	gl.drawArrays(gl.TRIANGLES, 0, numVertices);
 };
 
@@ -115,8 +92,8 @@ const DepthCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pag
 	return (
 		<canvas
 			ref={canvasRef}
-			width={size.x}
-			height={size.y}
+			width={size.current.x}
+			height={size.current.y}
 			className={styles.canvas}
 			onMouseDown={() => {
 				mouseDownRef.current = true;
