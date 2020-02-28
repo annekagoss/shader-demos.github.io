@@ -8,7 +8,14 @@ import {applyRotation, createMat4} from '../../../lib/gl/matrix';
 import {addVectors} from '../../../lib/gl/helpers';
 import loadMeshWorker from '../../../lib/gl/loadMeshWorker';
 import WebWorker from '../../../lib/gl/WebWorker';
+import {useOBJLoaderWebWorker} from '../../hooks/webWorker';
 import styles from './LoaderCanvas.module.scss';
+
+//FOX SKULL
+import OBJSource from '../../../lib/gl/assets/fox/fox3.obj';
+import MTLSource from '../../../lib/gl/assets/fox/fox.mtl';
+import diffuseSource0 from '../../../lib/gl/assets/fox/fox_skull_0.jpg';
+import diffuseSource1 from '../../../lib/gl/assets/fox/fox_skull_1.jpg';
 
 interface Props {
 	fragmentShader: string;
@@ -77,6 +84,20 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 	const vertexPositionBuffer = React.useRef<any>([]);
 	const vertexNormalBuffer = React.useRef<any>([]);
 	const rotationRef: React.MutableRefObject<Vector3> = React.useRef<Vector3>({x: 0, y: 0, z: 0});
+
+	useOBJLoaderWebWorker({
+		onLoadHandler: message => {
+			console.log(message);
+		},
+		OBJSource,
+		MTLSource,
+		textures: {
+			diffuse: {
+				'material_0.001': diffuseSource0,
+				'material_1.001': diffuseSource1
+			}
+		}
+	});
 
 	useInitializeGL({
 		gl,

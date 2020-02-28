@@ -1,18 +1,10 @@
-import {
-	ColorName,
-	Colors,
-	GLSLColor,
-	GLSLColors,
-	LightIntensities,
-	Vector3
-} from '../../types';
+import {ColorName, Colors, GLSLColor, GLSLColors, LightIntensities, Vector3, Face} from '../../types';
 
 const COLOR_VAL_REGEX: RegExp = /\d+/g;
 
 export function glSupported(window: any): boolean {
 	// Check https://github.com/AnalyticalGraphicsInc/webglreport for more detailed compatibility tests
-	const supported: boolean =
-		window.WebGLRenderingContext || window.WebGL2RenderingContext;
+	const supported: boolean = window.WebGLRenderingContext || window.WebGL2RenderingContext;
 	if (!supported) {
 		console.warn('WebGL is not supported on this device. Skipping 3D.'); // eslint-disable-line no-console
 	}
@@ -56,10 +48,7 @@ function hexToRGB(color: string, allowAlpha: boolean): GLSLColor {
 	if (color === '#') return;
 	const strippedColor: string = color.substr(1);
 	const colorLength: number = strippedColor.length;
-	const re: RegExp = new RegExp(
-		'.{1,'.concat((colorLength / 3).toString(), '}'),
-		'g'
-	);
+	const re: RegExp = new RegExp('.{1,'.concat((colorLength / 3).toString(), '}'), 'g');
 	const values: string[] = strippedColor.match(re);
 	if (!values) return;
 
@@ -67,10 +56,7 @@ function hexToRGB(color: string, allowAlpha: boolean): GLSLColor {
 	return allowAlpha ? [...rgb, 1] : rgb;
 }
 
-export function applyBrightness(
-	brightness: number,
-	defaults: LightIntensities
-): LightIntensities {
+export function applyBrightness(brightness: number, defaults: LightIntensities): LightIntensities {
 	return Object.keys(defaults).reduce((result, lightName) => {
 		if (lightName === 'ambient') {
 			result[lightName] = defaults[lightName];
@@ -93,15 +79,11 @@ export function lerp(v0: number, v1: number, t: number): number {
 	return v0 * (1 - t) + v1 * t;
 }
 
-export function interpolateVectors(
-	sourceVector: Vector3,
-	targetVector: Vector3,
-	amount: number
-): Vector3 {
+export function interpolateVectors(sourceVector: Vector3, targetVector: Vector3, amount: number): Vector3 {
 	const x: number = lerp(sourceVector.x, targetVector.x, amount);
 	const y: number = lerp(sourceVector.y, targetVector.y, amount);
 	const z: number = lerp(sourceVector.z, targetVector.z, amount);
-	return { x, y, z };
+	return {x, y, z};
 }
 
 export function addVectors(a: Vector3, b: Vector3): Vector3 {
@@ -142,6 +124,19 @@ export function normalizeVector(v: Vector3): Vector3 {
 	return multiplyScalar(v, 1 / magnitude);
 }
 
-export function vectorMagnitude({ x, y, z }: Vector3): number {
+export function vectorMagnitude({x, y, z}: Vector3): number {
 	return Math.sqrt(x * x + y * y + z * z);
 }
+
+export const computeFaceNormal = (face: Face): Vector3 | undefined => {
+	const {a, b, c} = face;
+	const cb: Vector3 = subtractVectors(c, b);
+	const ab: Vector3 = subtractVectors(a, b);
+	const cross: Vector3 = crossVectors(cb, ab);
+	/* We need to use === on -0 here because the recommended Object.is
+  is not supported on IE. */
+	if (cross.x === -0) cross.x = 0; // eslint-disable-line no-compare-neg-zero
+	if (cross.y === -0) cross.y = 0; // eslint-disable-line no-compare-neg-zero
+	if (cross.z === -0) cross.z = 0; // eslint-disable-line no-compare-neg-zero
+	return normalizeVector(cross);
+};

@@ -297,3 +297,14 @@ export interface UniformSetting {
 	type: UNIFORM_TYPE;
 	value: any;
 }
+
+export interface Textures {
+	diffure: Record<string, string>;
+}
+
+export interface WebWorkerLoadMessage {
+	onLoadHandler: (data: LoadedMesh) => void;
+	OBJSource: string;
+	MTLSource?: string;
+	textures?: Textures;
+}

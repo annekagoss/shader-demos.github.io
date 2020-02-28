@@ -157,7 +157,7 @@ export const legacyAssignProjectionMatrix = (glContext: GLContext): void => {
 };
 
 export const assignProjectionMatrix = (gl: WebGLRenderingContext, uniformLocations: Record<string, WebGLUniformLocation>, size: Vector2) => {
-	console.log(size);
+	if (!size) return;
 	let projectionMatrix: Matrix = applyPerspective({
 		sourceMatrix: createMat4(),
 		fieldOfView: degreesToRadians(40),

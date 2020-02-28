@@ -28,7 +28,7 @@ import {assignStaticUniforms, legacyAssignProjectionMatrix, initShaderProgram, i
 import {updateColors, updateLightSettings, updateMaterials, removeMaterials} from '../../../lib/gl/update';
 import {render} from '../../../lib/gl/render';
 
-import loadMeshWorker from '../../../lib/gl/loadMeshWorker';
+import loadMeshWorker from '../../../lib/gl/legacyLoadMeshWorker';
 import WebWorker from '../../../lib/gl/WebWorker';
 
 import {startInteraction, stopInteraction, updateMouseInteraction, updateDeviceInteraction, applyInteraction} from '../../../lib/gl/interaction';
@@ -142,6 +142,7 @@ export default class GLScene extends Component<SceneProps> {
 		this.glContext.textureCount = diffuseSources ? parseFloat(diffuseSources.length) : 0;
 
 		window.addEventListener('resize', this.updateRendererSize);
+		window.addEventListener('load', this.updateRendererSize);
 
 		if ('ondeviceorientation' in window) {
 			window.addEventListener('deviceorientation', this.handleDeviceOrientation);
@@ -392,7 +393,6 @@ export default class GLScene extends Component<SceneProps> {
 	}
 
 	start(): void {
-		console.log(this.glContext);
 		if (!this.frameId) {
 			this.frameId = requestAnimationFrame(this.animate);
 		}
@@ -458,19 +458,13 @@ export default class GLScene extends Component<SceneProps> {
 	};
 
 	updateRendererSize = (): void => {
-		console.log(this.$container);
 		if (!this.$container) return;
 		const {gl, $canvas} = this.glContext;
+		if (!$canvas) return;
 		const {width, height} = this.$container.getBoundingClientRect();
 		const targetWidth: number = Math.round(width * window.devicePixelRatio);
 		const targetHeight: number = Math.round(height * window.devicePixelRatio);
-		console.log({
-			targetWidth,
-			canvasWidth: $canvas.width,
-			devicePixeRatio: window.devicePixelRatio
-		});
 		if ($canvas.width !== targetWidth || $canvas.height !== targetHeight) {
-			console.log({targetWidth, width});
 			$canvas.width = targetWidth;
 			$canvas.height = targetHeight;
 			gl.viewport(0, 0, $canvas.width, $canvas.height);
@@ -526,7 +520,8 @@ export default class GLScene extends Component<SceneProps> {
 				ref={el => (this.$container = el)}
 				onMouseEnter={this.handleMouseEnter}
 				onMouseMove={this.handleMouseMove}
-				onMouseLeave={this.handleMouseLeave}>
+				onMouseLeave={this.handleMouseLeave}
+				onLoad={this.updateRendererSize}>
 				<canvas
 					ref={el => {
 						this.$canvas = el;
