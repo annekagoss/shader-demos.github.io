@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {assignProjectionMatrix} from '../../../lib/gl/initialize';
 import {assignUniforms} from '../../../lib/gl/render';
-import {UniformSetting, Vector2, UNIFORM_TYPE, Matrix, Vector3} from '../../../types';
+import {UniformSetting, Vector2, UNIFORM_TYPE, Matrix, Vector3, FaceArray, MESH_TYPE, Buffers} from '../../../types';
 import {useInitializeGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
 import styles from './DepthCanvas.module.scss';
@@ -15,7 +15,7 @@ interface Props {
 	uniforms: React.MutableRefObject<UniformSetting[]>;
 	setAttributes: (attributes: any[]) => void;
 	pageMousePosRef?: React.MutableRefObject<Vector2>;
-	mesh: Vector3[][];
+	faceArray: FaceArray;
 	rotationDelta: Vector3;
 }
 
@@ -38,7 +38,7 @@ const render = ({gl, uniformLocations, uniforms, time, mousePos, size, numVertic
 	gl.drawArrays(gl.TRIANGLES, 0, numVertices);
 };
 
-const DepthCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef, mesh, rotationDelta}: Props) => {
+const DepthCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef, faceArray, rotationDelta}: Props) => {
 	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
 	const size: React.MutableRefObject<Vector2> = React.useRef<Vector2>({
 		x: uniforms.current[0].value.x * window.devicePixelRatio,
@@ -48,28 +48,33 @@ const DepthCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pag
 	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: size.current.x * 0.5, y: size.current.y * -0.5});
 	const gl = React.useRef<WebGLRenderingContext>();
 	const uniformLocations = React.useRef<Record<string, WebGLUniformLocation>>();
-	const numVertices: number = mesh.flat().length;
-	const vertexPositionBuffer = React.useRef<any>([]);
-	const vertexNormalBuffer = React.useRef<any>([]);
+	const numVertices: number = faceArray.flat().length;
+	const buffersRef: React.MutableRefObject<Buffers> = React.useRef<Buffers>({
+		vertexBuffer: null,
+		normalBuffer: null,
+		indexBuffer: null,
+		textureBuffer: null,
+		textureAddressBuffer: null
+	});
 	const rotationRef: React.MutableRefObject<Vector3> = React.useRef<Vector3>({x: 0, y: 0, z: 0});
 
 	useInitializeGL({
 		gl,
 		uniformLocations,
 		canvasRef,
-		vertexPositionBuffer,
-		vertexNormalBuffer,
+		buffersRef,
 		fragmentSource: fragmentShader,
 		vertexSource: vertexShader,
 		uniforms: uniforms.current,
 		size,
-		mesh
+		faceArray,
+		meshType: MESH_TYPE.FACE_ARRAY
 	});
 
 	React.useEffect(() => {
 		setAttributes([
-			{name: 'aVertexPosition', value: vertexPositionBuffer.current.join(', ')},
-			{name: 'aVertexNormal', value: vertexNormalBuffer.current.join(', ')}
+			{name: 'aVertexPosition', value: buffersRef.current && buffersRef.current.vertexBuffer.data.join(', ')},
+			{name: 'aVertexNormal', value: buffersRef.current && buffersRef.current.normalBuffer.data.join(', ')}
 		]);
 	}, []);
 

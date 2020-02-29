@@ -1,6 +1,6 @@
 import * as React from 'react';
-import {UniformSetting, Vector2, UNIFORM_TYPE, Matrix, Vector3} from '../../../types';
-import {useInitializeGL} from '../../hooks/gl';
+import {UniformSetting, Vector2, UNIFORM_TYPE, Matrix, Vector3, LoadedMesh, FaceArray, MESH_TYPE, Buffers} from '../../../types';
+import {useInitializeGL, initializeGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
 import {useWindowSize} from '../../hooks/resize';
 import {assignProjectionMatrix} from '../../../lib/gl/initialize';
@@ -23,7 +23,7 @@ interface Props {
 	uniforms: React.MutableRefObject<UniformSetting[]>;
 	setAttributes: (attributes: any[]) => void;
 	pageMousePosRef?: React.MutableRefObject<Vector2>;
-	mesh: Vector3[][];
+	faceArray: FaceArray;
 	rotationDelta: Vector3;
 }
 
@@ -34,11 +34,12 @@ interface RenderProps {
 	time: number;
 	mousePos: Vector2;
 	size: Vector2;
-	numVertices: number;
 	rotation: Vector3;
+	buffers: Buffers;
 }
 
-const render = ({gl, uniformLocations, uniforms, time, mousePos, size, numVertices, rotation}: RenderProps) => {
+const render = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, rotation}: RenderProps) => {
+	if (!gl) return;
 	assignProjectionMatrix(gl, uniformLocations, size);
 	const modelViewMatrix: Matrix = applyRotation(createMat4().slice(), rotation);
 	gl.uniformMatrix4fv(uniformLocations.uModelViewMatrix, false, modelViewMatrix);
@@ -67,10 +68,15 @@ const render = ({gl, uniformLocations, uniforms, time, mousePos, size, numVertic
 				break;
 		}
 	});
-	gl.drawArrays(gl.TRIANGLES, 0, numVertices);
+	if (!buffers.indexBuffer) return;
+	const vertexCount: number = buffers.indexBuffer.numItems;
+	const indexType: number = gl.UNSIGNED_SHORT;
+	const indexOffset: number = 0;
+	gl.drawElements(gl.TRIANGLES, vertexCount, indexType, indexOffset);
+	// gl.drawArrays(gl.TRIANGLES, 0, numVertices);
 };
 
-const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef, mesh, rotationDelta}: Props) => {
+const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef, faceArray, rotationDelta}: Props) => {
 	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
 	const size: React.MutableRefObject<Vector2> = React.useRef<Vector2>({
 		x: uniforms.current[0].value.x * window.devicePixelRatio,
@@ -80,14 +86,37 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: size.current.x * 0.5, y: size.current.y * -0.5});
 	const gl = React.useRef<WebGLRenderingContext>();
 	const uniformLocations = React.useRef<Record<string, WebGLUniformLocation>>();
-	const numVertices: number = mesh.flat().length;
-	const vertexPositionBuffer = React.useRef<any>([]);
-	const vertexNormalBuffer = React.useRef<any>([]);
+	const buffersRef: React.MutableRefObject<Buffers> = React.useRef<Buffers>({
+		vertexBuffer: null,
+		normalBuffer: null,
+		indexBuffer: null,
+		textureBuffer: null,
+		textureAddressBuffer: null
+	});
 	const rotationRef: React.MutableRefObject<Vector3> = React.useRef<Vector3>({x: 0, y: 0, z: 0});
+	const meshRef: React.MutableRefObject<LoadedMesh> = React.useRef<LoadedMesh>();
 
 	useOBJLoaderWebWorker({
 		onLoadHandler: message => {
-			console.log(message);
+			meshRef.current = message;
+			initializeGL({
+				gl,
+				uniformLocations,
+				canvasRef,
+				buffersRef: buffersRef,
+				fragmentSource: fragmentShader,
+				vertexSource: vertexShader,
+				uniforms: uniforms.current,
+				size,
+				faceArray,
+				mesh: meshRef.current,
+				meshType: MESH_TYPE.OBJ
+			});
+			setAttributes([
+				// TODO: handle giant attribute arrays
+				// {name: 'aVertexPosition', value: buffersRef.current.vertexBuffer && buffersRef.current.vertexBuffer.data && buffersRef.current.vertexBuffer.data.join(', ')},
+				// {name: 'aVertexNormal', value: buffersRef.current.normalBuffer && buffersRef.current.normalBuffer.data && buffersRef.current.vertexBuffer.data.join(', ')}
+			]);
 		},
 		OBJSource,
 		MTLSource,
@@ -99,25 +128,25 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 		}
 	});
 
-	useInitializeGL({
-		gl,
-		uniformLocations,
-		canvasRef,
-		vertexPositionBuffer,
-		vertexNormalBuffer,
-		fragmentSource: fragmentShader,
-		vertexSource: vertexShader,
-		uniforms: uniforms.current,
-		size,
-		mesh
-	});
+	// useInitializeGL({
+	// 	gl,
+	// 	uniformLocations,
+	// 	canvasRef,
+	// 	vertexPositionBuffer,
+	// 	vertexNormalBuffer,
+	// 	fragmentSource: fragmentShader,
+	// 	vertexSource: vertexShader,
+	// 	uniforms: uniforms.current,
+	// 	size,
+	// 	mesh: meshRef.current,
+	// });
 
-	React.useEffect(() => {
-		setAttributes([
-			{name: 'aVertexPosition', value: vertexPositionBuffer.current.join(', ')},
-			{name: 'aVertexNormal', value: vertexNormalBuffer.current.join(', ')}
-		]);
-	}, []);
+	// React.useEffect(() => {
+	// 	setAttributes([
+	// 		{name: 'aVertexPosition', value: buffersRef.current && buffersRef.current.vertexBuffer.data.join(', ')},
+	// 		{name: 'aVertexNormal', value: buffersRef.current && buffersRef.current.normalBuffer.data.join(', ')}
+	// 	]);
+	// }, []);
 
 	useWindowSize(canvasRef.current, gl.current, uniforms.current, size);
 
@@ -130,8 +159,8 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 			time,
 			mousePos: mousePosRef.current,
 			size: size.current,
-			numVertices,
-			rotation: rotationRef.current
+			rotation: rotationRef.current,
+			buffers: buffersRef.current
 		});
 	});
 

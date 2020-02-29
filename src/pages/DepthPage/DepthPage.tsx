@@ -153,7 +153,7 @@ const DepthPage = ({isActive}: Props) => {
 					vertexShader={meshVertexShader}
 					uniforms={meshUniforms}
 					setAttributes={setAttributes}
-					mesh={CUBE_MESH}
+					faceArray={CUBE_MESH}
 					rotationDelta={CUBE_ROTATION_DELTA}
 				/>
 				<ShaderText fragmentShader={meshFragmentShader} vertexShader={meshVertexShader} />
@@ -165,7 +165,7 @@ const DepthPage = ({isActive}: Props) => {
 					vertexShader={meshVertexShader}
 					uniforms={meshUniforms}
 					setAttributes={setAttributes}
-					mesh={CUBE_MESH}
+					faceArray={CUBE_MESH}
 					rotationDelta={CUBE_ROTATION_DELTA}
 				/>
 				<ShaderText fragmentShader={meshFragmentShader} vertexShader={meshVertexShader} />

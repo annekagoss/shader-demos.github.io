@@ -1,10 +1,11 @@
 import * as React from 'react';
-import {UniformSetting, Vector2, UNIFORM_TYPE, FBO} from '../../../types';
+import {UniformSetting, Vector2, UNIFORM_TYPE, FBO, MESH_TYPE, Buffers} from '../../../types';
 import {useInitializeGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
 import {useWindowSize} from '../../hooks/resize';
 import {assignUniforms} from '../../../lib/gl/render';
 import styles from './BaseCanvas.module.scss';
+import {BASE_TRIANGLE_MESH} from '../../../lib/gl/initialize';
 
 interface Props {
 	fragmentShader: string;
@@ -36,21 +37,20 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes}: Pro
 	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: size.current.x * 0.5, y: size.current.y * -0.5});
 	const gl = React.useRef<WebGLRenderingContext>();
 	const uniformLocations = React.useRef<Record<string, WebGLUniformLocation>>();
-	const vertexPositionBuffer = React.useRef([]);
 
 	useInitializeGL({
 		gl,
 		uniformLocations,
 		canvasRef,
-		vertexPositionBuffer,
 		fragmentSource: fragmentShader,
 		vertexSource: vertexShader,
 		uniforms: uniforms.current,
-		size
+		size,
+		meshType: MESH_TYPE.BASE_TRIANGLES
 	});
 
 	React.useEffect(() => {
-		setAttributes([{name: 'aVertexPosition', value: vertexPositionBuffer.current.join(', ')}]);
+		setAttributes([{name: 'aVertexPosition', value: BASE_TRIANGLE_MESH.join(', ')}]);
 	}, []);
 
 	useWindowSize(canvasRef.current, gl.current, uniforms.current, size);

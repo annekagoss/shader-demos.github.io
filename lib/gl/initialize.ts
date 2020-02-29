@@ -1,4 +1,4 @@
-import {Buffer, Buffers, GLSLColors, FBO, GLContext, LightSettings, LoadedMesh, Material, Matrix, Transformation, Vector3, Vector2} from '../../types';
+import {Buffer, Buffers, GLSLColors, FBO, GLContext, LightSettings, LoadedMesh, Material, Matrix, Transformation, Vector3, Vector2, FaceArray} from '../../types';
 
 import {degreesToRadians, normalizeVector, subtractVectors, crossVectors} from './helpers';
 import {createMat4, applyPerspective, lookAt} from './matrix';
@@ -11,6 +11,8 @@ interface BufferInput {
 	data: number[];
 	itemSize: number;
 }
+
+export const BASE_TRIANGLE_MESH: number[] = [-1, 1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0];
 
 export function initShaderProgram(gl: WebGLRenderingContext, vertSource: string, fragSource: string): WebGLProgram {
 	const vertexShader: WebGLShader = loadShader(gl, gl.VERTEX_SHADER, vertSource);
@@ -77,11 +79,11 @@ export function initBuffers(gl: WebGLRenderingContext, loadedMesh: LoadedMesh): 
 	});
 
 	return {
-		indexBuffer,
-		normalBuffer,
-		textureAddressBuffer,
-		textureBuffer,
-		vertexBuffer
+		indexBuffer: {...indexBuffer, data: indices},
+		normalBuffer: {...normalBuffer, data: normals},
+		textureAddressBuffer: {...textureAddressBuffer, data: textureAddresses},
+		textureBuffer: {...textureAddressBuffer, data: textures},
+		vertexBuffer: {...vertexBuffer, data: positions}
 	};
 }
 
@@ -284,20 +286,15 @@ export function initPlaceholderTexture(gl: WebGLRenderingContext): WebGLTexture 
 
 // Base mesh made of two triangles
 export const initBaseMesh = (gl: WebGLRenderingContext, program: WebGLProgram) => {
-	const data = [-1, 1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0];
-	buildBuffer({
+	const vertexBuffer = buildBuffer({
 		gl,
 		type: gl.ARRAY_BUFFER,
-		data,
+		data: BASE_TRIANGLE_MESH,
 		itemSize: 3
 	});
 	const vertexPosition = gl.getAttribLocation(program, 'aVertexPosition');
 	gl.enableVertexAttribArray(vertexPosition);
 	gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
-	return {
-		bufferData: data,
-		vertexPosition
-	};
 };
 
 const computeFaceNormal = (face: Vector3[]): Vector3 => {
@@ -332,11 +329,11 @@ const computeBarycentricCoords = (numFaces: number): number[] => {
 	return coords;
 };
 
-export const initMesh = (gl: WebGLRenderingContext, program: WebGLProgram, mesh: Vector3[][], useBarycentric: bool) => {
-	const vertices = mesh.flat();
+export const initMeshFromFaceArray = (gl: WebGLRenderingContext, program: WebGLProgram, faceArray: FaceArray, useBarycentric: boolean) => {
+	const vertices = faceArray.flat();
 	const positions: number[] = vertices.map((coordinate: Vector3) => Object.values(coordinate)).flat();
 
-	buildBuffer({
+	const vertexBuffer = buildBuffer({
 		gl,
 		type: gl.ARRAY_BUFFER,
 		data: positions,
@@ -346,8 +343,8 @@ export const initMesh = (gl: WebGLRenderingContext, program: WebGLProgram, mesh:
 	gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
 	gl.enableVertexAttribArray(vertexPosition);
 
-	const normals = computeFaceNormals(mesh);
-	buildBuffer({
+	const normals = computeFaceNormals(faceArray);
+	const normalBuffer = buildBuffer({
 		gl,
 		type: gl.ARRAY_BUFFER,
 		data: normals,
@@ -358,8 +355,8 @@ export const initMesh = (gl: WebGLRenderingContext, program: WebGLProgram, mesh:
 	gl.enableVertexAttribArray(vertexNormal);
 
 	if (useBarycentric) {
-		const barycentric = computeBarycentricCoords(mesh.length);
-		buildBuffer({
+		const barycentric = computeBarycentricCoords(faceArray.length);
+		const barycentricBuffer = buildBuffer({
 			gl,
 			type: gl.ARRAY_BUFFER,
 			data: barycentric,
@@ -371,8 +368,11 @@ export const initMesh = (gl: WebGLRenderingContext, program: WebGLProgram, mesh:
 	}
 
 	return {
-		positionBufferData: positions,
-		normalBufferData: normals
+		vertexBuffer: {...vertexBuffer, data: positions},
+		normalBuffer: {...normalBuffer, data: normals},
+		indexBuffer: null,
+		textureBuffer: null,
+		textureAddressBuffer: null
 	};
 };
 

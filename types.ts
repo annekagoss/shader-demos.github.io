@@ -44,6 +44,7 @@ export interface Buffer {
 	buffer: WebGLBuffer;
 	itemSize: number; // Int > 0
 	numItems: number; // Int
+	data: number[];
 }
 
 export type Buffers = Record<BufferType, Buffer>;
@@ -298,8 +299,10 @@ export interface UniformSetting {
 	value: any;
 }
 
+export type FaceArray = Vector3[][];
+
 export interface Textures {
-	diffure: Record<string, string>;
+	diffuse: Record<string, string>;
 }
 
 export interface WebWorkerLoadMessage {
@@ -307,4 +310,10 @@ export interface WebWorkerLoadMessage {
 	OBJSource: string;
 	MTLSource?: string;
 	textures?: Textures;
+}
+
+export enum MESH_TYPE {
+	BASE_TRIANGLES,
+	FACE_ARRAY,
+	OBJ
 }
