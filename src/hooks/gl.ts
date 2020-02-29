@@ -74,7 +74,7 @@ const initializeMesh = ({faceArray, buffersRef, meshType, mesh}: InitializeProps
 			break;
 		case MESH_TYPE.OBJ:
 			// initializeMeshFromOBJ(tempGl, mesh, vertexPositionBuffer, vertexNormalBuffer, indexBuffer);
-			buffersRef.current = initBuffers(tempGl, mesh);
+			buffersRef.current = initBuffers(tempGl, tempProgram, mesh);
 			break;
 		default:
 			initBaseMesh(tempGl, tempProgram);

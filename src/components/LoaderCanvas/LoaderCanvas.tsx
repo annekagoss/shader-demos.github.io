@@ -4,7 +4,7 @@ import {useInitializeGL, initializeGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
 import {useWindowSize} from '../../hooks/resize';
 import {assignProjectionMatrix} from '../../../lib/gl/initialize';
-import {applyRotation, createMat4} from '../../../lib/gl/matrix';
+import {applyRotation, createMat4, applyTransformation} from '../../../lib/gl/matrix';
 import {addVectors} from '../../../lib/gl/helpers';
 import loadMeshWorker from '../../../lib/gl/loadMeshWorker';
 import WebWorker from '../../../lib/gl/WebWorker';
@@ -41,7 +41,13 @@ interface RenderProps {
 const render = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, rotation}: RenderProps) => {
 	if (!gl) return;
 	assignProjectionMatrix(gl, uniformLocations, size);
-	const modelViewMatrix: Matrix = applyRotation(createMat4().slice(), rotation);
+
+	// const modelViewMatrix: Matrix = applyRotation(createMat4().slice(), rotation);
+	const modelViewMatrix: Matrix = applyTransformation(createMat4(), {
+		translation: {x: 0, y: 0.3, z: 0},
+		rotation: {x: 0, y: 0, z: 0},
+		scale: 0.0485
+	});
 	gl.uniformMatrix4fv(uniformLocations.uModelViewMatrix, false, modelViewMatrix);
 
 	uniforms.forEach((uniform: UniformSetting) => {
@@ -69,6 +75,7 @@ const render = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, 
 		}
 	});
 	if (!buffers.indexBuffer) return;
+
 	const vertexCount: number = buffers.indexBuffer.numItems;
 	const indexType: number = gl.UNSIGNED_SHORT;
 	const indexOffset: number = 0;
@@ -85,7 +92,8 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 	const mouseDownRef: React.MutableRefObject<boolean> = React.useRef<boolean>(false);
 	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: size.current.x * 0.5, y: size.current.y * -0.5});
 	const gl = React.useRef<WebGLRenderingContext>();
-	const uniformLocations = React.useRef<Record<string, WebGLUniformLocation>>();
+	const uniformLocations: React.MutableRefObject<Record<string, WebGLUniformLocation>> = React.useRef<Record<string, WebGLUniformLocation>>();
+	const attributeLocationsRef: React.MutableRefObject<Record<string, number>> = React.useRef<Record<string, number>>({});
 	const buffersRef: React.MutableRefObject<Buffers> = React.useRef<Buffers>({
 		vertexBuffer: null,
 		normalBuffer: null,

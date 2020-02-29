@@ -41,7 +41,7 @@ export function loadShader(gl: WebGLRenderingContext, type: number, source: stri
 	return shader;
 }
 
-export function initBuffers(gl: WebGLRenderingContext, loadedMesh: LoadedMesh): Buffers {
+export function initBuffers(gl: WebGLRenderingContext, program: WebGLProgram, loadedMesh: LoadedMesh): Buffers {
 	const {positions, normals, textures, textureAddresses, indices}: LoadedMesh = loadedMesh;
 	const vertexBuffer: Buffer = buildBuffer({
 		gl,
@@ -49,6 +49,9 @@ export function initBuffers(gl: WebGLRenderingContext, loadedMesh: LoadedMesh): 
 		data: positions,
 		itemSize: 3
 	});
+	const vertexPosition = gl.getAttribLocation(program, 'aVertexPosition');
+	gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
+	gl.enableVertexAttribArray(vertexPosition);
 
 	const normalBuffer: Buffer = buildBuffer({
 		gl,
@@ -56,6 +59,9 @@ export function initBuffers(gl: WebGLRenderingContext, loadedMesh: LoadedMesh): 
 		data: normals,
 		itemSize: 3
 	});
+	const vertexNormal = gl.getAttribLocation(program, 'aVertexNormal');
+	gl.vertexAttribPointer(vertexNormal, 3, gl.FLOAT, false, 0, 0);
+	gl.enableVertexAttribArray(vertexNormal);
 
 	const textureBuffer: Buffer = buildBuffer({
 		gl,
@@ -63,6 +69,10 @@ export function initBuffers(gl: WebGLRenderingContext, loadedMesh: LoadedMesh): 
 		data: textures,
 		itemSize: 2
 	});
+	const textureCoord = gl.getAttribLocation(program, 'aTextureCoord');
+	gl.vertexAttribPointer(textureCoord, 2, gl.FLOAT, false, 0, 0);
+	gl.enableVertexAttribArray(textureCoord);
+
 
 	const textureAddressBuffer: Buffer = buildBuffer({
 		gl,
@@ -70,6 +80,10 @@ export function initBuffers(gl: WebGLRenderingContext, loadedMesh: LoadedMesh): 
 		data: textureAddresses,
 		itemSize: 1
 	});
+	const textureAddress = gl.getAttribLocation(program, 'aTextureAddress');
+	gl.vertexAttribPointer(textureAddress, 1, gl.FLOAT, false, 0, 0);
+	gl.enableVertexAttribArray(textureAddress);
+
 
 	const indexBuffer: Buffer = buildBuffer({
 		gl,
