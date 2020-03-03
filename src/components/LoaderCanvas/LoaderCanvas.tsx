@@ -45,7 +45,11 @@ const render = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, 
 	// const modelViewMatrix: Matrix = applyRotation(createMat4().slice(), rotation);
 	const modelViewMatrix: Matrix = applyTransformation(createMat4(), {
 		translation: {x: 0, y: 0.3, z: 0},
-		rotation: {x: 0, y: 0, z: 0},
+		rotation: {
+			x: Math.sin(time * 0.0005) * 0.25,
+			y: rotation.y,
+			z: rotation.z
+		},
 		scale: 0.0485
 	});
 	gl.uniformMatrix4fv(uniformLocations.uModelViewMatrix, false, modelViewMatrix);

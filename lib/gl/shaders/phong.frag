@@ -13,13 +13,20 @@ const float wireframeThickness = 0.01;
 const vec3 wireframeColor = vec3(0.0);
 const vec3 specularColor = vec3(1.0);
 
+const float contrast = 1.5;
+
 #pragma glslify: wireframe = require('./common/wireframe.glsl');
 
 void main() {  
 	vec2 st = gl_FragCoord.xy/uResolution;
 	// 0 PHONG
 	if (uMaterialType == 0) {
-		vec3 phongLighting = vLighting + (vSpecular * vLighting);
+		vec3 lighting = vLighting;
+		lighting.r = pow(lighting.r, contrast);
+		lighting.g = pow(lighting.g, contrast);
+		lighting.b = pow(lighting.b, contrast);
+		vec3 phongLighting = lighting + (max(vSpecular, 0.0) * vLighting);
+		
 		gl_FragColor = vec4(phongLighting, 1.0);
 		return;
 	}

@@ -82,18 +82,25 @@ const BASE_PHONG_UNIFORMS: UniformSetting[] = [
 		value: 0
 	},
 	{
+		defaultValue: 0.5,
+		name: 'uSpecular',
+		readonly: false,
+		type: UNIFORM_TYPE.FLOAT_1,
+		value: 0.5
+	},
+	{
+		defaultValue: {x: 4.0, y: 4.0, z: 4.0},
+		name: 'uLightColorA',
+		readonly: false,
+		type: UNIFORM_TYPE.VEC_3,
+		value: {x: 4.0, y: 4.0, z: 4.0}
+	},
+	{
 		defaultValue: {x: 1.0, y: 1.0, z: 1.0},
 		name: 'uLightPositionA',
 		readonly: false,
 		type: UNIFORM_TYPE.VEC_3,
 		value: {x: 1.0, y: 1.0, z: 1.0}
-	},
-	{
-		defaultValue: {x: 2.0, y: 2.0, z: 2.0},
-		name: 'uLightColorA',
-		readonly: false,
-		type: UNIFORM_TYPE.VEC_3,
-		value: {x: 2.0, y: 2.0, z: 2.0}
 	},
 	{
 		defaultValue: {x: 0.0, y: 0.0, z: 0.0},
@@ -181,6 +188,7 @@ const CUBE_MESH: Vector3[][] = [
 ];
 
 const CUBE_ROTATION_DELTA: Vector3 = {x: 0.0025, y: 0.01, z: 0};
+const OBJ_ROTATION_DELTA: Vector3 = {x: 0, y: 0.01, z: 0};
 
 const DepthPage = ({isActive}: Props) => {
 	const meshUniforms = React.useRef<UniformSetting[]>(BASE_MESH_UNIFORMS);
@@ -214,7 +222,7 @@ const DepthPage = ({isActive}: Props) => {
 					uniforms={phongUniforms}
 					setAttributes={setAttributes}
 					faceArray={CUBE_MESH}
-					rotationDelta={CUBE_ROTATION_DELTA}
+					rotationDelta={OBJ_ROTATION_DELTA}
 				/>
 				<ShaderText fragmentShader={phongFragmentShader} vertexShader={phongVertexShader} />
 				<Inputs attributes={attributes} uniforms={phongUniforms} pageMousePosRef={pageMousePosRef} />

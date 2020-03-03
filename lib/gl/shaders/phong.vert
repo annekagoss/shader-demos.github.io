@@ -12,6 +12,8 @@ uniform vec3 uLightPositionB;
 uniform vec3 uLightColorA;
 uniform vec3 uLightColorB;
 
+uniform float uSpecular;
+
 varying vec3 vLighting;
 varying float vSpecular;
 
@@ -34,7 +36,8 @@ void main() {
 		uNormalMatrix,
 		aVertexNormal,
 		lighting,
-		eye
+		eye,
+		uSpecular
 	);
 	vLighting = lighting;
 	vSpecular = specular;
