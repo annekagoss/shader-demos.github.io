@@ -44,7 +44,8 @@ export const initializeRenderer = ({uniformLocations, canvasRef, fragmentSource,
 	uniformLocations.current = {
 		...mapUniformSettingsToLocations(uniforms, tempGl, tempProgram, useFrameBuffer),
 		uProjectionMatrix: tempGl.getUniformLocation(tempProgram, 'uProjectionMatrix'),
-		uModelViewMatrix: tempGl.getUniformLocation(tempProgram, 'uModelViewMatrix')
+		uModelViewMatrix: tempGl.getUniformLocation(tempProgram, 'uModelViewMatrix'),
+		uNormalMatrix: tempGl.getUniformLocation(tempProgram, 'uNormalMatrix')
 	};
 	if (useFrameBuffer) {
 		FBOA.current = initFrameBufferObject(tempGl, size.current.x, size.current.y);

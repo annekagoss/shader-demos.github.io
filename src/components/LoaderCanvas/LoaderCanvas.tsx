@@ -4,7 +4,7 @@ import {useInitializeGL, initializeGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
 import {useWindowSize} from '../../hooks/resize';
 import {assignProjectionMatrix} from '../../../lib/gl/initialize';
-import {applyRotation, createMat4, applyTransformation} from '../../../lib/gl/matrix';
+import {applyRotation, createMat4, applyTransformation, invertMatrix} from '../../../lib/gl/matrix';
 import {addVectors} from '../../../lib/gl/helpers';
 import loadMeshWorker from '../../../lib/gl/loadMeshWorker';
 import WebWorker from '../../../lib/gl/WebWorker';
@@ -49,6 +49,7 @@ const render = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, 
 		scale: 0.0485
 	});
 	gl.uniformMatrix4fv(uniformLocations.uModelViewMatrix, false, modelViewMatrix);
+	gl.uniformMatrix4fv(uniformLocations.uNormalMatrix, false, invertMatrix(modelViewMatrix));
 
 	uniforms.forEach((uniform: UniformSetting) => {
 		switch (uniform.type) {

@@ -1,13 +1,13 @@
 import * as React from 'react';
 import Section from '../../components/Section/Section';
-import BaseCanvas from '../../components/BaseCanvas/BaseCanvas';
 import DepthCanvas from '../../components/DepthCanvas/DepthCanvas';
 import LoaderCanvas from '../../components/LoaderCanvas/LoaderCanvas';
 import ShaderText from '../../components/ShaderText/ShaderText';
 import Inputs from '../../components/Inputs/Inputs';
 import meshFragmentShader from '../../../lib/gl/shaders/mesh.frag';
-import baseVertexShader from '../../../lib/gl/shaders/base.vert';
 import meshVertexShader from '../../../lib/gl/shaders/mesh.vert';
+import phongFragmentShader from '../../../lib/gl/shaders/phong.frag';
+import phongVertexShader from '../../../lib/gl/shaders/phong.vert';
 import {BASE_UNIFORMS} from '../../utils/general';
 import {UNIFORM_TYPE, Vector2, UniformSetting, Vector3} from '../../../types';
 
@@ -42,6 +42,13 @@ const BASE_MESH_UNIFORMS: UniformSetting[] = [
 		value: {x: 1.0, y: 1.0, z: 1.0}
 	},
 	{
+		defaultValue: {x: 0.0, y: 0.0, z: 1.0},
+		name: 'uLightColorA',
+		readonly: false,
+		type: UNIFORM_TYPE.VEC_3,
+		value: {x: 0.0, y: 0.0, z: 1.0}
+	},
+	{
 		defaultValue: {x: 0.3, y: 0.0, z: 0.6},
 		name: 'uLightColorB',
 		readonly: false,
@@ -54,13 +61,53 @@ const BASE_MESH_UNIFORMS: UniformSetting[] = [
 		readonly: false,
 		type: UNIFORM_TYPE.VEC_3,
 		value: {x: -1.0, y: -1.0, z: 1.0}
+	}
+];
+
+const BASE_PHONG_UNIFORMS: UniformSetting[] = [
+	...BASE_UNIFORMS,
+	{
+		defaultValue: 0,
+		name: 'uTime',
+		readonly: true,
+		type: UNIFORM_TYPE.FLOAT_1,
+		value: 0
 	},
 	{
-		defaultValue: {x: 0.0, y: 0.0, z: 1.0},
+		defaultValue: 0,
+		name: 'uMaterialType',
+		isBool: false,
+		readonly: false,
+		type: UNIFORM_TYPE.INT_1,
+		value: 0
+	},
+	{
+		defaultValue: {x: 1.0, y: 1.0, z: 1.0},
+		name: 'uLightPositionA',
+		readonly: false,
+		type: UNIFORM_TYPE.VEC_3,
+		value: {x: 1.0, y: 1.0, z: 1.0}
+	},
+	{
+		defaultValue: {x: 2.0, y: 2.0, z: 2.0},
 		name: 'uLightColorA',
 		readonly: false,
 		type: UNIFORM_TYPE.VEC_3,
-		value: {x: 0.0, y: 0.0, z: 1.0}
+		value: {x: 2.0, y: 2.0, z: 2.0}
+	},
+	{
+		defaultValue: {x: 0.0, y: 0.0, z: 0.0},
+		name: 'uLightColorB',
+		readonly: false,
+		type: UNIFORM_TYPE.VEC_3,
+		value: {x: 0.0, y: 0.0, z: 0.0}
+	},
+	{
+		defaultValue: {x: -1.0, y: -1.0, z: 1.0},
+		name: 'uLightPositionB',
+		readonly: false,
+		type: UNIFORM_TYPE.VEC_3,
+		value: {x: -1.0, y: -1.0, z: 1.0}
 	}
 ];
 
@@ -137,6 +184,7 @@ const CUBE_ROTATION_DELTA: Vector3 = {x: 0.0025, y: 0.01, z: 0};
 
 const DepthPage = ({isActive}: Props) => {
 	const meshUniforms = React.useRef<UniformSetting[]>(BASE_MESH_UNIFORMS);
+	const phongUniforms = React.useRef<UniformSetting[]>(BASE_PHONG_UNIFORMS);
 	const pageMousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({
 		x: 0.5,
 		y: 0.5
@@ -161,15 +209,15 @@ const DepthPage = ({isActive}: Props) => {
 			</Section>
 			<Section title='2.1: File Loader' notes={``}>
 				<LoaderCanvas
-					fragmentShader={meshFragmentShader}
-					vertexShader={meshVertexShader}
-					uniforms={meshUniforms}
+					fragmentShader={phongFragmentShader}
+					vertexShader={phongVertexShader}
+					uniforms={phongUniforms}
 					setAttributes={setAttributes}
 					faceArray={CUBE_MESH}
 					rotationDelta={CUBE_ROTATION_DELTA}
 				/>
-				<ShaderText fragmentShader={meshFragmentShader} vertexShader={meshVertexShader} />
-				<Inputs attributes={attributes} uniforms={meshUniforms} pageMousePosRef={pageMousePosRef} />
+				<ShaderText fragmentShader={phongFragmentShader} vertexShader={phongVertexShader} />
+				<Inputs attributes={attributes} uniforms={phongUniforms} pageMousePosRef={pageMousePosRef} />
 			</Section>
 		</div>
 	);

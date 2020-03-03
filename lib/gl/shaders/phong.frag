@@ -1,88 +1,33 @@
+#ifdef GL_ES
 precision mediump float;
+#endif
 
-varying vec2 vTextureCoord;
-varying vec3 vNormal;
 varying vec3 vLighting;
 varying float vSpecular;
-varying float vTextureAddress;
+// varying vec3 vBarycentric;
 
-varying vec4 vPositionFromLeftLight;
+uniform vec2 uResolution;
+uniform int uMaterialType;
 
-uniform float uHasTexture;
-uniform sampler2D uSampler0;
-uniform sampler2D uSampler1;
+const float wireframeThickness = 0.01;
+const vec3 wireframeColor = vec3(0.0);
+const vec3 specularColor = vec3(1.0);
 
-uniform float uShadowStrength;
+#pragma glslify: wireframe = require('./common/wireframe.glsl');
 
-uniform vec3 uDiffuseColor0;
-uniform vec3 uEmissiveColor0;
-uniform vec3 uSpecularColor0;
-uniform float uReflectivity0;
-uniform float uOpacity0;
-
-uniform vec3 uDiffuseColor1;
-uniform vec3 uEmissiveColor1;
-uniform vec3 uSpecularColor1;
-uniform float uReflectivity1;
-uniform float uOpacity1;
-
-uniform vec3 uDiffuseColor2;
-uniform vec3 uEmissiveColor2;
-uniform vec3 uSpecularColor2;
-uniform float uReflectivity2;
-uniform float uOpacity2;
-
-uniform int uDepthEnabled;
-uniform sampler2D uDepthMap;
-
-uniform vec3 uLeftLightColor;
-uniform vec3 uRightLightColor;
-uniform vec3 uTopLightColor;
-uniform vec3 uBottomLightColor;
-
-#pragma glslify: shadow = require('./common/shadow-map.glsl');
-
-vec4 readTextures() {
-  if (vTextureAddress == 0.) {
-    if (uHasTexture == 1.) {
-      return texture2D(uSampler0, vTextureCoord);
-    } else {
-      return vec4(uDiffuseColor0, 1.);
-    }
-  } else if (vTextureAddress == 1.) {
-    if (uHasTexture == 1.) {
-      return texture2D(uSampler1, vTextureCoord);
-    } else {
-      return vec4(uDiffuseColor1, 1.);
-    }
-  } else {
-      return vec4(uDiffuseColor2, 1.);
-  }
-}
-
-void main() {
-  vec4 texelColor = readTextures();
-  vec3 specularColor;
-  float opacity;
-
-  if (vTextureAddress == 0.) {
-    specularColor = uSpecularColor0;
-    opacity = uOpacity0;
-  } else if (vTextureAddress == 1.) {
-    specularColor = uSpecularColor1;
-    opacity = uOpacity1;
-  } else {
-    specularColor = uSpecularColor2;
-    opacity = uOpacity2;
-  }
-
-  vec3 lightedColor;
-  if (uDepthEnabled == 1) {
-    vec3 shadowColor = shadow(uDepthMap, vPositionFromLeftLight, uShadowStrength);
-    lightedColor = (texelColor.xyz - shadowColor) * (vLighting + (vSpecular * specularColor) );
-  } else {
-    lightedColor = texelColor.xyz * (vLighting + (vSpecular * specularColor));
-  }
-
-  gl_FragColor = vec4(lightedColor, opacity*texelColor.w);
+void main() {  
+	vec2 st = gl_FragCoord.xy/uResolution;
+	// 0 PHONG
+	if (uMaterialType == 0) {
+		vec3 phongLighting = vLighting + (vSpecular * vLighting);
+		gl_FragColor = vec4(phongLighting, 1.0);
+		return;
+	}
+	// 1 WIREFRAME
+	// } else {
+	// 	gl_FragColor = wireframe(vBarycentric);
+	// }
+	// 2 TEXTURE
+	// 3 SHADOW MAP
+	// 4 SHINY GLITCH
 }

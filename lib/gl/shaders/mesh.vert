@@ -16,16 +16,18 @@ varying vec3 vLighting;
 varying vec3 vBarycentric;
 varying vec3 vVertexPosition;
 
-vec3 calculateLighting() {
-	vec4 normal = uModelViewMatrix * vec4(aVertexNormal, 1.);
-	vec3 a = uLightColorA * max(dot(normal.xyz, normalize(uLightPositionA)), 0.0);
-	vec3 b = uLightColorB * max(dot(normal.xyz, normalize(uLightPositionB)), 0.0);
-	return a + b;
-}
+#pragma glslify: calculateLighting = require('./common/lighting.glsl');
 
 void main() {
 	gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-	vLighting = calculateLighting();
+	vLighting = calculateLighting(
+		uModelViewMatrix,
+		aVertexNormal,
+		uLightPositionA,
+		uLightPositionB,
+		uLightColorA,
+		uLightColorB
+	);
 	vBarycentric = aBarycentric;
 	vVertexPosition = aVertexPosition.xyz * .5 + .5;
 }
