@@ -41,7 +41,7 @@ export function loadShader(gl: WebGLRenderingContext, type: number, source: stri
 	return shader;
 }
 
-export function initBuffers(gl: WebGLRenderingContext, program: WebGLProgram, loadedMesh: LoadedMesh): Buffers {
+export function initBuffers(gl: WebGLRenderingContext, program: WebGLProgram, loadedMesh: LoadedMesh, useBarycentric: boolean): Buffers {
 	const {positions, normals, textures, textureAddresses, indices}: LoadedMesh = loadedMesh;
 	const vertexBuffer: Buffer = buildBuffer({
 		gl,
@@ -73,7 +73,6 @@ export function initBuffers(gl: WebGLRenderingContext, program: WebGLProgram, lo
 	gl.vertexAttribPointer(textureCoord, 2, gl.FLOAT, false, 0, 0);
 	gl.enableVertexAttribArray(textureCoord);
 
-
 	const textureAddressBuffer: Buffer = buildBuffer({
 		gl,
 		type: gl.ARRAY_BUFFER,
@@ -84,13 +83,25 @@ export function initBuffers(gl: WebGLRenderingContext, program: WebGLProgram, lo
 	gl.vertexAttribPointer(textureAddress, 1, gl.FLOAT, false, 0, 0);
 	gl.enableVertexAttribArray(textureAddress);
 
-
 	const indexBuffer: Buffer = buildBuffer({
 		gl,
 		type: gl.ELEMENT_ARRAY_BUFFER,
 		data: indices,
 		itemSize: 1
 	});
+
+	if (useBarycentric) {
+		const barycentric = computeBarycentricCoords(Math.round(positions.length / 3));
+		buildBuffer({
+			gl,
+			type: gl.ARRAY_BUFFER,
+			data: barycentric,
+			itemSize: 3
+		});
+		const barycentricLocation = gl.getAttribLocation(program, 'aBarycentric');
+		gl.vertexAttribPointer(barycentricLocation, 3, gl.FLOAT, false, 0, 0);
+		gl.enableVertexAttribArray(barycentricLocation);
+	}
 
 	return {
 		indexBuffer: {...indexBuffer, data: indices},
@@ -370,7 +381,7 @@ export const initMeshFromFaceArray = (gl: WebGLRenderingContext, program: WebGLP
 
 	if (useBarycentric) {
 		const barycentric = computeBarycentricCoords(faceArray.length);
-		const barycentricBuffer = buildBuffer({
+		buildBuffer({
 			gl,
 			type: gl.ARRAY_BUFFER,
 			data: barycentric,

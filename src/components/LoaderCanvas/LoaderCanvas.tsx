@@ -85,7 +85,7 @@ const render = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, 
 	const indexType: number = gl.UNSIGNED_SHORT;
 	const indexOffset: number = 0;
 	gl.drawElements(gl.TRIANGLES, vertexCount, indexType, indexOffset);
-	// gl.drawArrays(gl.TRIANGLES, 0, numVertices);
+	//gl.drawArrays(gl.TRIANGLES, 0, vertexCount);
 };
 
 const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef, faceArray, rotationDelta}: Props) => {

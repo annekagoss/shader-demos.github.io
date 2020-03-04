@@ -4,7 +4,7 @@ precision mediump float;
 
 varying vec3 vLighting;
 varying float vSpecular;
-// varying vec3 vBarycentric;
+varying vec3 vBarycentric;
 
 uniform vec2 uResolution;
 uniform int uMaterialType;
@@ -26,14 +26,13 @@ void main() {
 		lighting.g = pow(lighting.g, contrast);
 		lighting.b = pow(lighting.b, contrast);
 		vec3 phongLighting = lighting + (max(vSpecular, 0.0) * vLighting);
-		
 		gl_FragColor = vec4(phongLighting, 1.0);
 		return;
 	}
 	// 1 WIREFRAME
-	// } else {
-	// 	gl_FragColor = wireframe(vBarycentric);
-	// }
+	else {
+		gl_FragColor = wireframe(vBarycentric);
+	}
 	// 2 TEXTURE
 	// 3 SHADOW MAP
 	// 4 SHINY GLITCH

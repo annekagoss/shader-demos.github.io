@@ -2,6 +2,7 @@ precision mediump float;
 
 attribute vec4 aVertexPosition;
 attribute vec3 aVertexNormal;
+attribute vec3 aBarycentric;
 
 uniform mat4 uModelViewMatrix;
 uniform mat4 uNormalMatrix;
@@ -16,6 +17,7 @@ uniform float uSpecular;
 
 varying vec3 vLighting;
 varying float vSpecular;
+varying vec3 vBarycentric;
 
 const vec3 eye = vec3(0, 0, 6); // TODO pass in camera position as uniform
 
@@ -41,6 +43,6 @@ void main() {
 	);
 	vLighting = lighting;
 	vSpecular = specular;
-	// vBarycentric = aBarycentric;
+	vBarycentric = aBarycentric;
 	//vVertexPosition = aVertexPosition.xyz * .5 + .5;
 }

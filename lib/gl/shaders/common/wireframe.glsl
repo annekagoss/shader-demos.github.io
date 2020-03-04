@@ -1,4 +1,4 @@
-const float wireframeThickness = 0.01;
+const float wireframeThickness = 0.005;
 const vec3 wireframeColor = vec3(0.0);
 
 /*
