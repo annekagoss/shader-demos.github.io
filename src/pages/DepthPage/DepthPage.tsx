@@ -1,5 +1,6 @@
 import * as React from 'react';
 import Section from '../../components/Section/Section';
+import BaseCanvas from '../../components/BaseCanvas/BaseCanvas';
 import DepthCanvas from '../../components/DepthCanvas/DepthCanvas';
 import LoaderCanvas from '../../components/LoaderCanvas/LoaderCanvas';
 import ShaderText from '../../components/ShaderText/ShaderText';
@@ -8,6 +9,8 @@ import meshFragmentShader from '../../../lib/gl/shaders/mesh.frag';
 import meshVertexShader from '../../../lib/gl/shaders/mesh.vert';
 import phongFragmentShader from '../../../lib/gl/shaders/phong.frag';
 import phongVertexShader from '../../../lib/gl/shaders/phong.vert';
+import mandelbulbFragmentShader from '../../../lib/gl/shaders/mandelbulb.frag';
+import baseVertexShader from '../../../lib/gl/shaders/base.vert';
 import {BASE_UNIFORMS} from '../../utils/general';
 import {UNIFORM_TYPE, Vector2, UniformSetting, Vector3} from '../../../types';
 
@@ -118,6 +121,17 @@ const BASE_PHONG_UNIFORMS: UniformSetting[] = [
 	}
 ];
 
+const BASE_FRACTAL_UNIFORMS = [
+	...BASE_UNIFORMS,
+	{
+		defaultValue: 0,
+		name: 'uTime',
+		readonly: true,
+		type: UNIFORM_TYPE.FLOAT_1,
+		value: 0
+	}
+];
+
 const CUBE_MESH: Vector3[][] = [
 	// Side 1
 	[
@@ -193,6 +207,7 @@ const OBJ_ROTATION_DELTA: Vector3 = {x: 0, y: 0.01, z: 0};
 const DepthPage = ({isActive}: Props) => {
 	const meshUniforms = React.useRef<UniformSetting[]>(BASE_MESH_UNIFORMS);
 	const phongUniforms = React.useRef<UniformSetting[]>(BASE_PHONG_UNIFORMS);
+	const fractalUniforms = React.useRef<UniformSetting[]>(BASE_FRACTAL_UNIFORMS);
 	const pageMousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({
 		x: 0.5,
 		y: 0.5
@@ -203,7 +218,7 @@ const DepthPage = ({isActive}: Props) => {
 
 	return (
 		<div className={styles.page}>
-			<Section title='2.0: Mesh' notes={``}>
+			{/* <Section title='2.0: Mesh' notes={``}>
 				<DepthCanvas
 					fragmentShader={meshFragmentShader}
 					vertexShader={meshVertexShader}
@@ -226,6 +241,11 @@ const DepthPage = ({isActive}: Props) => {
 				/>
 				<ShaderText fragmentShader={phongFragmentShader} vertexShader={phongVertexShader} />
 				<Inputs attributes={attributes} uniforms={phongUniforms} pageMousePosRef={pageMousePosRef} />
+			</Section> */}
+			<Section title='2.3: Fractal' notes={``}>
+				<BaseCanvas fragmentShader={mandelbulbFragmentShader} vertexShader={baseVertexShader} uniforms={fractalUniforms} setAttributes={setAttributes} />
+				<ShaderText fragmentShader={mandelbulbFragmentShader} vertexShader={baseVertexShader} />
+				<Inputs attributes={attributes} uniforms={fractalUniforms} pageMousePosRef={pageMousePosRef} />
 			</Section>
 		</div>
 	);
