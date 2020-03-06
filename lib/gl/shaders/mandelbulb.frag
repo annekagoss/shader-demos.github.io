@@ -23,6 +23,7 @@ precision mediump float;
 
 uniform vec2 uResolution;
 uniform float uTime;
+uniform sampler2D uBackground;
 
 vec2 isphere(vec4 sph, vec3 ro, vec3 rd )
 {
@@ -204,33 +205,35 @@ vec3 render(vec2 p, mat4 cam )
 
 void main() {
 
-	float time = uTime*0.0001;
+	// float time = uTime*0.0001;
 	
-    // camera
-	float di = 1.4+0.1*cos(.29*time);
-	vec3  ro = di * vec3(cos(.33*time), 0.8*sin(.37*time), sin(.31*time));
-	vec3  ta = vec3(0.0,0.1,0.0);
-	float cr = 0.5*cos(0.1*time);
+    // // camera
+	// float di = 1.4+0.1*cos(.29*time);
+	// vec3  ro = di * vec3(cos(.33*time), 0.8*sin(.37*time), sin(.31*time));
+	// vec3  ta = vec3(0.0,0.1,0.0);
+	// float cr = 0.5*cos(0.1*time);
 
-    // camera matrix
-	vec3 cp = vec3(sin(cr), cos(cr),0.0);
-    vec3 cw = normalize(ta-ro);
-	vec3 cu = normalize(cross(cw,cp));
-	vec3 cv =          (cross(cu,cw));
-    mat4 cam = mat4(cu, ro.x, cv, ro.y, cw, ro.z, 0.0, 0.0, 0.0, 1.0);
+    // // camera matrix
+	// vec3 cp = vec3(sin(cr), cos(cr),0.0);
+    // vec3 cw = normalize(ta-ro);
+	// vec3 cu = normalize(cross(cw,cp));
+	// vec3 cv =          (cross(cu,cw));
+    // mat4 cam = mat4(cu, ro.x, cv, ro.y, cw, ro.z, 0.0, 0.0, 0.0, 1.0);
 
-    // render
-    #if AA<2
-	vec3 col = render(gl_FragCoord.xy, cam);
-    #else
-    vec3 col = vec3(0.0);
-    for(int j=ZERO; j<AA; j++)
-    for(int i=ZERO; i<AA; i++)
-    {
-	    col += render(gl_FragCoord.xy + (vec2(i,j)/float(AA)), cam);
-    }
-	col /= float(AA*AA);
-    #endif
+    // // render
+    // #if AA<2
+	// vec3 col = render(gl_FragCoord.xy, cam);
+    // #else
+    // vec3 col = vec3(0.0);
+    // for(int j=ZERO; j<AA; j++)
+    // for(int i=ZERO; i<AA; i++)
+    // {
+	//     col += render(gl_FragCoord.xy + (vec2(i,j)/float(AA)), cam);
+    // }
+	// col /= float(AA*AA);
+    // #endif
 
-	gl_FragColor = vec4(col, 1.0);
+	// gl_FragColor = vec4(col, 1.0);
+	vec2 st = gl_FragCoord.xy/uResolution;
+	gl_FragColor = texture2D(uBackground, st);
 }

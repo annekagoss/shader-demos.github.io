@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {FBO, UniformSetting, Vector3, Vector2, FaceArray, LoadedMesh, MESH_TYPE, Buffers} from '../../types';
 import {initShaderProgram, initBaseMesh, initMeshFromFaceArray, initFrameBufferObject, initBuffers} from '../../lib/gl/initialize';
+import {bindTexture} from '../../lib/gl/textureLoader';
 
 interface InitializeProps {
 	gl: React.MutableRefObject<WebGLRenderingContext>;
@@ -16,9 +17,12 @@ interface InitializeProps {
 	buffersRef?: React.MutableRefObject<Buffers>;
 	mesh?: LoadedMesh;
 	meshType: MESH_TYPE;
+	textureSource?: string;
+	textureRef?: React.MutableRefObject<HTMLImageElement>;
+	textureSizeRef?: React.MutableRefObject<Vector2>;
 }
 
-export const initializeRenderer = ({uniformLocations, canvasRef, fragmentSource, vertexSource, uniforms, size, FBOA, FBOB}: InitializeProps) => {
+export const initializeRenderer = ({uniformLocations, canvasRef, fragmentSource, vertexSource, uniforms, size, FBOA, FBOB, textureSource}: InitializeProps) => {
 	const {width, height} = canvasRef.current.getBoundingClientRect();
 	size.current = {
 		x: width * window.devicePixelRatio,
@@ -41,6 +45,7 @@ export const initializeRenderer = ({uniformLocations, canvasRef, fragmentSource,
 	tempGl.useProgram(tempProgram);
 
 	const useFrameBuffer: boolean = Boolean(FBOA && FBOB);
+
 	uniformLocations.current = {
 		...mapUniformSettingsToLocations(uniforms, tempGl, tempProgram, useFrameBuffer),
 		uProjectionMatrix: tempGl.getUniformLocation(tempProgram, 'uProjectionMatrix'),
@@ -51,7 +56,37 @@ export const initializeRenderer = ({uniformLocations, canvasRef, fragmentSource,
 		FBOA.current = initFrameBufferObject(tempGl, size.current.x, size.current.y);
 		FBOB.current = initFrameBufferObject(tempGl, size.current.x, size.current.y);
 	}
-	return {tempGl, tempProgram};
+
+	let texture;
+	let textureSize: Vector2 = {x: 0, y: 0};
+	if (textureSource) {
+		const image = new Image();
+		image.crossOrigin = 'anonymous';
+		image.onload = () => {
+			const {texture: tempTexture, textureSize: tempSize} = bindTexture(tempGl, image);
+			texture = tempTexture;
+			console.log('LOAD', texture, tempSize);
+
+			uniformLocations.current = {
+				...uniformLocations.current,
+				uBackground: tempGl.getUniformLocation(tempProgram, 'uBackground'),
+				uBackgroundSize: tempGl.getUniformLocation(tempProgram, 'uBackgroundSize')
+			};
+
+			return {tempGl, tempProgram, texture, textureSize};
+		};
+		// image.onerror = e => reject(e);
+		// 	image.src = textureSource;
+		// 	// image.load();
+
+		// 	uniformLocations.current = {
+		// 		...uniformLocations.current,
+		// 		uBackground: tempGl.getUniformLocation(tempProgram, 'uBackground'),
+		// 		uBackgroundSize: tempGl.getUniformLocation(tempProgram, 'uBackgroundSize')
+		// 	};
+	}
+	return {tempGl, tempProgram, texture, textureSize};
+	// return {tempGl, tempProgram, texture, textureSize};
 };
 
 // const initializeMeshFromOBJ = (
@@ -84,9 +119,12 @@ const initializeMesh = ({faceArray, buffersRef, meshType, mesh}: InitializeProps
 
 export const initializeGL = (props: InitializeProps) => {
 	if (props.canvasRef.current === undefined) return;
-	const {tempGl, tempProgram} = initializeRenderer(props);
+	const {tempGl, tempProgram, texture, textureSize} = initializeRenderer(props);
 	initializeMesh(props, tempGl, tempProgram);
 	props.gl.current = tempGl;
+	console.log(texture);
+	props.textureRef.current = texture;
+	props.textureSizeRef.current = textureSize;
 };
 
 export const useInitializeGL = (props: InitializeProps) => {

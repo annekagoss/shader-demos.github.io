@@ -9,8 +9,6 @@ interface LoadedImage {
 // TODO: async this
 export function loadTextures(gl: WebGLRenderingContext, materials: Materials): Promise<Materials> {
 	let promises: Promise<LoadedImage>[] = [];
-
-	// TODO: un-fuck this
 	Object.keys(materials).forEach(matName => {
 		const {textures} = materials[matName];
 		if (textures && textures !== {}) {
@@ -44,7 +42,7 @@ const initTexture = (matName: string, type: string, source: string): Promise<Loa
 		image.src = source;
 	});
 
-function bindTexture(gl, image) {
+export const bindTexture = (gl, image) => {
 	const level = 0;
 	const internalFormat = gl.RGBA;
 	const sourceFormat = gl.RGBA;
@@ -60,7 +58,10 @@ function bindTexture(gl, image) {
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 	}
-	return texture;
-}
+	return {
+		texture,
+		textureSize: {x: image.width, y: image.height}
+	};
+};
 
 const isPowerOf2 = value => (value & (value - 1)) === 0;

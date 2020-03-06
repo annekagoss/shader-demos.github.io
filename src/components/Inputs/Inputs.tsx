@@ -143,6 +143,7 @@ const UniformInput = ({uniform, updateUniforms, pageMousePosRef}: UniformInputPr
 		if (uniform.name === 'uMouse' && pageMousePosRef !== null) {
 			return parseUniform(pageMousePosRef.current, UNIFORM_TYPE.VEC_2);
 		}
+		if (uniform.name === 'uBackground') return <></>;
 		return parseUniform(uniform.value, uniform.type);
 	}
 	switch (uniform.type) {

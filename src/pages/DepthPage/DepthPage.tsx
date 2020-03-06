@@ -13,6 +13,7 @@ import mandelbulbFragmentShader from '../../../lib/gl/shaders/mandelbulb.frag';
 import baseVertexShader from '../../../lib/gl/shaders/base.vert';
 import {BASE_UNIFORMS} from '../../utils/general';
 import {UNIFORM_TYPE, Vector2, UniformSetting, Vector3} from '../../../types';
+import desertBg from '../../assets/desert.jpg';
 
 import styles from './DepthPage.module.scss';
 
@@ -129,6 +130,13 @@ const BASE_FRACTAL_UNIFORMS = [
 		readonly: true,
 		type: UNIFORM_TYPE.FLOAT_1,
 		value: 0
+	},
+	{
+		defaultValue: {x: 0, y: 0},
+		name: 'uBackgroundSize',
+		readonly: true,
+		type: UNIFORM_TYPE.VEC_2,
+		value: {x: 0, y: 0}
 	}
 ];
 
@@ -243,7 +251,7 @@ const DepthPage = ({isActive}: Props) => {
 				<Inputs attributes={attributes} uniforms={phongUniforms} pageMousePosRef={pageMousePosRef} />
 			</Section> */}
 			<Section title='2.3: Fractal' notes={``}>
-				<BaseCanvas fragmentShader={mandelbulbFragmentShader} vertexShader={baseVertexShader} uniforms={fractalUniforms} setAttributes={setAttributes} />
+				<BaseCanvas fragmentShader={mandelbulbFragmentShader} vertexShader={baseVertexShader} uniforms={fractalUniforms} setAttributes={setAttributes} textureSource={desertBg} />
 				<ShaderText fragmentShader={mandelbulbFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={fractalUniforms} pageMousePosRef={pageMousePosRef} />
 			</Section>

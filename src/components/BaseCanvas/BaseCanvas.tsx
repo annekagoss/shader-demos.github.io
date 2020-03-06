@@ -12,6 +12,7 @@ interface Props {
 	vertexShader: string;
 	uniforms: React.MutableRefObject<UniformSetting[]>;
 	setAttributes: (attributes: any[]) => void;
+	textureSource?: string;
 }
 
 interface RenderProps {
@@ -20,14 +21,26 @@ interface RenderProps {
 	uniforms: UniformSetting[];
 	time: number;
 	mousePos: Vector2;
+	texture?: HTMLImageElement;
 }
 
-const render = ({gl, uniformLocations, uniforms, time, mousePos}: RenderProps) => {
+const render = ({gl, uniformLocations, uniforms, time, mousePos, texture}: RenderProps) => {
 	assignUniforms(uniforms, uniformLocations, gl, time, mousePos);
+
+	gl.activeTexture(gl.TEXTURE0);
+
+	if (texture) {
+		// Bind the texture to texture unit 0
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+
+		// Tell the shader we bound the texture to texture unit 0
+		gl.uniform1i(uniformLocations.uBackground, 0);
+	}
+
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 };
 
-const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes}: Props) => {
+const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, textureSource}: Props) => {
 	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
 	const size: React.MutableRefObject<Vector2> = React.useRef<Vector2>({
 		x: uniforms.current[0].value.x * window.devicePixelRatio,
@@ -37,6 +50,8 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes}: Pro
 	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: size.current.x * 0.5, y: size.current.y * -0.5});
 	const gl = React.useRef<WebGLRenderingContext>();
 	const uniformLocations = React.useRef<Record<string, WebGLUniformLocation>>();
+	const textureRef: React.MutableRefObject<HTMLImageElement> = React.useRef<HTMLImageElement>();
+	const textureSizeRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: 0, y: 0});
 
 	useInitializeGL({
 		gl,
@@ -46,7 +61,10 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes}: Pro
 		vertexSource: vertexShader,
 		uniforms: uniforms.current,
 		size,
-		meshType: MESH_TYPE.BASE_TRIANGLES
+		meshType: MESH_TYPE.BASE_TRIANGLES,
+		textureSource,
+		textureRef,
+		textureSizeRef
 	});
 
 	React.useEffect(() => {
@@ -56,12 +74,14 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes}: Pro
 	useWindowSize(canvasRef.current, gl.current, uniforms.current, size);
 
 	useAnimationFrame((time: number) => {
+		console.log(textureRef);
 		render({
 			gl: gl.current,
 			uniformLocations: uniformLocations.current,
 			uniforms: uniforms.current,
 			time,
-			mousePos: mousePosRef.current
+			mousePos: mousePosRef.current,
+			texture: textureRef.current
 		});
 	});
 
