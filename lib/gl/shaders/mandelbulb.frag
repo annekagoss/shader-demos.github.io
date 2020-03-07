@@ -206,9 +206,9 @@ vec3 render(vec2 p, mat4 cam )
 	{
         // color
         col = vec3(0.01);
-		col = mix( col, vec3(0.10,0.20,0.30), clamp(tra.y,0.0,1.0) );
-	 	col = mix( col, vec3(0.02,0.10,0.30), clamp(tra.z*tra.z,0.0,1.0) );
-        col = mix( col, vec3(0.30,0.10,0.02), clamp(pow(tra.w,6.0),0.0,1.0) );
+		col = mix( col, vec3(0.20,0.20,0.20), clamp(tra.y,0.0,1.0) );
+	 	col = mix( col, vec3(0.10,0.10,0.10), clamp(tra.z*tra.z,0.0,1.0) );
+        col = mix( col, vec3(0.10,0.10,0.10), clamp(pow(tra.w,6.0),0.0,1.0) );
         col *= 0.5;
         
         // lighting terms
@@ -229,10 +229,10 @@ vec3 render(vec2 p, mat4 cam )
         float dif3 = (0.7+0.3*nor.y)*(0.2+0.8*occ);
         
 		vec3 lin = vec3(0.0); 
-		     lin += 7.0*vec3(1.50,1.10,0.70)*dif1;
-		     lin += 4.0*vec3(0.25,0.20,0.15)*dif2;
-        	 lin += 1.5*vec3(0.10,0.20,0.30)*dif3;
-             lin += 2.5*vec3(0.35,0.30,0.25)*(0.05+0.95*occ); // ambient
+		     lin += 7.0*vec3(1.10,1.10,1.10)*dif1;
+		     lin += 4.0*vec3(0.25,0.25,0.25)*dif2;
+        	 lin += 1.5*vec3(0.20,0.20,0.20)*dif3;
+             lin += 2.5*vec3(0.30,0.30,0.30)*(0.05+0.95*occ); // ambient
         	 lin += 4.0*fac*occ;                          // fake SSS
 		col *= lin;
 		// col = pow( col, vec3(0.7,0.9,1.0) );                  // fake SSS
@@ -255,7 +255,7 @@ vec3 render(vec2 p, mat4 cam )
 	col = sqrt( col );
     
     // vignette
-    //col *= 1.0 - 0.1255*length(sp);
+    // col *= 1.0 - 0.1255*length(sp);
 
     return col;
 }
@@ -265,7 +265,7 @@ void main() {
 	float time = uTime*0.0001;
 	
     // camera
-	float di =2.0+0.1*cos(.29*time);
+	float di =2.0+0.1;
 	vec3  ro = di * vec3(cos(.33*time), 0.8*sin(.37*time), sin(.31*time));
 	vec3  ta = vec3(0.0,0.1,0.0);
 	float cr = 0.5*cos(0.1*time);
