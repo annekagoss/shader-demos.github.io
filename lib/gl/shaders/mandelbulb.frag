@@ -51,12 +51,14 @@ float map(vec3 p, out vec4 resColor )
     
 	for( int i=0; i<4; i++)
     {
-        dz = 8.0*pow(sqrt(m),7.0)*dz + 1.0;
-        
+		// float size = 8.0 + sin(uTime*0.001)*.3;
+		float size = 8.0;
+        dz = size*pow(sqrt(m),7.0)*dz + (20.0 * (sin(uTime*0.001) * 0.5 + 0.5));
+       
         float r = length(w);
-        float b = 8.0*acos( w.y/r);
-        float a = 8.0*atan( w.x, w.z );
-        w = p + pow(r,8.0) * vec3( sin(b)*sin(a), cos(b), sin(b)*cos(a) );        
+        float b = -size*acos((w.y/r)) + (uTime*0.001);
+        float a = size*atan( w.x, w.z ) - (uTime*0.001);
+        w = p + pow(r,size) * vec3( sin(b)*sin(a), cos(b), sin(b)*cos(a) );        
         
         trap = min( trap, vec4(abs(w),m) );
 
@@ -108,7 +110,7 @@ float softshadow(vec3 ro, vec3 rd, float k )
 {
     float res = 1.0;
     float t = 0.0;
-    for( int i=0; i<64; i++ )
+    for( int i=0; i<32; i++ )
     {
         vec4 kk;
         float h = map(ro + rd*t, kk);
@@ -132,6 +134,33 @@ vec3 calcNormal(vec3 pos, float t, float px )
 const vec3 light1 = vec3(  0.577, 0.577, -0.577 );
 const vec3 light2 = vec3( -0.707, 0.000,  0.707 );
 
+// vec3 getEnvMap(vec3 rayDir) {
+// 	vec3 texXY = texture2D(uBackground, rayDir.xy).xyz;
+// 	vec3 texYZ = texture2D(uBackground, rayDir.xy).xyz;
+// 	vec3 texXZ = texture2D(uBackground, rayDir.xy).xyz;
+// 	vec3 tex = vec3(
+// 		(texXY.x + texYZ.x + texXZ.x) / 3.0,
+// 		(texXY.y + texYZ.y + texXZ.y) / 3.0,
+// 		(texXY.z + texYZ.z + texXZ.z) / 3.0
+// 	);
+// 	tex = tex * tex; // gamma correct
+// 	return tex;
+// }
+
+vec4 cubemap( sampler2D sam, vec3 d )
+{
+    // intersect cube
+    vec3 n = abs(d);
+    vec3 v = (n.x>n.y && n.x>n.z) ? d.xyz: 
+             (n.y>n.x && n.y>n.z) ? d.yzx:
+                                    d.zxy;
+    // project into face
+    vec2 q = v.yz/v.x;
+    // undistort in the edges
+    q *= 1.25 - 0.25*q*q;
+    // sample
+    return texture2D( sam, 0.5+0.5*q );
+}
 
 vec3 render(vec2 p, mat4 cam )
 {
@@ -153,8 +182,24 @@ vec3 render(vec2 p, mat4 cam )
     // color sky
     if( t<0.0 )
     {
-     	col  = vec3(0.8,.9,1.1)*(0.6+0.4*rd.y);
-		col += 5.0*vec3(0.8,0.7,0.5)*pow( clamp(dot(rd,light1),0.0,1.0), 32.0 );
+     	// col  = vec3(0.8,.9,1.1)*(0.6+0.4*rd.y);
+		// col += 5.0*vec3(0.8,0.7,0.5)*pow( clamp(dot(rd,light1),0.0,1.0), 32.0 );
+		col = vec3(1.0);
+		
+		// vec2 st = gl_FragCoord.xy/uResolution;
+		// st.y = 1.0 - st.y;
+		// col = texture2D(uBackground, st).xyz;
+		
+		// vec4 sc = vec4(0.0,0.0,0.0,5.0);
+		
+		// vec3 oc = ro - sc.xyz;
+    
+		// float b = dot(oc,rd);
+		// float c = dot(oc,oc) - sc.w*sc.w;
+		// float h = b*b - c;
+		
+		// vec3 nor = normalize(ro+h*rd-sc.xyz);
+        // col = cubemap( uBackground, nor ).xyz;
 	}
     // color fractal
 	else
@@ -192,48 +237,58 @@ vec3 render(vec2 p, mat4 cam )
 		col *= lin;
 		// col = pow( col, vec3(0.7,0.9,1.0) );                  // fake SSS
         col += spe1*15.0;
+
+		// float b = dot(ro,rd);
+		// float c = dot(ro,ro);
+		// float h = b*b - c;
+		// vec3 nor = normalize(ro+h*rd);
+        col = mix(col, cubemap( uBackground, nor).xyz, clamp(pow(tra.w,3.0),0.0,1.0));
+		col += mix(0.1, -0.1, -dot(-hal,nor));
+		col.x = clamp(col.x, 0.125, 1.0);
+		col.y = clamp(col.y, 0.125, 1.0);
+		col.z = clamp(col.z, 0.125, 1.0);
+		
+		// col = getEnvMap(ref);
     }
 
     // gamma
 	col = sqrt( col );
     
     // vignette
-    col *= 1.0 - 0.05*length(sp);
+    //col *= 1.0 - 0.1255*length(sp);
 
     return col;
 }
 
 void main() {
 
-	// float time = uTime*0.0001;
+	float time = uTime*0.0001;
 	
-    // // camera
-	// float di = 1.4+0.1*cos(.29*time);
-	// vec3  ro = di * vec3(cos(.33*time), 0.8*sin(.37*time), sin(.31*time));
-	// vec3  ta = vec3(0.0,0.1,0.0);
-	// float cr = 0.5*cos(0.1*time);
+    // camera
+	float di =2.0+0.1*cos(.29*time);
+	vec3  ro = di * vec3(cos(.33*time), 0.8*sin(.37*time), sin(.31*time));
+	vec3  ta = vec3(0.0,0.1,0.0);
+	float cr = 0.5*cos(0.1*time);
 
-    // // camera matrix
-	// vec3 cp = vec3(sin(cr), cos(cr),0.0);
-    // vec3 cw = normalize(ta-ro);
-	// vec3 cu = normalize(cross(cw,cp));
-	// vec3 cv =          (cross(cu,cw));
-    // mat4 cam = mat4(cu, ro.x, cv, ro.y, cw, ro.z, 0.0, 0.0, 0.0, 1.0);
+    // camera matrix
+	vec3 cp = vec3(sin(cr), cos(cr),0.0);
+    vec3 cw = normalize(ta-ro);
+	vec3 cu = normalize(cross(cw,cp));
+	vec3 cv =          (cross(cu,cw));
+    mat4 cam = mat4(cu, ro.x, cv, ro.y, cw, ro.z, 0.0, 0.0, 0.0, 1.0);
 
-    // // render
-    // #if AA<2
-	// vec3 col = render(gl_FragCoord.xy, cam);
-    // #else
-    // vec3 col = vec3(0.0);
-    // for(int j=ZERO; j<AA; j++)
-    // for(int i=ZERO; i<AA; i++)
-    // {
-	//     col += render(gl_FragCoord.xy + (vec2(i,j)/float(AA)), cam);
-    // }
-	// col /= float(AA*AA);
-    // #endif
+    // render
+    #if AA<2
+	vec3 col = render(gl_FragCoord.xy, cam);
+    #else
+    vec3 col = vec3(0.0);
+    for(int j=ZERO; j<AA; j++)
+    for(int i=ZERO; i<AA; i++)
+    {
+	    col += render(gl_FragCoord.xy + (vec2(i,j)/float(AA)), cam);
+    }
+	col /= float(AA*AA);
+    #endif
 
-	// gl_FragColor = vec4(col, 1.0);
-	vec2 st = gl_FragCoord.xy/uResolution;
-	gl_FragColor = texture2D(uBackground, st);
+	gl_FragColor = vec4(col, 1.0);
 }

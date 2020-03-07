@@ -74,7 +74,6 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, text
 	useWindowSize(canvasRef.current, gl.current, uniforms.current, size);
 
 	useAnimationFrame((time: number) => {
-		console.log(textureRef);
 		render({
 			gl: gl.current,
 			uniformLocations: uniformLocations.current,

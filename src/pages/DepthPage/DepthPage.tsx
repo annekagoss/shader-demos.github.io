@@ -226,7 +226,7 @@ const DepthPage = ({isActive}: Props) => {
 
 	return (
 		<div className={styles.page}>
-			{/* <Section title='2.0: Mesh' notes={``}>
+			<Section title='2.0: Mesh' notes={``}>
 				<DepthCanvas
 					fragmentShader={meshFragmentShader}
 					vertexShader={meshVertexShader}
@@ -249,7 +249,7 @@ const DepthPage = ({isActive}: Props) => {
 				/>
 				<ShaderText fragmentShader={phongFragmentShader} vertexShader={phongVertexShader} />
 				<Inputs attributes={attributes} uniforms={phongUniforms} pageMousePosRef={pageMousePosRef} />
-			</Section> */}
+			</Section>
 			<Section title='2.3: Fractal' notes={``}>
 				<BaseCanvas fragmentShader={mandelbulbFragmentShader} vertexShader={baseVertexShader} uniforms={fractalUniforms} setAttributes={setAttributes} textureSource={desertBg} />
 				<ShaderText fragmentShader={mandelbulbFragmentShader} vertexShader={baseVertexShader} />
