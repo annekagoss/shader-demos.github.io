@@ -21,8 +21,6 @@ export const useAnimationFrame = (canvasRef: React.MutableRefObject<HTMLCanvasEl
 		// Keep animation paused while idle
 		if (idleRef.current) return;
 
-		console.log({idleTime: idleTimerRef.current, MAX_IDLE_TIME});
-
 		// Pause animation while idle
 		if (idleTimerRef.current > MAX_IDLE_TIME) {
 			cancelAnimationFrame(requestRef.current);

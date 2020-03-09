@@ -79,7 +79,7 @@ const FeedbackCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, 
 
 	useWindowSize(canvasRef.current, gl.current, uniforms.current, size);
 
-	useAnimationFrame((time: number, pingPong: number) => {
+	useAnimationFrame(canvasRef, (time: number, pingPong: number) => {
 		render({
 			gl: gl.current,
 			uniformLocations: uniformLocations.current,

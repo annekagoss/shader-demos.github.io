@@ -41,16 +41,15 @@ interface RenderProps {
 const render = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, rotation}: RenderProps) => {
 	if (!gl) return;
 	assignProjectionMatrix(gl, uniformLocations, size);
-
-	// const modelViewMatrix: Matrix = applyRotation(createMat4().slice(), rotation);
+	// TODO: pull transformation from inputs
 	const modelViewMatrix: Matrix = applyTransformation(createMat4(), {
-		translation: {x: 0, y: 0.3, z: 0},
+		translation: uniforms.find(uniform => uniform.name === 'uTranslation').value,
 		rotation: {
 			x: Math.sin(time * 0.0005) * 0.25,
 			y: rotation.y,
 			z: rotation.z
 		},
-		scale: 0.0485
+		scale: uniforms.find(uniform => uniform.name === 'uScale').value
 	});
 	gl.uniformMatrix4fv(uniformLocations.uModelViewMatrix, false, modelViewMatrix);
 	gl.uniformMatrix4fv(uniformLocations.uNormalMatrix, false, invertMatrix(modelViewMatrix));
@@ -141,29 +140,9 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 		}
 	});
 
-	// useInitializeGL({
-	// 	gl,
-	// 	uniformLocations,
-	// 	canvasRef,
-	// 	vertexPositionBuffer,
-	// 	vertexNormalBuffer,
-	// 	fragmentSource: fragmentShader,
-	// 	vertexSource: vertexShader,
-	// 	uniforms: uniforms.current,
-	// 	size,
-	// 	mesh: meshRef.current,
-	// });
-
-	// React.useEffect(() => {
-	// 	setAttributes([
-	// 		{name: 'aVertexPosition', value: buffersRef.current && buffersRef.current.vertexBuffer.data.join(', ')},
-	// 		{name: 'aVertexNormal', value: buffersRef.current && buffersRef.current.normalBuffer.data.join(', ')}
-	// 	]);
-	// }, []);
-
 	useWindowSize(canvasRef.current, gl.current, uniforms.current, size);
 
-	useAnimationFrame((time: number) => {
+	useAnimationFrame(canvasRef, (time: number) => {
 		rotationRef.current = addVectors(rotationRef.current, rotationDelta);
 		render({
 			gl: gl.current,

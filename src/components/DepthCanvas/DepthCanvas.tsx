@@ -80,7 +80,7 @@ const DepthCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pag
 
 	useWindowSize(canvasRef.current, gl.current, uniforms.current, size);
 
-	useAnimationFrame((time: number) => {
+	useAnimationFrame(canvasRef, (time: number) => {
 		rotationRef.current = addVectors(rotationRef.current, rotationDelta);
 		render({
 			gl: gl.current,
