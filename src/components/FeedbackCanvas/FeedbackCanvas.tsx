@@ -77,7 +77,7 @@ const FeedbackCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, 
 		setAttributes([{name: 'aVertexPosition', value: BASE_TRIANGLE_MESH.join(', ')}]);
 	}, []);
 
-	useWindowSize(canvasRef.current, gl.current, uniforms.current, size);
+	useWindowSize(canvasRef, gl, uniforms.current, size);
 
 	useAnimationFrame(canvasRef, (time: number, pingPong: number) => {
 		render({

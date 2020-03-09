@@ -128,11 +128,11 @@ const BASE_PHONG_UNIFORMS: UniformSetting[] = [
 		value: {x: 0.0, y: 0.0, z: 0.0}
 	},
 	{
-		defaultValue: {x: -1.0, y: -1.0, z: 1.0},
+		defaultValue: {x: -1.0, y: 1.0, z: 1.0},
 		name: 'uLightPositionB',
 		readonly: false,
 		type: UNIFORM_TYPE.VEC_3,
-		value: {x: -1.0, y: -1.0, z: 1.0}
+		value: {x: -1.0, y: 1.0, z: 1.0}
 	}
 ];
 

@@ -3,8 +3,8 @@ import {UniformSetting, FBO, Vector2} from '../../types';
 import {initFrameBufferObject} from '../../lib/gl/initialize';
 
 export const useWindowSize = (
-	canvas: HTMLCanvasElement,
-	gl: WebGLRenderingContext,
+	canvas: React.MutableRefObject<HTMLCanvasElement>,
+	gl: React.MutableRefObject<WebGLRenderingContext>,
 	uniforms: UniformSetting[],
 	size: React.MutableRefObject<Vector2>,
 	FBOA?: React.MutableRefObject<FBO>,
@@ -16,25 +16,27 @@ export const useWindowSize = (
 		return () => {
 			window.removeEventListener('resize', handleResize);
 		};
-	});
+	}, []);
 };
 
 const updateRendererSize = (
-	canvas: HTMLCanvasElement,
-	gl: WebGLRenderingContext,
+	canvas: React.MutableRefObject<HTMLCanvasElement>,
+	gl: React.MutableRefObject<WebGLRenderingContext>,
 	uniforms: UniformSetting[],
 	size: React.MutableRefObject<Vector2>,
 	FBOA?: React.MutableRefObject<FBO>,
 	FBOB?: React.MutableRefObject<FBO>
 ) => {
-	if (!canvas) return;
-	const {width, height} = canvas.getBoundingClientRect();
+	console.log('try to resize', {gl, canvas});
+	if (!canvas.current) return;
+	console.log('resize');
+	const {width, height} = canvas.current.getBoundingClientRect();
 	size.current = {
 		x: width * window.devicePixelRatio,
 		y: height * window.devicePixelRatio
 	};
-	canvas.width = size.current.x;
-	canvas.height = size.current.y;
+	canvas.current.width = size.current.x;
+	canvas.current.height = size.current.y;
 	uniforms[0].value = size.current;
-	gl.viewport(0, 0, size.current.x, size.current.y);
+	gl.current.viewport(0, 0, size.current.x, size.current.y);
 };

@@ -72,7 +72,7 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, text
 		setAttributes([{name: 'aVertexPosition', value: BASE_TRIANGLE_MESH.join(', ')}]);
 	}, []);
 
-	useWindowSize(canvasRef.current, gl.current, uniforms.current, size);
+	useWindowSize(canvasRef, gl, uniforms.current, size);
 
 	useAnimationFrame(canvasRef, (time: number) => {
 		render({

@@ -13,7 +13,7 @@ import {
 	LightIntensities,
 	LightPositions,
 	LightSettings,
-	LoadedMesh,
+	Mesh,
 	Materials,
 	Mesh,
 	ProgramInfo,
@@ -150,28 +150,15 @@ export default class GLScene extends Component<SceneProps> {
 		}
 
 		const worker: any = new WebWorker(loadMeshWorker);
-		worker.addEventListener('message', (event: {data: LoadedMesh}) => {
+		worker.addEventListener('message', (event: {data: Mesh}) => {
 			this.init(event.data);
 		});
 
-		if (MTLSource) {
-			worker.postMessage({
-				OBJSource,
-				MTLSource,
-				diffuseSources
-			}); /* tslint:disable-line no-unsafe-any */
-		} else {
-			worker.postMessage({
-				OBJSource,
-				MTLSource,
-				diffuseSources
-			}); /* tslint:disable-line no-unsafe-any */
-			worker.postMessage({
-				OBJSource,
-				MTLSource,
-				diffuseSources
-			}); /* tslint:disable-line no-unsafe-any */
-		}
+		worker.postMessage({
+			OBJSource,
+			MTLSource,
+			diffuseSources
+		}); /* tslint:disable-line no-unsafe-any */
 	}
 
 	componentWillUnmount(): void {
@@ -259,7 +246,7 @@ export default class GLScene extends Component<SceneProps> {
 		}); /* tslint:disable-line no-unsafe-any */
 	}
 
-	init = (mesh: LoadedMesh): void => {
+	init = (mesh: Mesh): void => {
 		const {width, height} = this.$container.getBoundingClientRect();
 		this.$canvas.width = Math.round(width * window.devicePixelRatio);
 		this.$canvas.height = Math.round(height * window.devicePixelRatio);
@@ -384,7 +371,7 @@ export default class GLScene extends Component<SceneProps> {
 			});
 	};
 
-	initWithoutTextures(gl: WebGLRenderingContext, mesh: LoadedMesh): void {
+	initWithoutTextures(gl: WebGLRenderingContext, mesh: Mesh): void {
 		this.glContext.mesh = mesh;
 		this.glContext.buffers = initBuffers(gl, mesh);
 		this.glContext.gl = gl;

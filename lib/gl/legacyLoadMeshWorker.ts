@@ -1,4 +1,4 @@
-import {BoundingBox, Face, Geometry, LoadedMesh, Materials, PartialFace, UnpackedGeometry, Vector3} from '../../types';
+import {BoundingBox, Face, Geometry, Mesh, Materials, PartialFace, UnpackedGeometry, Vector3} from '../../types';
 
 export default () => {
 	enum MATERIAL_KEY {
@@ -25,7 +25,7 @@ export default () => {
 	const MAT_DECLARATION_REGEX: RegExp = /^newmtl\s/;
 	const TEXTURE_ADDRESS_REGEX: RegExp = /^usemtl\s/;
 
-	const loadMeshData = (OBJSource: string, MTLString: string, diffuseSources: string[]): LoadedMesh => {
+	const loadMeshData = (OBJSource: string, MTLString: string, diffuseSources: string[]): Mesh => {
 		const geometry: Geometry = loadOBJData(OBJSource);
 		const materials: Materials = MTLString && loadMTLData(MTLString, diffuseSources);
 		return Object.assign(geometry, {materials});
@@ -357,7 +357,7 @@ export default () => {
 		if (!e) return;
 		const {OBJSource, MTLSource, diffuseSources} = e.data;
 		if (OBJSource) {
-			const mesh: LoadedMesh = loadMeshData(OBJSource, MTLSource, diffuseSources);
+			const mesh: Mesh = loadMeshData(OBJSource, MTLSource, diffuseSources);
 			postMessage(mesh, null);
 			return;
 		}

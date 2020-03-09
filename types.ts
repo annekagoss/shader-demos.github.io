@@ -193,12 +193,12 @@ export interface Materials {
 	textures?: Textures;
 }
 
-export interface Mesh {
-	geometry: Geometry;
-	materials: Materials;
-}
+// export interface Mesh {
+// 	geometry: Geometry;
+// 	materials: Materials;
+// }
 
-export interface LoadedMesh extends Geometry {
+export interface Mesh extends Geometry {
 	materials: Materials;
 }
 
@@ -215,7 +215,7 @@ export interface GLContext {
 	fbo?: FBO;
 	gl: WebGLRenderingContext;
 	hasMaterial: boolean;
-	mesh?: LoadedMesh;
+	mesh?: Mesh;
 	placeholderTexture?: WebGLTexture;
 	programInfo: ProgramInfo;
 	shadowProgramInfo: ProgramInfo;
@@ -306,7 +306,7 @@ export interface Textures {
 }
 
 export interface WebWorkerLoadMessage {
-	onLoadHandler: (data: LoadedMesh) => void;
+	onLoadHandler: (data: Mesh) => void;
 	OBJSource: string;
 	MTLSource?: string;
 	textures?: Textures;

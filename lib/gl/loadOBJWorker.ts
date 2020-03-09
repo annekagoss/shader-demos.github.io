@@ -1,4 +1,4 @@
-import {BoundingBox, Face, Geometry, LoadedMesh, Materials, PartialFace, UnpackedGeometry, Vector3} from '../../types';
+import {BoundingBox, Face, Geometry, Mesh, Materials, PartialFace, UnpackedGeometry, Vector3} from '../../types';
 
 export default () => {
 	enum MATERIAL_KEY {
@@ -25,7 +25,7 @@ export default () => {
 	const MAT_DECLARATION_REGEX: RegExp = /^newmtl\s/;
 	const TEXTURE_ADDRESS_REGEX: RegExp = /^usemtl\s/;
 
-	const loadMeshData = (OBJSource: string, MTLString: string, diffuseSources: string[]): LoadedMesh => {
+	const loadMeshData = (OBJSource: string, MTLString: string, diffuseSources: string[]): Mesh => {
 		const geometry: Geometry = loadOBJData(OBJSource);
 		const materials: Materials = MTLString && loadMTLData(MTLString, diffuseSources);
 		return Object.assign(geometry, {materials});
@@ -63,11 +63,17 @@ export default () => {
 			elements.shift();
 
 			if (POSITION_REGEX.test(line)) {
-				positions.push.apply(positions, elements);
+				positions.push.apply(
+					positions,
+					elements.map(element => parseFloat(element))
+				);
 			} else if (NORMAL_REGEX.test(line)) {
 				normals.push.apply(normals, elements);
 			} else if (TEXTURE_REGEX.test(line)) {
-				textures.push.apply(textures, elements);
+				textures.push.apply(
+					textures,
+					elements.map(element => parseFloat(element))
+				);
 			} else if (TEXTURE_ADDRESS_REGEX.test(line)) {
 				textureAddress++;
 			} else if (FACE_REGEX.test(line)) {
@@ -357,13 +363,9 @@ export default () => {
 		if (!e) return;
 		const {OBJSource, MTLSource, diffuseSources} = e.data;
 		if (OBJSource) {
-			const mesh: LoadedMesh = loadMeshData(OBJSource, MTLSource, diffuseSources);
+			const mesh: Mesh = loadMeshData(OBJSource, MTLSource, diffuseSources);
 			postMessage(mesh, null);
 			return;
-		}
-		if (MTLSource) {
-			const materials: Materials = loadMTLData(MTLSource, diffuseSources);
-			postMessage(materials, null);
 		}
 	});
 };

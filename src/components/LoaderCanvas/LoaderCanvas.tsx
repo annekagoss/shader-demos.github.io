@@ -1,14 +1,14 @@
 import * as React from 'react';
-import {UniformSetting, Vector2, UNIFORM_TYPE, Matrix, Vector3, LoadedMesh, FaceArray, MESH_TYPE, Buffers} from '../../../types';
-import {useInitializeGL, initializeGL} from '../../hooks/gl';
+import {UniformSetting, Vector2, UNIFORM_TYPE, Matrix, Vector3, Mesh, FaceArray, MESH_TYPE, Buffers, Materials} from '../../../types';
+import {initializeGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
 import {useWindowSize} from '../../hooks/resize';
 import {assignProjectionMatrix} from '../../../lib/gl/initialize';
-import {applyRotation, createMat4, applyTransformation, invertMatrix} from '../../../lib/gl/matrix';
+import {createMat4, applyTransformation, invertMatrix} from '../../../lib/gl/matrix';
 import {addVectors, formatAttributes} from '../../../lib/gl/helpers';
-import loadMeshWorker from '../../../lib/gl/loadMeshWorker';
-import WebWorker from '../../../lib/gl/WebWorker';
 import {useOBJLoaderWebWorker} from '../../hooks/webWorker';
+// import {legacyLoadTextures} from '../../../lib/gl/loader';
+
 import styles from './LoaderCanvas.module.scss';
 
 //FOX SKULL
@@ -105,11 +105,16 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 		textureAddressBuffer: null
 	});
 	const rotationRef: React.MutableRefObject<Vector3> = React.useRef<Vector3>({x: 0, y: 0, z: 0});
-	const meshRef: React.MutableRefObject<LoadedMesh> = React.useRef<LoadedMesh>();
+	const meshRef: React.MutableRefObject<Mesh> = React.useRef<Mesh>();
 
 	useOBJLoaderWebWorker({
 		onLoadHandler: message => {
 			meshRef.current = message;
+
+			// TODO: use new async version
+
+			// .then((loadedMaterials: Materials) => {
+			// meshRef.current.materials = loadedMaterials;
 			initializeGL({
 				gl,
 				uniformLocations,
@@ -123,6 +128,10 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 				mesh: meshRef.current,
 				meshType: MESH_TYPE.OBJ
 			});
+
+			// legacyLoadTextures(gl.current, meshRef.current.materials);
+			// });
+
 			setAttributes(formatAttributes(buffersRef));
 		},
 		OBJSource,
@@ -135,7 +144,7 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 		}
 	});
 
-	useWindowSize(canvasRef.current, gl.current, uniforms.current, size);
+	useWindowSize(canvasRef, gl, uniforms.current, size);
 
 	useAnimationFrame(canvasRef, (time: number) => {
 		rotationRef.current = addVectors(rotationRef.current, rotationDelta);

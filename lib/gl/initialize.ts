@@ -1,4 +1,4 @@
-import {Buffer, Buffers, GLSLColors, FBO, GLContext, LightSettings, LoadedMesh, Material, Matrix, Transformation, Vector3, Vector2, FaceArray} from '../../types';
+import {Buffer, Buffers, GLSLColors, FBO, GLContext, LightSettings, Mesh, Material, Matrix, Transformation, Vector3, Vector2, FaceArray} from '../../types';
 
 import {degreesToRadians, normalizeVector, subtractVectors, crossVectors} from './helpers';
 import {createMat4, applyPerspective, lookAt} from './matrix';
@@ -41,8 +41,8 @@ export function loadShader(gl: WebGLRenderingContext, type: number, source: stri
 	return shader;
 }
 
-export function initBuffers(gl: WebGLRenderingContext, program: WebGLProgram, loadedMesh: LoadedMesh, useBarycentric: boolean): Buffers {
-	const {positions, normals, textures, textureAddresses, indices}: LoadedMesh = loadedMesh;
+export function initBuffers(gl: WebGLRenderingContext, program: WebGLProgram, loadedMesh: Mesh, useBarycentric: boolean): Buffers {
+	const {positions, normals, textures, textureAddresses, indices}: Mesh = loadedMesh;
 	const vertexBuffer: Buffer = buildBuffer({
 		gl,
 		type: gl.ARRAY_BUFFER,
@@ -107,7 +107,7 @@ export function initBuffers(gl: WebGLRenderingContext, program: WebGLProgram, lo
 		indexBuffer: {...indexBuffer, data: indices},
 		normalBuffer: {...normalBuffer, data: normals},
 		textureAddressBuffer: {...textureAddressBuffer, data: textureAddresses},
-		textureBuffer: {...textureAddressBuffer, data: textures},
+		textureBuffer: {...textureBuffer, data: textures},
 		vertexBuffer: {...vertexBuffer, data: positions}
 	};
 }
