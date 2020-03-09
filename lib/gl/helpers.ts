@@ -1,4 +1,4 @@
-import {ColorName, Colors, GLSLColor, GLSLColors, LightIntensities, Vector3, Face} from '../../types';
+import {ColorName, Colors, GLSLColor, GLSLColors, LightIntensities, Vector3, Face, Buffers} from '../../types';
 
 const COLOR_VAL_REGEX: RegExp = /\d+/g;
 
@@ -139,4 +139,20 @@ export const computeFaceNormal = (face: Face): Vector3 | undefined => {
 	if (cross.y === -0) cross.y = 0; // eslint-disable-line no-compare-neg-zero
 	if (cross.z === -0) cross.z = 0; // eslint-disable-line no-compare-neg-zero
 	return normalizeVector(cross);
+};
+
+export const formatAttributes = (buffersRef: React.MutableRefObject<Buffers>): Record<string, string>[] => {
+	if (!buffersRef.current) return [];
+	return Object.keys(buffersRef.current).reduce((result, bufferName) => {
+		const buffer = buffersRef.current[bufferName];
+		if (!buffer || !buffer.data) return result;
+		result.push({
+			name: bufferName,
+			value: `${buffer.data
+				.slice(0, 10)
+				.map(item => Math.round(item * 100) / 100)
+				.join(', ')}... (${buffer.data.length} total)`
+		});
+		return result;
+	}, []);
 };

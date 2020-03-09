@@ -206,21 +206,23 @@ const Inputs = ({uniforms, attributes, pageMousePosRef}: Props) => {
 					Attributes
 				</button>
 			</div>
-			<div className={cx(styles.textBlock, uniformsVisible && styles.active)}>
-				{uniforms.current
-					.filter(uniform => uniform.name !== 'uMouse' && uniform.name !== 'uTime')
-					.map(uniform => (
-						<div className={styles.textItem} key={uniform.name}>
-							{uniform.name}: <UniformInput uniform={uniform} updateUniforms={updateUniforms} pageMousePosRef={pageMousePosRef} />
+			<div className={styles.textContainer}>
+				<div className={cx(styles.textBlock, uniformsVisible && styles.active)}>
+					{uniforms.current
+						.filter(uniform => uniform.name !== 'uMouse' && uniform.name !== 'uTime')
+						.map(uniform => (
+							<div className={styles.textItem} key={uniform.name}>
+								{uniform.name}: <UniformInput uniform={uniform} updateUniforms={updateUniforms} pageMousePosRef={pageMousePosRef} />
+							</div>
+						))}
+				</div>
+				<div className={cx(styles.textBlock, attributesVisible && styles.active)}>
+					{attributes.map(attribute => (
+						<div className={styles.textItem} key={attribute.name}>
+							{attribute.name}: {attribute.value}
 						</div>
 					))}
-			</div>
-			<div className={cx(styles.textBlock, attributesVisible && styles.active)}>
-				{attributes.map(attribute => (
-					<div className={styles.textItem} key={attribute.name}>
-						{attribute.name}: [{attribute.value}]
-					</div>
-				))}
+				</div>
 			</div>
 		</div>
 	);

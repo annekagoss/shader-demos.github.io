@@ -5,7 +5,7 @@ import {useAnimationFrame} from '../../hooks/animation';
 import {useWindowSize} from '../../hooks/resize';
 import {assignProjectionMatrix} from '../../../lib/gl/initialize';
 import {applyRotation, createMat4, applyTransformation, invertMatrix} from '../../../lib/gl/matrix';
-import {addVectors} from '../../../lib/gl/helpers';
+import {addVectors, formatAttributes} from '../../../lib/gl/helpers';
 import loadMeshWorker from '../../../lib/gl/loadMeshWorker';
 import WebWorker from '../../../lib/gl/WebWorker';
 import {useOBJLoaderWebWorker} from '../../hooks/webWorker';
@@ -84,7 +84,6 @@ const render = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, 
 	const indexType: number = gl.UNSIGNED_SHORT;
 	const indexOffset: number = 0;
 	gl.drawElements(gl.TRIANGLES, vertexCount, indexType, indexOffset);
-	//gl.drawArrays(gl.TRIANGLES, 0, vertexCount);
 };
 
 const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef, faceArray, rotationDelta}: Props) => {
@@ -124,11 +123,7 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 				mesh: meshRef.current,
 				meshType: MESH_TYPE.OBJ
 			});
-			setAttributes([
-				// TODO: handle giant attribute arrays
-				// {name: 'aVertexPosition', value: buffersRef.current.vertexBuffer && buffersRef.current.vertexBuffer.data && buffersRef.current.vertexBuffer.data.join(', ')},
-				// {name: 'aVertexNormal', value: buffersRef.current.normalBuffer && buffersRef.current.normalBuffer.data && buffersRef.current.vertexBuffer.data.join(', ')}
-			]);
+			setAttributes(formatAttributes(buffersRef));
 		},
 		OBJSource,
 		MTLSource,
