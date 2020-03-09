@@ -46,6 +46,7 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, text
 		x: uniforms.current[0].value.x * window.devicePixelRatio,
 		y: uniforms.current[0].value.y * window.devicePixelRatio
 	});
+	const idleRef: React.MutableRefObject<boolean> = React.useRef<boolean>(false);
 	const mouseDownRef: React.MutableRefObject<boolean> = React.useRef<boolean>(false);
 	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: size.current.x * 0.5, y: size.current.y * -0.5});
 	const gl = React.useRef<WebGLRenderingContext>();
@@ -73,7 +74,7 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, text
 
 	useWindowSize(canvasRef.current, gl.current, uniforms.current, size);
 
-	useAnimationFrame((time: number) => {
+	useAnimationFrame(canvasRef, (time: number) => {
 		render({
 			gl: gl.current,
 			uniformLocations: uniformLocations.current,

@@ -51,7 +51,7 @@ const GL_PROPS: SceneProps = {
 };
 
 const App = () => {
-	const [activePageIndex, setActivePageIndex] = React.useState<number>(2);
+	const [activePageIndex, setActivePageIndex] = React.useState<number>(0);
 	return (
 		<div className={styles.app}>
 			{/* <div className={styles.GLScene}>

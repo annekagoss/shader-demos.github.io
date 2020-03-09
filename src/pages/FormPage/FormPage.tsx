@@ -156,7 +156,7 @@ const FormPage = ({isActive}: Props) => {
 				<ShaderText fragmentShader={helloWorldFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs uniforms={baseUniforms} attributes={attributes} />
 			</Section>{' '}
-			<Section
+			{/* <Section
 				title='0.1: Step'
 				notes={` Step is one of the hardware accelerated functions that are native to GLSL. It returns either 1.0 or 0.0 based on whether a value has passed a given threshold.`}>
 				<BaseCanvas fragmentShader={stepFragmentShader} vertexShader={baseVertexShader} uniforms={stepUniforms} setAttributes={setAttributes} />
@@ -192,7 +192,7 @@ const FormPage = ({isActive}: Props) => {
 				<BaseCanvas fragmentShader={polygonFragmentShader} vertexShader={baseVertexShader} uniforms={polygonUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={polygonFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={polygonUniforms} />
-			</Section>
+			</Section> */}
 		</div>
 	);
 };
