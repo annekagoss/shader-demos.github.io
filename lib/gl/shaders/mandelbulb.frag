@@ -184,11 +184,11 @@ vec3 render(vec2 p, mat4 cam )
     {
      	// col  = vec3(0.8,.9,1.1)*(0.6+0.4*rd.y);
 		// col += 5.0*vec3(0.8,0.7,0.5)*pow( clamp(dot(rd,light1),0.0,1.0), 32.0 );
-		col = vec3(1.0);
+		// col = vec3(1.0);
 		
-		// vec2 st = gl_FragCoord.xy/uResolution;
-		// st.y = 1.0 - st.y;
-		// col = texture2D(uBackground, st).xyz;
+		vec2 st = gl_FragCoord.xy/uResolution;
+		st.y = 1.0 - st.y;
+		col = texture2D(uBackground, st).xyz;
 		
 		// vec4 sc = vec4(0.0,0.0,0.0,5.0);
 		
