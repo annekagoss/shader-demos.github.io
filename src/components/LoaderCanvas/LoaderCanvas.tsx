@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {UniformSetting, Vector2, UNIFORM_TYPE, Matrix, Vector3, Mesh, FaceArray, MESH_TYPE, Buffers, Materials} from '../../../types';
+import {UniformSetting, Vector2, UNIFORM_TYPE, Matrix, Vector3, Mesh, FaceArray, MESH_TYPE, Buffers, Materials, Textures, OBJData} from '../../../types';
 import {initializeGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
 import {useWindowSize} from '../../hooks/resize';
@@ -11,19 +11,13 @@ import {useOBJLoaderWebWorker} from '../../hooks/webWorker';
 
 import styles from './LoaderCanvas.module.scss';
 
-//FOX SKULL
-import OBJSource from '../../../lib/gl/assets/fox/fox3.obj';
-import MTLSource from '../../../lib/gl/assets/fox/fox.mtl';
-import diffuseSource0 from '../../../lib/gl/assets/fox/fox_skull_0.jpg';
-import diffuseSource1 from '../../../lib/gl/assets/fox/fox_skull_1.jpg';
-
 interface Props {
 	fragmentShader: string;
 	vertexShader: string;
 	uniforms: React.MutableRefObject<UniformSetting[]>;
 	setAttributes: (attributes: any[]) => void;
 	pageMousePosRef?: React.MutableRefObject<Vector2>;
-	faceArray: FaceArray;
+	OBJData: OBJData;
 	rotationDelta: Vector3;
 }
 
@@ -86,7 +80,7 @@ const render = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, 
 	gl.drawElements(gl.TRIANGLES, vertexCount, indexType, indexOffset);
 };
 
-const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef, faceArray, rotationDelta}: Props) => {
+const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef, OBJData, rotationDelta}: Props) => {
 	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
 	const size: React.MutableRefObject<Vector2> = React.useRef<Vector2>({
 		x: uniforms.current[0].value.x * window.devicePixelRatio,
@@ -96,7 +90,6 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: size.current.x * 0.5, y: size.current.y * -0.5});
 	const gl = React.useRef<WebGLRenderingContext>();
 	const uniformLocations: React.MutableRefObject<Record<string, WebGLUniformLocation>> = React.useRef<Record<string, WebGLUniformLocation>>();
-	const attributeLocationsRef: React.MutableRefObject<Record<string, number>> = React.useRef<Record<string, number>>({});
 	const buffersRef: React.MutableRefObject<Buffers> = React.useRef<Buffers>({
 		vertexBuffer: null,
 		normalBuffer: null,
@@ -110,11 +103,6 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 	useOBJLoaderWebWorker({
 		onLoadHandler: message => {
 			meshRef.current = message;
-
-			// TODO: use new async version
-
-			// .then((loadedMaterials: Materials) => {
-			// meshRef.current.materials = loadedMaterials;
 			initializeGL({
 				gl,
 				uniformLocations,
@@ -124,24 +112,12 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 				vertexSource: vertexShader,
 				uniforms: uniforms.current,
 				size,
-				faceArray,
 				mesh: meshRef.current,
 				meshType: MESH_TYPE.OBJ
 			});
-
-			// legacyLoadTextures(gl.current, meshRef.current.materials);
-			// });
-
 			setAttributes(formatAttributes(buffersRef));
 		},
-		OBJSource,
-		MTLSource,
-		textures: {
-			diffuse: {
-				'material_0.001': diffuseSource0,
-				'material_1.001': diffuseSource1
-			}
-		}
+		OBJData
 	});
 
 	useWindowSize(canvasRef, gl, uniforms.current, size);

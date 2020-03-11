@@ -1,4 +1,4 @@
-import {BoundingBox, Face, Geometry, Mesh, Materials, PartialFace, UnpackedGeometry, Vector3} from '../../types';
+import {BoundingBox, Face, Geometry, Mesh, Materials, PartialFace, UnpackedGeometry, Vector3, Textures} from '../../types';
 
 export default () => {
 	enum MATERIAL_KEY {
@@ -25,9 +25,9 @@ export default () => {
 	const MAT_DECLARATION_REGEX: RegExp = /^newmtl\s/;
 	const TEXTURE_ADDRESS_REGEX: RegExp = /^usemtl\s/;
 
-	const loadMeshData = (OBJSource: string, MTLString: string, diffuseSources: string[]): Mesh => {
+	const loadMeshData = (OBJSource: string, MTLString: string, textures: Textures): Mesh => {
 		const geometry: Geometry = loadOBJData(OBJSource);
-		const materials: Materials = MTLString && loadMTLData(MTLString, diffuseSources);
+		const materials: Materials = MTLString && loadMTLData(MTLString, textures);
 		return Object.assign(geometry, {materials});
 	};
 
@@ -279,7 +279,7 @@ export default () => {
 		};
 	};
 
-	const loadMTLData = (source: String, diffuseSources: String[]): Materials => {
+	const loadMTLData = (source: String, textures: Textures): Materials => {
 		let index: number;
 		let name: string;
 
@@ -322,7 +322,7 @@ export default () => {
 						materials[index].reflectivity = parseFloat(elements[0]);
 						break;
 					case MATERIAL_KEY.DIFFUSE_MAP:
-						materials[index].textures.diffuseMap = diffuseSources && diffuseSources[name];
+						materials[index].textures.diffuseMap = textures.diffuse && textures.diffuse[name];
 						break;
 					case MATERIAL_KEY.SPECULAR_MAP:
 						console.warn('Specular maps are not yet supported.'); /* tslint:disable-line no-console */
@@ -361,9 +361,9 @@ export default () => {
 
 	self.addEventListener('message', e => {
 		if (!e) return;
-		const {OBJSource, MTLSource, diffuseSources} = e.data;
+		const {OBJSource, MTLSource, textures} = e.data;
 		if (OBJSource) {
-			const mesh: Mesh = loadMeshData(OBJSource, MTLSource, diffuseSources);
+			const mesh: Mesh = loadMeshData(OBJSource, MTLSource, textures);
 			postMessage(mesh, null);
 			return;
 		}

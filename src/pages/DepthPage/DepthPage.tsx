@@ -17,6 +17,12 @@ import desertBg from '../../assets/desert.jpg';
 
 import styles from './DepthPage.module.scss';
 
+//FOX SKULL
+import foxOBJ from '../../../lib/gl/assets/fox/fox3.obj';
+import foxMTL from '../../../lib/gl/assets/fox/fox.mtl';
+import foxDiffuseSource0 from '../../../lib/gl/assets/fox/fox_skull_0.jpg';
+import foxDiffuseSource1 from '../../../lib/gl/assets/fox/fox_skull_1.jpg';
+
 interface Props {
 	isActive: boolean;
 }
@@ -238,6 +244,17 @@ const DepthPage = ({isActive}: Props) => {
 
 	if (!isActive) return <></>;
 
+	const foxOBJData = {
+		OBJSource: foxOBJ,
+		MTLSource: foxMTL,
+		textures: {
+			diffuse: {
+				'material_0.001': foxDiffuseSource0,
+				'material_1.001': foxDiffuseSource1
+			}
+		}
+	};
+
 	return (
 		<div className={styles.page}>
 			{/* <Section title='2.0: Mesh' notes={``}>
@@ -258,7 +275,7 @@ const DepthPage = ({isActive}: Props) => {
 					vertexShader={phongVertexShader}
 					uniforms={phongUniforms}
 					setAttributes={setAttributes}
-					faceArray={CUBE_MESH}
+					OBJData={foxOBJData}
 					rotationDelta={OBJ_ROTATION_DELTA}
 				/>
 				<ShaderText fragmentShader={phongFragmentShader} vertexShader={phongVertexShader} />

@@ -1,6 +1,3 @@
-import {type} from 'os';
-import {number} from 'prop-types';
-
 export enum Direction {
 	BOTTOM = 'bottom',
 	LEFT = 'left',
@@ -305,11 +302,15 @@ export interface Textures {
 	diffuse: Record<string, string>;
 }
 
-export interface WebWorkerLoadMessage {
-	onLoadHandler: (data: Mesh) => void;
+export interface OBJData {
 	OBJSource: string;
 	MTLSource?: string;
 	textures?: Textures;
+}
+
+export interface WebWorkerLoadMessage {
+	onLoadHandler: (data: Mesh) => void;
+	OBJData: OBJData;
 }
 
 export enum MESH_TYPE {
