@@ -100,11 +100,11 @@ const BASE_PHONG_UNIFORMS: UniformSetting[] = [
 		value: 0
 	},
 	{
-		defaultValue: 0.5,
+		defaultValue: 0.3,
 		name: 'uSpecular',
 		readonly: false,
 		type: UNIFORM_TYPE.FLOAT_1,
-		value: 0.5
+		value: 0.3
 	},
 	{
 		defaultValue: {x: 4.0, y: 4.0, z: 4.0},

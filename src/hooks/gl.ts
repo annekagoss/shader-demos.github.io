@@ -54,13 +54,16 @@ export const initializeRenderer = ({uniformLocations, canvasRef, fragmentSource,
 		uModelViewMatrix: tempGl.getUniformLocation(tempProgram, 'uModelViewMatrix'),
 		uNormalMatrix: tempGl.getUniformLocation(tempProgram, 'uNormalMatrix'),
 		uDiffuse0: tempGl.getUniformLocation(tempProgram, 'uDiffuse0'),
-		uDiffuse1: tempGl.getUniformLocation(tempProgram, 'uDiffuse1')
+		uDiffuse1: tempGl.getUniformLocation(tempProgram, 'uDiffuse1'),
+		uDepthEnabled: tempGl.getUniformLocation(tempProgram, 'uDepthEnabled'),
+		uDepthMap: tempGl.getUniformLocation(tempProgram, 'uDepthMap')
 	};
 	if (useFrameBuffer) {
 		FBOA.current = initFrameBufferObject(tempGl, size.current.x, size.current.y);
 		FBOB.current = initFrameBufferObject(tempGl, size.current.x, size.current.y);
 	}
 
+	// TODO move this stuff
 	let texture;
 	const textureSize: Vector2 = {x: 0, y: 0};
 	if (textureSource) {
@@ -124,7 +127,6 @@ export const initializeGL = (props: InitializeProps) => {
 
 	loadTextures(tempGl, props.mesh.materials).then((loadedMaterials: Materials): void => {
 		props.mesh.materials = loadedMaterials;
-
 		bindMaterials(tempGl, props.uniformLocations, props.mesh.materials);
 		initializeMesh(props, tempGl, tempProgram);
 		props.gl.current = tempGl;

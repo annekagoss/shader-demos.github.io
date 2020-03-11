@@ -41,19 +41,18 @@ vec3 phongLighting() {
 
 void main() {  
 	vec2 st = gl_FragCoord.xy/uResolution;
-	//0 PHONG
+	// 0 PHONG
 	if (uMaterialType == 0) {
 		gl_FragColor = vec4(phongLighting(), 1.0);
-		return;
+	// 1 TEXTURE
 	} else if (uMaterialType == 1) {
 		vec4 texelColor = readTextures();
 		gl_FragColor = vec4(texelColor.xyz * phongLighting(), texelColor.w);
 	}
-	//1 WIREFRAME
+	// 2 WIREFRAME
 	else {
 		gl_FragColor = wireframe(vBarycentric);
 	}
-	// 2 TEXTURE
 	// 3 SHADOW MAP
 	// 4 SHINY GLITCH
 }
