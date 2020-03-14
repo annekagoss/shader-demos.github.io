@@ -1,10 +1,10 @@
 import * as React from 'react';
-import {UniformSetting, Vector2, UNIFORM_TYPE, Matrix, Vector3, Mesh, FaceArray, MESH_TYPE, Buffers, Materials, Textures, OBJData} from '../../../types';
+import {UniformSetting, Vector2, UNIFORM_TYPE, Matrix, Vector3, Mesh, FaceArray, MESH_TYPE, Buffers, Materials, Textures, OBJData, FBO} from '../../../types';
 import {initializeGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
 import {useWindowSize} from '../../hooks/resize';
 import {assignProjectionMatrix} from '../../../lib/gl/initialize';
-import {createMat4, applyTransformation, invertMatrix} from '../../../lib/gl/matrix';
+import {createMat4, applyTransformation, invertMatrix, transposeMatrix} from '../../../lib/gl/matrix';
 import {addVectors, formatAttributes} from '../../../lib/gl/helpers';
 import {useOBJLoaderWebWorker} from '../../hooks/webWorker';
 // import {legacyLoadTextures} from '../../../lib/gl/loader';
@@ -30,12 +30,17 @@ interface RenderProps {
 	size: Vector2;
 	rotation: Vector3;
 	buffers: Buffers;
+	supportsDepth: boolean;
+	depthFBO: FBO;
+	program: WebGLProgram;
+	depthProgram: WebGLProgram;
+	depthUniformLocations: Record<string, WebGLUniformLocation>;
 }
 
-const render = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, rotation}: RenderProps) => {
-	if (!gl) return;
-	assignProjectionMatrix(gl, uniformLocations, size);
-	// TODO: pull transformation from inputs
+const render = (props: RenderProps) => {
+	if (!props.gl) return;
+	const {gl, program, depthFBO, depthProgram, size, uniforms, rotation, time, uniformLocations} = props;
+
 	const modelViewMatrix: Matrix = applyTransformation(createMat4(), {
 		translation: uniforms.find(uniform => uniform.name === 'uTranslation').value,
 		rotation: {
@@ -43,10 +48,74 @@ const render = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, 
 			y: rotation.y,
 			z: rotation.z
 		},
+		// rotation: {x: 0, y: 0, z: 0},
 		scale: uniforms.find(uniform => uniform.name === 'uScale').value
 	});
+
+	// const modelViewMatrix: Matrix = applyTransformation(createMat4(), {
+	// 	translation: {x: 0, y: 0, z: 0},
+	// 	rotation: {x: 0, y: 0, z: 0},
+	// 	scale: uniforms.find(uniform => uniform.name === 'uScale').value
+	// });
+
+	// if (!props.supportsDepth) {
+	gl.useProgram(program);
+	draw(props, modelViewMatrix);
+	return;
+	// }
+
+	// gl.activeTexture(gl.TEXTURE4);
+	// gl.bindFramebuffer(gl.FRAMEBUFFER, depthFBO.buffer);
+	// gl.viewport(0, 0, depthFBO.textureWidth, depthFBO.textureHeight);
+	// gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	// gl.useProgram(depthProgram);
+	// drawShadowMap(props, modelViewMatrix);
+
+	// gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+	// gl.viewport(0, 0, size.x, size.y);
+	// gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	// gl.useProgram(program);
+	// gl.uniform1i(uniformLocations.uDepthMap, 4);
+	// draw(props, modelViewMatrix);
+};
+
+const drawShadowMap = ({gl, depthProgram, depthUniformLocations, buffers}: RenderProps, modelViewMatrix: Matrix): void => {
+	const numPosComponents: number = buffers.vertexBuffer.itemSize;
+	const posType: number = gl.FLOAT;
+	const normalizePos: boolean = false;
+	const posStride: number = 0;
+	const posOffset: number = 0;
+	const depthVertexPosition = gl.getAttribLocation(depthProgram, 'aVertexPosition');
+	gl.bindBuffer(gl.ARRAY_BUFFER, buffers.vertexBuffer.buffer);
+	gl.vertexAttribPointer(depthVertexPosition, numPosComponents, posType, normalizePos, posStride, posOffset);
+	gl.enableVertexAttribArray(depthVertexPosition);
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indexBuffer.buffer);
+
+	gl.uniformMatrix4fv(depthUniformLocations.uModelViewMatrix, false, modelViewMatrix);
+	const vertexCount: number = buffers.indexBuffer.numItems;
+	const indexType: number = gl.UNSIGNED_SHORT;
+	const indexOffset: number = 0;
+	gl.drawElements(gl.TRIANGLES, vertexCount, indexType, indexOffset);
+};
+
+const draw = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, rotation, supportsDepth, depthFBO, depthProgram, program}: RenderProps, modelViewMatrix: Matrix): void => {
+	const numPosComponents: number = buffers.vertexBuffer.itemSize;
+	const posType: number = gl.FLOAT;
+	const normalizePos: boolean = false;
+	const posStride: number = 0;
+	const posOffset: number = 0;
+	const depthVertexPosition = gl.getAttribLocation(program, 'aVertexPosition');
+	gl.bindBuffer(gl.ARRAY_BUFFER, buffers.vertexBuffer.buffer);
+	gl.vertexAttribPointer(depthVertexPosition, numPosComponents, posType, normalizePos, posStride, posOffset);
+	gl.enableVertexAttribArray(depthVertexPosition);
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indexBuffer.buffer);
+
+	assignProjectionMatrix(gl, uniformLocations, size);
+
 	gl.uniformMatrix4fv(uniformLocations.uModelViewMatrix, false, modelViewMatrix);
-	gl.uniformMatrix4fv(uniformLocations.uNormalMatrix, false, invertMatrix(modelViewMatrix));
+	let normalMatrix: Float32Array = invertMatrix(modelViewMatrix);
+	normalMatrix = transposeMatrix(normalMatrix);
+	gl.uniformMatrix4fv(uniformLocations.uNormalMatrix, false, normalMatrix);
 
 	uniforms.forEach((uniform: UniformSetting) => {
 		switch (uniform.type) {
@@ -99,13 +168,21 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 	});
 	const rotationRef: React.MutableRefObject<Vector3> = React.useRef<Vector3>({x: 0, y: 0, z: 0});
 	const meshRef: React.MutableRefObject<Mesh> = React.useRef<Mesh>();
+	// Depth shadow mapping
+	const programRef: React.MutableRefObject<WebGLProgram> = React.useRef<WebGLProgram>();
+	const depthProgramRef: React.MutableRefObject<WebGLProgram> = React.useRef<WebGLProgram>();
+	const supportsDepthRef: React.MutableRefObject<boolean> = React.useRef<boolean>();
+	const depthFBO: React.MutableRefObject<FBO> = React.useRef<FBO>();
+	const depthUniformLocations: React.MutableRefObject<Record<string, WebGLUniformLocation>> = React.useRef<Record<string, WebGLUniformLocation>>();
 
 	useOBJLoaderWebWorker({
 		onLoadHandler: message => {
 			meshRef.current = message;
 			initializeGL({
 				gl,
+				programRef,
 				uniformLocations,
+				depthUniformLocations,
 				canvasRef,
 				buffersRef: buffersRef,
 				fragmentSource: fragmentShader,
@@ -113,7 +190,11 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 				uniforms: uniforms.current,
 				size,
 				mesh: meshRef.current,
-				meshType: MESH_TYPE.OBJ
+				meshType: MESH_TYPE.OBJ,
+				shouldUseDepth: true,
+				supportsDepthRef,
+				depthProgramRef,
+				depthFBO
 			});
 			setAttributes(formatAttributes(buffersRef));
 		},
@@ -127,12 +208,17 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 		render({
 			gl: gl.current,
 			uniformLocations: uniformLocations.current,
+			depthUniformLocations: depthUniformLocations.current,
 			uniforms: uniforms.current,
 			time,
 			mousePos: mousePosRef.current,
 			size: size.current,
 			rotation: rotationRef.current,
-			buffers: buffersRef.current
+			buffers: buffersRef.current,
+			supportsDepth: supportsDepthRef.current,
+			depthFBO: depthFBO.current,
+			program: programRef.current,
+			depthProgram: depthProgramRef.current
 		});
 	});
 

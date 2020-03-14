@@ -9,6 +9,7 @@ attribute vec3 aBarycentric;
 uniform mat4 uModelViewMatrix;
 uniform mat4 uNormalMatrix;
 uniform mat4 uProjectionMatrix;
+uniform mat4 uLeftLightMatrix;
 
 uniform vec3 uLightPositionA;
 uniform vec3 uLightPositionB;
@@ -22,6 +23,10 @@ varying float vSpecular;
 varying vec2 vTextureCoord;
 varying float vTextureAddress;
 varying vec3 vBarycentric;
+varying vec3 vNormal;
+varying vec4 vPosition;
+varying vec4 vNormalDirection;
+varying vec4 vPositionFromLeftLight;
 
 const vec3 eye = vec3(0, 0, 6); // TODO pass in camera position as uniform
 
@@ -30,17 +35,16 @@ const vec3 eye = vec3(0, 0, 6); // TODO pass in camera position as uniform
 
 void main() {
 	gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+	vec4 normalDirection = normalize(uNormalMatrix * vec4(aVertexNormal, 1.));
 	vec3 lighting = calculateLighting(
-		uModelViewMatrix,
-		aVertexNormal,
+		normalDirection,
 		uLightPositionA,
 		uLightPositionB,
 		uLightColorA,
 		uLightColorB
 	);
 	float specular = calculateSpecular(
-		uNormalMatrix,
-		aVertexNormal,
+		normalDirection,
 		lighting,
 		eye,
 		uSpecular
@@ -50,4 +54,10 @@ void main() {
 	vTextureCoord = aTextureCoord;
 	vTextureAddress = aTextureAddress;
 	vBarycentric = aBarycentric;
+	vNormal = aVertexNormal;
+	vPositionFromLeftLight = uLeftLightMatrix * uModelViewMatrix * aVertexPosition;
+	
+	// TOON
+	vPosition = aVertexPosition * uModelViewMatrix;
+	vNormalDirection = normalDirection;
 }

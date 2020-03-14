@@ -20,9 +20,9 @@ varying vec3 vVertexPosition;
 
 void main() {
 	gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+	vec4 normalDirection = normalize(uModelViewMatrix * vec4(aVertexNormal, 1.));
 	vLighting = calculateLighting(
-		uModelViewMatrix,
-		aVertexNormal,
+		normalDirection,
 		uLightPositionA,
 		uLightPositionB,
 		uLightColorA,

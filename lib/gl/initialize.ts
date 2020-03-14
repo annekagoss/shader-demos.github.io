@@ -41,7 +41,7 @@ export function loadShader(gl: WebGLRenderingContext, type: number, source: stri
 	return shader;
 }
 
-export function initBuffers(gl: WebGLRenderingContext, program: WebGLProgram, loadedMesh: Mesh, useBarycentric: boolean): Buffers {
+export function initBuffers(gl: WebGLRenderingContext, program: WebGLProgram, loadedMesh: Mesh, useBarycentric: boolean, depthProgram?: WebGLProgram): Buffers {
 	const {positions, normals, textures, textureAddresses, indices}: Mesh = loadedMesh;
 	const vertexBuffer: Buffer = buildBuffer({
 		gl,
@@ -52,6 +52,14 @@ export function initBuffers(gl: WebGLRenderingContext, program: WebGLProgram, lo
 	const vertexPosition = gl.getAttribLocation(program, 'aVertexPosition');
 	gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
 	gl.enableVertexAttribArray(vertexPosition);
+
+	if (depthProgram) {
+		gl.useProgram(depthProgram);
+		const depthVertexPosition = gl.getAttribLocation(depthProgram, 'aVertexPosition');
+		gl.vertexAttribPointer(depthVertexPosition, 3, gl.FLOAT, false, 0, 0);
+		gl.enableVertexAttribArray(depthVertexPosition);
+		gl.useProgram(program);
+	}
 
 	const normalBuffer: Buffer = buildBuffer({
 		gl,
@@ -154,7 +162,7 @@ export function legacyInitFrameBufferObject(gl: WebGLRenderingContext): FBO {
 	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	gl.bindTexture(gl.TEXTURE_2D, null);
 	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-	gl.activeTexture(gl.TEXTURE4);
+	gl.activeTexture(gl.TEXTURE);
 	gl.bindTexture(gl.TEXTURE_2D, targetTexture);
 
 	return {
@@ -401,15 +409,17 @@ export const initMeshFromFaceArray = (gl: WebGLRenderingContext, program: WebGLP
 	};
 };
 
-export const initFrameBufferObject = (gl: WebGLRenderingContext, textureWidth: number, textureHeight: number): FBO => {
-	// Todo move to global constants
-	const level: number = 0;
-	const internalFormat: number = gl.RGBA;
-	const border: number = 0;
-	const format: number = gl.RGBA;
-	const type: number = gl.UNSIGNED_BYTE;
-	const data: ArrayBufferView | null = null;
+const FBOConstants = (gl: WebGLRenderingContext): Record<string, any> => ({
+	level: 0,
+	internalFormat: gl.RGBA,
+	border: 0,
+	format: gl.RGBA,
+	type: gl.UNSIGNED_BYTE,
+	data: null
+});
 
+const createTargetTexture = (gl: WebGLRenderingContext, textureWidth: number, textureHeight: number, constants: Record<string, number>): WebGLTexture => {
+	const {level, internalFormat, border, format, type, data} = constants;
 	const targetTexture: WebGLTexture = gl.createTexture();
 	gl.bindTexture(gl.TEXTURE_2D, null);
 	gl.bindTexture(gl.TEXTURE_2D, targetTexture);
@@ -417,17 +427,57 @@ export const initFrameBufferObject = (gl: WebGLRenderingContext, textureWidth: n
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+	return targetTexture;
+};
 
+const createFrameBuffer = (gl: WebGLRenderingContext, targetTexture, level: number): WebGLFramebuffer => {
 	const frameBuffer: WebGLFramebuffer = gl.createFramebuffer();
 	gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
 	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, level);
-
 	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	gl.bindTexture(gl.TEXTURE_2D, null);
+	return frameBuffer;
+};
+
+export const initFrameBufferObject = (gl: WebGLRenderingContext, textureWidth: number, textureHeight: number): FBO => {
+	const constants = FBOConstants(gl);
+
+	const targetTexture: WebGLTexture = createTargetTexture(gl, textureWidth, textureHeight, constants);
+	const frameBuffer: WebGLFramebuffer = createFrameBuffer(gl, targetTexture, constants.level);
 
 	if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
 		console.error(new Error('Could not attach frame buffer'));
 	}
+
+	return {
+		buffer: frameBuffer,
+		targetTexture,
+		textureWidth,
+		textureHeight
+	};
+};
+
+export const initDepthBufferObject = (gl: WebGLRenderingContext, textureWidth: number, textureHeight: number): FBO => {
+	const constants = FBOConstants(gl);
+
+	const targetTexture: WebGLTexture = createTargetTexture(gl, textureWidth, textureHeight, constants);
+	const frameBuffer: WebGLFramebuffer = createFrameBuffer(gl, targetTexture, constants.level);
+
+	// Create depth buffer
+	const depthBuffer: WebGLRenderbuffer = gl.createRenderbuffer();
+	gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
+	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, textureWidth, textureHeight);
+
+	// Bnd depth buffer to frame buffer
+	gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
+	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
+
+	// reset
+	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+	gl.bindTexture(gl.TEXTURE_2D, null);
+	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+	gl.activeTexture(gl.TEXTURE4);
+	gl.bindTexture(gl.TEXTURE_2D, targetTexture);
 
 	return {
 		buffer: frameBuffer,
