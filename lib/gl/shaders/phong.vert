@@ -1,4 +1,6 @@
+#ifdef GL_ES
 precision mediump float;
+#endif
 
 attribute vec4 aVertexPosition;
 attribute vec3 aVertexNormal;
@@ -9,14 +11,14 @@ attribute vec3 aBarycentric;
 uniform mat4 uModelViewMatrix;
 uniform mat4 uNormalMatrix;
 uniform mat4 uProjectionMatrix;
-uniform mat4 uLeftLightMatrix;
 
+uniform float uTime;
 uniform vec3 uLightPositionA;
 uniform vec3 uLightPositionB;
 uniform vec3 uLightColorA;
 uniform vec3 uLightColorB;
-
 uniform float uSpecular;
+uniform float uOutlinePass;
 
 varying vec3 vLighting;
 varying float vSpecular;
@@ -26,7 +28,6 @@ varying vec3 vBarycentric;
 varying vec3 vNormal;
 varying vec4 vPosition;
 varying vec4 vNormalDirection;
-varying vec4 vPositionFromLeftLight;
 
 const vec3 eye = vec3(0, 0, 6); // TODO pass in camera position as uniform
 
@@ -34,8 +35,19 @@ const vec3 eye = vec3(0, 0, 6); // TODO pass in camera position as uniform
 #pragma glslify: calculateSpecular = require('./common/specular.glsl');
 
 void main() {
-	gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-	vec4 normalDirection = normalize(uNormalMatrix * vec4(aVertexNormal, 1.));
+	vec4 position = aVertexPosition;
+	vec3 normal = aVertexNormal;
+	
+	if (uOutlinePass == 1.0) {
+		position.xyz *= 1.025;
+		normal *= 1.025;
+	}
+	// Distortion
+	// position.xy *= 1.0 + sin((uTime * 0.001) + (position.z * .5)) * .1;
+	// normal.xy *= 1.0 + sin((uTime * 0.001) + (normal.z * .5)) * .1;
+	
+	gl_Position = uProjectionMatrix * uModelViewMatrix * position;
+	vec4 normalDirection = normalize(uNormalMatrix * vec4(normal, 1.));
 	vec3 lighting = calculateLighting(
 		normalDirection,
 		uLightPositionA,
@@ -54,10 +66,9 @@ void main() {
 	vTextureCoord = aTextureCoord;
 	vTextureAddress = aTextureAddress;
 	vBarycentric = aBarycentric;
-	vNormal = aVertexNormal;
-	vPositionFromLeftLight = uLeftLightMatrix * uModelViewMatrix * aVertexPosition;
+	vNormal = normal;
 	
 	// TOON
-	vPosition = aVertexPosition * uModelViewMatrix;
+	vPosition = position * uModelViewMatrix;
 	vNormalDirection = normalDirection;
 }

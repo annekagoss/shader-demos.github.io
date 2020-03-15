@@ -78,6 +78,14 @@ const BASE_PHONG_UNIFORMS: UniformSetting[] = [
 	...BASE_UNIFORMS,
 	{
 		defaultValue: 0,
+		name: 'uMaterialType',
+		isBool: false,
+		readonly: false,
+		type: UNIFORM_TYPE.INT_1,
+		value: 0
+	},
+	{
+		defaultValue: 0,
 		name: 'uTime',
 		readonly: true,
 		type: UNIFORM_TYPE.FLOAT_1,
@@ -96,14 +104,6 @@ const BASE_PHONG_UNIFORMS: UniformSetting[] = [
 		readonly: false,
 		type: UNIFORM_TYPE.FLOAT_1,
 		value: 0.0485
-	},
-	{
-		defaultValue: 0,
-		name: 'uMaterialType',
-		isBool: false,
-		readonly: false,
-		type: UNIFORM_TYPE.INT_1,
-		value: 0
 	},
 	{
 		defaultValue: 0.6,
@@ -281,11 +281,11 @@ const DepthPage = ({isActive}: Props) => {
 				<ShaderText fragmentShader={phongFragmentShader} vertexShader={phongVertexShader} />
 				<Inputs attributes={attributes} uniforms={phongUniforms} pageMousePosRef={pageMousePosRef} />
 			</Section>
-			{/* <Section title='2.3: Fractal' notes={``}>
+			<Section title='2.2: Fractal' notes={``}>
 				<BaseCanvas fragmentShader={mandelbulbFragmentShader} vertexShader={baseVertexShader} uniforms={fractalUniforms} setAttributes={setAttributes} textureSource={desertBg} />
 				<ShaderText fragmentShader={mandelbulbFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={fractalUniforms} pageMousePosRef={pageMousePosRef} />
-			</Section> */}
+			</Section>
 		</div>
 	);
 };

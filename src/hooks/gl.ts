@@ -1,10 +1,12 @@
 import * as React from 'react';
-import {FBO, UniformSetting, Vector3, Vector2, FaceArray, Mesh, MESH_TYPE, Buffers, Materials, Material, Matrix} from '../../types';
+import {FBO, UniformSetting, Vector3, Vector2, FaceArray, Mesh, MESH_TYPE, Buffers, Materials, Material, Matrix, Buffer} from '../../types';
 import {initShaderProgram, initBaseMesh, initMeshFromFaceArray, initFrameBufferObject, initBuffers, initDepthBufferObject} from '../../lib/gl/initialize';
 import {loadTextures} from '../../lib/gl/textureLoader';
 import {supportsDepth, degreesToRadians} from '../../lib/gl/helpers';
 import depthFragmentSource from '../../lib/gl/shaders/shadow.frag';
 import depthVertexSource from '../../lib/gl/shaders/shadow.vert';
+import outlineFragmentSource from '../../lib/gl/shaders/outline.frag';
+import outlineVertexSource from '../../lib/gl/shaders/base.vert';
 import {applyPerspective} from '../../lib/gl/matrix';
 import {createMat4} from '../../lib/gl/matrix';
 import {lookAt} from '../../lib/gl/matrix';
@@ -15,7 +17,7 @@ interface InitializeProps {
 	gl: React.MutableRefObject<WebGLRenderingContext>;
 	programRef?: React.MutableRefObject<WebGLProgram>;
 	uniformLocations: React.MutableRefObject<Record<string, WebGLUniformLocation>>;
-	depthUniformLocations?: React.MutableRefObject<Record<string, WebGLUniformLocation>>;
+	outlineUniformLocations?: React.MutableRefObject<Record<string, WebGLUniformLocation>>;
 	canvasRef: React.MutableRefObject<HTMLCanvasElement>;
 	fragmentSource: string;
 	vertexSource: string;
@@ -23,30 +25,17 @@ interface InitializeProps {
 	size: React.MutableRefObject<Vector2>;
 	FBOA?: React.MutableRefObject<FBO>;
 	FBOB?: React.MutableRefObject<FBO>;
-	depthFBO?: React.MutableRefObject<FBO>;
 	faceArray?: FaceArray;
 	buffersRef?: React.MutableRefObject<Buffers>;
 	mesh?: Mesh;
 	meshType: MESH_TYPE;
 	shouldUseDepth?: boolean;
 	supportsDepthRef?: React.MutableRefObject<boolean>;
-	depthProgramRef?: React.MutableRefObject<WebGLProgram>;
+	outlineProgramRef?: React.MutableRefObject<WebGLProgram>;
+	baseVertexBufferRef: React.MutableRefObject<Buffer>;
 }
 
-export const initializeRenderer = ({
-	uniformLocations,
-	depthUniformLocations,
-	canvasRef,
-	fragmentSource,
-	vertexSource,
-	uniforms,
-	size,
-	FBOA,
-	FBOB,
-	depthFBO,
-	shouldUseDepth = false,
-	supportsDepthRef
-}: InitializeProps) => {
+export const initializeRenderer = ({uniformLocations, canvasRef, fragmentSource, vertexSource, uniforms, size, FBOA, FBOB, outlineUniformLocations}: InitializeProps) => {
 	const {width, height} = canvasRef.current.getBoundingClientRect();
 	const x: number = width * window.devicePixelRatio;
 	const y: number = height * window.devicePixelRatio;
@@ -75,64 +64,32 @@ export const initializeRenderer = ({
 		uModelViewMatrix: gl.getUniformLocation(program, 'uModelViewMatrix'),
 		uNormalMatrix: gl.getUniformLocation(program, 'uNormalMatrix'),
 		uDiffuse0: gl.getUniformLocation(program, 'uDiffuse0'),
-		uDiffuse1: gl.getUniformLocation(program, 'uDiffuse1'),
-		uDepthEnabled: gl.getUniformLocation(program, 'uDepthEnabled'),
-		uDepthMap: gl.getUniformLocation(program, 'uDepthMap'),
-		uLeftLightMatrix: gl.getUniformLocation(program, 'uLeftLightMatrix'),
-		uPositionFromShadowLight: gl.getUniformLocation(program, 'uPositionFromShadowLight')
+		uDiffuse1: gl.getUniformLocation(program, 'uDiffuse1')
 	};
 
 	if (usePingPongBuffers) {
 		FBOA.current = initFrameBufferObject(gl, x, y);
 		FBOB.current = initFrameBufferObject(gl, x, y);
 	}
-
-	const shouldInitializeDepthMap: boolean = shouldUseDepth && supportsDepth(gl);
-	let depthProgram;
-	if (shouldInitializeDepthMap) {
-		supportsDepthRef.current = true;
-		depthProgram = initializeDepthMap(gl, depthFBO, uniformLocations, depthUniformLocations, x, y, program);
-		gl.useProgram(program);
+	let outlineProgram;
+	if (outlineUniformLocations) {
+		outlineProgram = initializeOutlineProgram(gl, outlineUniformLocations, x, y);
 	}
-	return {gl, program, depthProgram};
+
+	return {gl, program, outlineProgram};
 };
 
-const initializeDepthMap = (
-	gl: WebGLRenderingContext,
-	FBO: React.MutableRefObject<FBO>,
-	uniformLocations: React.MutableRefObject<Record<string, WebGLUniformLocation>>,
-	depthUniformLocations: React.MutableRefObject<Record<string, WebGLUniformLocation>>,
-	x: number,
-	y: number,
-	program: WebGLProgram
-) => {
-	const depthProgram: WebGLProgram = initShaderProgram(gl, depthVertexSource, depthFragmentSource);
-
-	FBO.current = initDepthBufferObject(gl, x, y);
-	depthUniformLocations.current = {
-		uModelViewMatrix: gl.getUniformLocation(depthProgram, 'uModelViewMatrix'),
-		uLeftLightMatrix: gl.getUniformLocation(depthProgram, 'uLeftLightMatrix')
+const initializeOutlineProgram = (gl: WebGLRenderingContext, outlineUniformLocations: React.MutableRefObject<Record<string, WebGLUniformLocation>>) => {
+	const outlineProgram: WebGLProgram = initShaderProgram(gl, outlineVertexSource, outlineFragmentSource);
+	outlineUniformLocations.current = {
+		uSource: gl.getUniformLocation(outlineProgram, 'uSource'),
+		uOutline: gl.getUniformLocation(outlineProgram, 'uOutline'),
+		uResolution: gl.getUniformLocation(outlineProgram, 'uResolution')
 	};
-	const lightMatrix: Matrix = applyPerspective({
-		sourceMatrix: createMat4(),
-		fieldOfView: degreesToRadians(70),
-		aspect: FBO.current.textureWidth / FBO.current.textureHeight,
-		near: 0.01,
-		far: 2000
-	});
-	const leftLightMatrix: Matrix = lookAt(lightMatrix, {
-		target: {x: 0, y: 0.3, z: 0},
-		origin: {x: 1, y: 1, z: 1},
-		up: {x: 0, y: 1, z: 0}
-	});
-	gl.useProgram(program);
-	gl.uniformMatrix4fv(uniformLocations.current.uLeftLightMatrix, false, leftLightMatrix);
-	gl.useProgram(depthProgram);
-	gl.uniformMatrix4fv(depthUniformLocations.current.uLeftLightMatrix, false, leftLightMatrix);
-	return depthProgram;
+	return outlineProgram;
 };
 
-const initializeMesh = ({faceArray, buffersRef, meshType, mesh}: InitializeProps, gl: WebGLRenderingContext, program: WebGLProgram, depthProgram: WebGLProgram) => {
+const initializeMesh = ({faceArray, buffersRef, meshType, mesh, baseVertexBufferRef}: InitializeProps, gl: WebGLRenderingContext, program: WebGLProgram, outlineProgram: WebGLProgram) => {
 	switch (meshType) {
 		case MESH_TYPE.BASE_TRIANGLES:
 			initBaseMesh(gl, program);
@@ -142,7 +99,12 @@ const initializeMesh = ({faceArray, buffersRef, meshType, mesh}: InitializeProps
 			buffersRef.current = initMeshFromFaceArray(gl, program, faceArray, true);
 			break;
 		case MESH_TYPE.OBJ:
-			buffersRef.current = initBuffers(gl, program, mesh, true, depthProgram);
+			if (outlineProgram) {
+				gl.useProgram(outlineProgram);
+				baseVertexBufferRef.current = initBaseMesh(gl, outlineProgram);
+			}
+			gl.useProgram(program);
+			buffersRef.current = initBuffers(gl, program, mesh, true);
 			break;
 		default:
 			initBaseMesh(gl, program);
@@ -151,25 +113,33 @@ const initializeMesh = ({faceArray, buffersRef, meshType, mesh}: InitializeProps
 
 export const initializeGL = (props: InitializeProps) => {
 	if (props.canvasRef.current === undefined) return;
-	const {gl, program, depthProgram} = initializeRenderer(props);
+	const {gl, program, outlineProgram} = initializeRenderer(props);
 
 	const shouldLoadTextures: boolean = props.mesh && props.mesh.materials && props.mesh.materials !== {};
 
 	if (!shouldLoadTextures) {
-		initializeMesh(props, gl, program, depthProgram);
+		initializeMesh(props, gl, program, outlineProgram);
 		props.gl.current = gl;
-		if (props.programRef) props.programRef.current = program;
-		if (props.depthProgramRef) props.depthProgramRef.current = depthProgram;
+		if (props.programRef) {
+			props.programRef.current = program;
+		}
+		if (props.outlineProgramRef) {
+			props.outlineProgramRef.current = outlineProgram;
+		}
 		return;
 	}
 
 	loadTextures(gl, props.mesh.materials).then((loadedMaterials: Materials): void => {
 		props.mesh.materials = loadedMaterials;
 		bindMaterials(gl, props.uniformLocations, props.mesh.materials);
-		initializeMesh(props, gl, program, depthProgram);
+		initializeMesh(props, gl, program, outlineProgram);
 		props.gl.current = gl;
-		if (props.programRef) props.programRef.current = program;
-		if (props.depthProgramRef) props.depthProgramRef.current = depthProgram;
+		if (props.programRef) {
+			props.programRef.current = program;
+		}
+		if (props.outlineProgramRef) {
+			props.outlineProgramRef.current = outlineProgram;
+		}
 	});
 };
 

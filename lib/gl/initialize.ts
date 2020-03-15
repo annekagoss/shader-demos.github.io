@@ -41,7 +41,7 @@ export function loadShader(gl: WebGLRenderingContext, type: number, source: stri
 	return shader;
 }
 
-export function initBuffers(gl: WebGLRenderingContext, program: WebGLProgram, loadedMesh: Mesh, useBarycentric: boolean, depthProgram?: WebGLProgram): Buffers {
+export function initBuffers(gl: WebGLRenderingContext, program: WebGLProgram, loadedMesh: Mesh, useBarycentric: boolean): Buffers {
 	const {positions, normals, textures, textureAddresses, indices}: Mesh = loadedMesh;
 	const vertexBuffer: Buffer = buildBuffer({
 		gl,
@@ -52,14 +52,6 @@ export function initBuffers(gl: WebGLRenderingContext, program: WebGLProgram, lo
 	const vertexPosition = gl.getAttribLocation(program, 'aVertexPosition');
 	gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
 	gl.enableVertexAttribArray(vertexPosition);
-
-	if (depthProgram) {
-		gl.useProgram(depthProgram);
-		const depthVertexPosition = gl.getAttribLocation(depthProgram, 'aVertexPosition');
-		gl.vertexAttribPointer(depthVertexPosition, 3, gl.FLOAT, false, 0, 0);
-		gl.enableVertexAttribArray(depthVertexPosition);
-		gl.useProgram(program);
-	}
 
 	const normalBuffer: Buffer = buildBuffer({
 		gl,
@@ -98,9 +90,17 @@ export function initBuffers(gl: WebGLRenderingContext, program: WebGLProgram, lo
 		itemSize: 1
 	});
 
+	let buffers = {
+		indexBuffer: {...indexBuffer, data: indices},
+		normalBuffer: {...normalBuffer, data: normals},
+		textureAddressBuffer: {...textureAddressBuffer, data: textureAddresses},
+		textureBuffer: {...textureBuffer, data: textures},
+		vertexBuffer: {...vertexBuffer, data: positions}
+	};
+
 	if (useBarycentric) {
 		const barycentric = computeBarycentricCoords(Math.round(positions.length / 3));
-		buildBuffer({
+		const barycentricBuffer = buildBuffer({
 			gl,
 			type: gl.ARRAY_BUFFER,
 			data: barycentric,
@@ -109,15 +109,13 @@ export function initBuffers(gl: WebGLRenderingContext, program: WebGLProgram, lo
 		const barycentricLocation = gl.getAttribLocation(program, 'aBarycentric');
 		gl.vertexAttribPointer(barycentricLocation, 3, gl.FLOAT, false, 0, 0);
 		gl.enableVertexAttribArray(barycentricLocation);
+		buffers = {
+			...buffers,
+			barycentricBuffer: {...barycentricBuffer, data: barycentric}
+		};
 	}
 
-	return {
-		indexBuffer: {...indexBuffer, data: indices},
-		normalBuffer: {...normalBuffer, data: normals},
-		textureAddressBuffer: {...textureAddressBuffer, data: textureAddresses},
-		textureBuffer: {...textureBuffer, data: textures},
-		vertexBuffer: {...vertexBuffer, data: positions}
-	};
+	return buffers;
 }
 
 export function buildBuffer({gl, type, data, itemSize}: BufferInput): Buffer {
@@ -128,6 +126,7 @@ export function buildBuffer({gl, type, data, itemSize}: BufferInput): Buffer {
 	const numItems: number = data.length / itemSize;
 	return {
 		buffer,
+		data,
 		itemSize,
 		numItems
 	};
@@ -319,15 +318,16 @@ export function initPlaceholderTexture(gl: WebGLRenderingContext): WebGLTexture 
 
 // Base mesh made of two triangles
 export const initBaseMesh = (gl: WebGLRenderingContext, program: WebGLProgram) => {
-	const vertexBuffer = buildBuffer({
+	const buffer = buildBuffer({
 		gl,
 		type: gl.ARRAY_BUFFER,
 		data: BASE_TRIANGLE_MESH,
 		itemSize: 3
 	});
-	const vertexPosition = gl.getAttribLocation(program, 'aVertexPosition');
+	const vertexPosition = gl.getAttribLocation(program, 'aBaseVertexPosition');
 	gl.enableVertexAttribArray(vertexPosition);
 	gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
+	return buffer;
 };
 
 const computeFaceNormal = (face: Vector3[]): Vector3 => {
@@ -405,7 +405,8 @@ export const initMeshFromFaceArray = (gl: WebGLRenderingContext, program: WebGLP
 		normalBuffer: {...normalBuffer, data: normals},
 		indexBuffer: null,
 		textureBuffer: null,
-		textureAddressBuffer: null
+		textureAddressBuffer: null,
+		barycentricBuffer: null
 	};
 };
 
@@ -430,10 +431,16 @@ const createTargetTexture = (gl: WebGLRenderingContext, textureWidth: number, te
 	return targetTexture;
 };
 
-const createFrameBuffer = (gl: WebGLRenderingContext, targetTexture, level: number): WebGLFramebuffer => {
+const createFrameBuffer = (gl: WebGLRenderingContext, targetTexture, textureWidth, textureHeight, level: number): WebGLFramebuffer => {
 	const frameBuffer: WebGLFramebuffer = gl.createFramebuffer();
 	gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
 	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, level);
+
+	const depthBuffer: WebGLRenderbuffer = gl.createRenderbuffer();
+	gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
+	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, textureWidth, textureHeight);
+
+	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
 	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	gl.bindTexture(gl.TEXTURE_2D, null);
 	return frameBuffer;
@@ -443,7 +450,7 @@ export const initFrameBufferObject = (gl: WebGLRenderingContext, textureWidth: n
 	const constants = FBOConstants(gl);
 
 	const targetTexture: WebGLTexture = createTargetTexture(gl, textureWidth, textureHeight, constants);
-	const frameBuffer: WebGLFramebuffer = createFrameBuffer(gl, targetTexture, constants.level);
+	const frameBuffer: WebGLFramebuffer = createFrameBuffer(gl, targetTexture, textureWidth, textureHeight, constants.level);
 
 	if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
 		console.error(new Error('Could not attach frame buffer'));

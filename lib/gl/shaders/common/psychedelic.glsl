@@ -1,7 +1,3 @@
-precision mediump float;
-
-varying vec3 vNormal;
-uniform float uTime;
 
 vec3 normalColor(vec3 normal) {
   float x = (normal.x * .5) + .5;
@@ -60,14 +56,14 @@ vec3 hueShift (vec3 color, float shift) {
     return vec3(color);
 }
 
-void main() {
-  vec3 normalRGB = normalColor(vNormal);
-  vec3 normalHSL = rgbTohsl(normalRGB);
-  float hueShiftParam = vNormal.z * 3.0 + mod(uTime*.001, 1.0);
-  normalHSL = hueShift(normalHSL, hueShiftParam);
-  vec3 color = hslTorgb(normalHSL);
-  color *= vLighting;
-  color *= 1.5; // exposure
-	color = pow(color,vec3(.85)); // gamma
-  gl_FragColor = vec4(color, 1.);
+vec3 psychedelic(vec3 normal, float time) {
+	vec3 normalRGB = normalColor(normal);
+	vec3 normalHSL = rgbTohsl(normalRGB);
+	float hueShiftParam = normal.z * 3.0 + mod(time*.001, 1.0);
+	normalHSL = hueShift(normalHSL, hueShiftParam);
+	vec3 color = hslTorgb(normalHSL);
+	color *= 1.5; // exposure
+	return pow(color,vec3(.85)); // gamma
 }
+
+#pragma glslify: export(psychedelic) 

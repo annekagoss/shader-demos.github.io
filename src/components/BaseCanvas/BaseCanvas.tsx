@@ -63,7 +63,6 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, text
 		uniforms: uniforms.current,
 		size,
 		meshType: MESH_TYPE.BASE_TRIANGLES,
-		textureSource,
 		textureRef,
 		textureSizeRef
 	});
@@ -88,8 +87,8 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, text
 	return (
 		<canvas
 			ref={canvasRef}
-			width={size.x}
-			height={size.y}
+			width={size.current.x}
+			height={size.current.y}
 			className={styles.canvas}
 			onMouseDown={() => {
 				mouseDownRef.current = true;

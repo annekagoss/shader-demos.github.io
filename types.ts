@@ -28,7 +28,8 @@ export enum BufferType {
 	NORMAL = 'normalBuffer',
 	TEXTURE = 'textureBuffer',
 	TEXTURE_ADDRESS = 'textureAddressBuffer',
-	INDEX = 'indexBuffer'
+	INDEX = 'indexBuffer',
+	BARYCENTRIC = 'barycentricBuffer'
 }
 
 export type DiffuseSources = Record<string, string>;
