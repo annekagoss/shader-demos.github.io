@@ -63,6 +63,8 @@ export const initializeRenderer = ({uniformLocations, canvasRef, fragmentSource,
 		uProjectionMatrix: gl.getUniformLocation(program, 'uProjectionMatrix'),
 		uModelViewMatrix: gl.getUniformLocation(program, 'uModelViewMatrix'),
 		uNormalMatrix: gl.getUniformLocation(program, 'uNormalMatrix'),
+		uDisplacement: gl.getUniformLocation(program, 'uDisplacement'),
+		uOutlinePass: gl.getUniformLocation(program, 'uOutlinePass'),
 		uDiffuse0: gl.getUniformLocation(program, 'uDiffuse0'),
 		uDiffuse1: gl.getUniformLocation(program, 'uDiffuse1')
 	};

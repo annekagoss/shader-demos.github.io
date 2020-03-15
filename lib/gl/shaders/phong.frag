@@ -16,7 +16,7 @@ uniform int uMaterialType;
 uniform sampler2D uDiffuse0;
 uniform sampler2D uDiffuse1;
 uniform vec3 uLightColorA;
-uniform float uOutlinePass;
+uniform mediump int uOutlinePass;
 uniform float uTime;
 
 #pragma glslify: wireframe = require('./common/wireframe.glsl');
@@ -56,7 +56,7 @@ void main() {
 	}
 	// 2 TOON
 	else if (uMaterialType == 2) {
-		if (uOutlinePass == 1.0) {
+		if (uOutlinePass == 1) {
 			gl_FragColor = vec4(vec3(0.0), 1.0);
 		} else {
 			gl_FragColor = toonShading(eye, vNormalDirection, vPosition, lightPosition, baseColor);

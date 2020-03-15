@@ -41,7 +41,7 @@ interface RenderProps {
 
 const render = (props: RenderProps) => {
 	if (!props.gl) return;
-	const {gl, size, uniforms, program, outlineProgram, FBOA, FBOB} = props;
+	const {gl, size, uniforms, uniformLocations, outlineUniformLocations, program, outlineProgram, FBOA, FBOB} = props;
 
 	if (parseInt(uniforms.find(uniform => uniform.name === 'uMaterialType').value) !== 2) {
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -56,12 +56,12 @@ const render = (props: RenderProps) => {
 	gl.viewport(0, 0, FBOA.current.textureWidth, FBOA.current.textureHeight);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	gl.useProgram(program);
-	gl.uniform1f(gl.getUniformLocation(program, 'uOutlinePass'), 1.0);
+	gl.uniform1i(uniformLocations.uOutlinePass, 1);
 	draw(props);
 
 	gl.activeTexture(gl.TEXTURE5);
 	gl.bindFramebuffer(gl.FRAMEBUFFER, FBOB.current.buffer);
-	gl.uniform1f(gl.getUniformLocation(program, 'uOutlinePass'), 0.0);
+	gl.uniform1i(uniformLocations.uOutlinePass, 0);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	draw(props);
 
@@ -71,13 +71,13 @@ const render = (props: RenderProps) => {
 
 	gl.activeTexture(gl.TEXTURE4);
 	gl.bindTexture(gl.TEXTURE_2D, FBOA.current.targetTexture);
-	gl.uniform1i(gl.getUniformLocation(outlineProgram, 'uOutline'), 4);
+	gl.uniform1i(outlineUniformLocations.uOutline, 4);
 
 	gl.activeTexture(gl.TEXTURE5);
 	gl.bindTexture(gl.TEXTURE_2D, FBOB.current.targetTexture);
-	gl.uniform1i(gl.getUniformLocation(outlineProgram, 'uSource'), 5);
+	gl.uniform1i(outlineUniformLocations.uSource, 5);
 
-	gl.uniform2fv(gl.getUniformLocation(outlineProgram, 'uResolution'), [size.x, size.y]);
+	gl.uniform2fv(outlineUniformLocations.uResolution, [size.x, size.y]);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	drawOutlines(props);
 };

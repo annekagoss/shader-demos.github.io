@@ -18,7 +18,8 @@ uniform vec3 uLightPositionB;
 uniform vec3 uLightColorA;
 uniform vec3 uLightColorB;
 uniform float uSpecular;
-uniform float uOutlinePass;
+uniform mediump int uOutlinePass;
+uniform int uDisplacement;
 
 varying vec3 vLighting;
 varying float vSpecular;
@@ -38,13 +39,15 @@ void main() {
 	vec4 position = aVertexPosition;
 	vec3 normal = aVertexNormal;
 	
-	if (uOutlinePass == 1.0) {
+	if (uOutlinePass == 1) {
 		position.xyz *= 1.025;
 		normal *= 1.025;
 	}
-	// Distortion
-	// position.xy *= 1.0 + sin((uTime * 0.001) + (position.z * .5)) * .1;
-	// normal.xy *= 1.0 + sin((uTime * 0.001) + (normal.z * .5)) * .1;
+	
+	if (uDisplacement == 1) {
+		position.xy *= 1.0 + sin((uTime * 0.001) + (position.z * .5)) * .1;
+		normal.xy *= 1.0 + sin((uTime * 0.001) + (normal.z * .5)) * .1;
+	}	
 	
 	gl_Position = uProjectionMatrix * uModelViewMatrix * position;
 	vec4 normalDirection = normalize(uNormalMatrix * vec4(normal, 1.));
