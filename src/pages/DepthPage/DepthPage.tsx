@@ -160,6 +160,13 @@ const BASE_FRACTAL_UNIFORMS = [
 		value: 0
 	},
 	{
+		defaultValue: {x: 0.5, y: 0.5},
+		name: 'uMouse',
+		readonly: true,
+		type: UNIFORM_TYPE.VEC_2,
+		value: {x: 0.5, y: 0.5}
+	},
+	{
 		defaultValue: {x: 0, y: 0},
 		name: 'uBackgroundSize',
 		readonly: true,
@@ -265,7 +272,7 @@ const DepthPage = ({isActive}: Props) => {
 
 	return (
 		<div className={styles.page}>
-			<Section title='2.0: Mesh' notes={``}>
+			{/* <Section title='2.0: Mesh' notes={``}>
 				<DepthCanvas
 					fragmentShader={meshFragmentShader}
 					vertexShader={meshVertexShader}
@@ -288,12 +295,12 @@ const DepthPage = ({isActive}: Props) => {
 				/>
 				<ShaderText fragmentShader={phongFragmentShader} vertexShader={phongVertexShader} />
 				<Inputs attributes={attributes} uniforms={phongUniforms} pageMousePosRef={pageMousePosRef} />
-			</Section>
-			{/* <Section title='2.2: Fractal' notes={``}>
+			</Section> */}
+			<Section title='2.2: Fractal' notes={``}>
 				<BaseCanvas fragmentShader={mandelbulbFragmentShader} vertexShader={baseVertexShader} uniforms={fractalUniforms} setAttributes={setAttributes} textureSource={desertBg} />
 				<ShaderText fragmentShader={mandelbulbFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={fractalUniforms} pageMousePosRef={pageMousePosRef} />
-			</Section> */}
+			</Section>
 		</div>
 	);
 };

@@ -2,19 +2,9 @@
 precision mediump float;
 #endif
 
-// Created by inigo quilez - iq/2013
-// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+// Based on this example from Inigo Iquilez
+// https://www.shadertoy.com/view/ltfSWn
 
-// The source code for these videos from 2009: 
-// https://www.youtube.com/watch?v=eKUh4nkmQbc
-// https://www.youtube.com/watch?v=erS6SKqtXLY
-
-// More info here: http://iquilezles.org/www/articles/mandelbulb/mandelbulb.htm
-
-// See https://www.shadertoy.com/view/MdfGRr to see the Julia counterpart
-
-
-// #if HW_PERFORMANCE == 0
 // #define AA 1
 // #else
 #define AA 1  // make AA 1 for slow machines or 3 for fast machines
@@ -22,6 +12,7 @@ precision mediump float;
 #define ZERO 0
 
 uniform vec2 uResolution;
+uniform vec2 uMouse;
 uniform float uTime;
 uniform sampler2D uBackground;
 
@@ -40,6 +31,25 @@ vec2 isphere(vec4 sph, vec3 ro, vec3 rd )
     return -b + vec2(-h,h);
 }
 
+float circle(vec2 st, float radius, vec2 resolution) {
+	st.x *= resolution.x/resolution.y;
+	vec2 proportionalCenter = vec2(0.5);
+	proportionalCenter.x *= resolution.x/resolution.y;
+	float dist = distance(st, proportionalCenter);
+	return smoothstep(dist - 0.125, dist + 0.125, radius);
+}
+
+vec2 translateWithMouse(vec2 st) {
+	vec2 mouseSt = uMouse/uResolution;
+	return st + (mouseSt * -1.) + vec2(.5, -.5);
+}
+
+float circle() {
+	vec2 st = gl_FragCoord.xy/uResolution;
+	vec2 mouseSt = translateWithMouse(st);
+	return circle(mouseSt, .375, uResolution);
+}
+
 float map(vec3 p, out vec4 resColor )
 {
     vec3 w = p;
@@ -47,19 +57,20 @@ float map(vec3 p, out vec4 resColor )
 
     vec4 trap = vec4(abs(w),m);
 	float dz = 1.0;
-    
+	
+	vec2 st = gl_FragCoord.xy/uResolution;
+	vec2 mouse = translateWithMouse(st) * 10.0;
     
 	for( int i=0; i<4; i++)
     {
-		// float size = 8.0 + sin(uTime*0.001)*.3;
 		float size = 8.0;
-        dz = size*pow(sqrt(m),7.0)*dz + (20.0 * (sin(uTime*0.001) * 0.5 + 0.5));
-       
-        float r = length(w);
-        float b = -size*acos((w.y/r)) + (uTime*0.001);
-        float a = size*atan( w.x, w.z ) - (uTime*0.001);
-        w = p + pow(r,size) * vec3( sin(b)*sin(a), cos(b), sin(b)*cos(a) );        
-        
+        dz = size*pow(sqrt(m),7.0)*dz;
+		float r = length(w);
+        float b = -size*acos((w.y/r)) + (uTime*0.001)+mouse.y;
+        float a = size*atan( w.x, w.z ) - (uTime*0.001)+mouse.x;
+		vec3 original = pow(r,size) * vec3( sin(b)*sin(a), cos(b), sin(b)*cos(a) );
+		vec3 new = pow(r,9.0) * vec3( sin(b)*sin(a), cos(b), sin(b)*cos(a) );
+		w = mix( p + new, p + original, circle());       
         trap = min( trap, vec4(abs(w),m) );
 
         m = dot(w,w);
@@ -134,19 +145,6 @@ vec3 calcNormal(vec3 pos, float t, float px )
 const vec3 light1 = vec3(  0.577, 0.577, -0.577 );
 const vec3 light2 = vec3( -0.707, 0.000,  0.707 );
 
-// vec3 getEnvMap(vec3 rayDir) {
-// 	vec3 texXY = texture2D(uBackground, rayDir.xy).xyz;
-// 	vec3 texYZ = texture2D(uBackground, rayDir.xy).xyz;
-// 	vec3 texXZ = texture2D(uBackground, rayDir.xy).xyz;
-// 	vec3 tex = vec3(
-// 		(texXY.x + texYZ.x + texXZ.x) / 3.0,
-// 		(texXY.y + texYZ.y + texXZ.y) / 3.0,
-// 		(texXY.z + texYZ.z + texXZ.z) / 3.0
-// 	);
-// 	tex = tex * tex; // gamma correct
-// 	return tex;
-// }
-
 vec4 cubemap( sampler2D sam, vec3 d )
 {
     // intersect cube
@@ -182,24 +180,9 @@ vec3 render(vec2 p, mat4 cam )
     // color sky
     if( t<0.0 )
     {
-     	// col  = vec3(0.8,.9,1.1)*(0.6+0.4*rd.y);
-		// col += 5.0*vec3(0.8,0.7,0.5)*pow( clamp(dot(rd,light1),0.0,1.0), 32.0 );
-		// col = vec3(1.0);
-		
-		vec2 st = gl_FragCoord.xy/uResolution;
-		st.y = 1.0 - st.y;
-		col = texture2D(uBackground, st).xyz;
-		
-		// vec4 sc = vec4(0.0,0.0,0.0,5.0);
-		
-		// vec3 oc = ro - sc.xyz;
-    
-		// float b = dot(oc,rd);
-		// float c = dot(oc,oc) - sc.w*sc.w;
-		// float h = b*b - c;
-		
-		// vec3 nor = normalize(ro+h*rd-sc.xyz);
-        // col = cubemap( uBackground, nor ).xyz;
+     	col  = vec3(0.8,.9,1.1)*(0.6+0.4*rd.y);
+		col += 5.0*vec3(0.8,0.7,0.5)*pow( clamp(dot(rd,light1),0.0,1.0), 32.0 );
+		col = vec3(1.0);
 	}
     // color fractal
 	else
@@ -235,27 +218,11 @@ vec3 render(vec2 p, mat4 cam )
              lin += 2.5*vec3(0.30,0.30,0.30)*(0.05+0.95*occ); // ambient
         	 lin += 4.0*fac*occ;                          // fake SSS
 		col *= lin;
-		// col = pow( col, vec3(0.7,0.9,1.0) );                  // fake SSS
         col += spe1*15.0;
-
-		// float b = dot(ro,rd);
-		// float c = dot(ro,ro);
-		// float h = b*b - c;
-		// vec3 nor = normalize(ro+h*rd);
-        col = mix(col, cubemap( uBackground, nor).xyz, clamp(pow(tra.w,3.0),0.0,1.0));
-		col += mix(0.1, -0.1, -dot(-hal,nor));
-		col.x = clamp(col.x, 0.125, 1.0);
-		col.y = clamp(col.y, 0.125, 1.0);
-		col.z = clamp(col.z, 0.125, 1.0);
-		
-		// col = getEnvMap(ref);
     }
 
     // gamma
 	col = sqrt( col );
-    
-    // vignette
-    // col *= 1.0 - 0.1255*length(sp);
 
     return col;
 }

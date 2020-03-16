@@ -46,13 +46,10 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, text
 		x: uniforms.current[0].value.x * window.devicePixelRatio,
 		y: uniforms.current[0].value.y * window.devicePixelRatio
 	});
-	const idleRef: React.MutableRefObject<boolean> = React.useRef<boolean>(false);
 	const mouseDownRef: React.MutableRefObject<boolean> = React.useRef<boolean>(false);
 	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: size.current.x * 0.5, y: size.current.y * -0.5});
 	const gl = React.useRef<WebGLRenderingContext>();
 	const uniformLocations = React.useRef<Record<string, WebGLUniformLocation>>();
-	const textureRef: React.MutableRefObject<HTMLImageElement> = React.useRef<HTMLImageElement>();
-	const textureSizeRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: 0, y: 0});
 
 	useInitializeGL({
 		gl,
@@ -62,9 +59,7 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, text
 		vertexSource: vertexShader,
 		uniforms: uniforms.current,
 		size,
-		meshType: MESH_TYPE.BASE_TRIANGLES,
-		textureRef,
-		textureSizeRef
+		meshType: MESH_TYPE.BASE_TRIANGLES
 	});
 
 	React.useEffect(() => {
@@ -79,8 +74,7 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, text
 			uniformLocations: uniformLocations.current,
 			uniforms: uniforms.current,
 			time,
-			mousePos: mousePosRef.current,
-			texture: textureRef.current
+			mousePos: mousePosRef.current
 		});
 	});
 
