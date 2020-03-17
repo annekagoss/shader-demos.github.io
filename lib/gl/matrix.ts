@@ -1,4 +1,4 @@
-import {subtractVectors, normalizeVector, crossVectors} from './helpers';
+import {subtractVectors, normalizeVector, crossVectors} from './math';
 import {Axis, LookAtOptions, PerspectiveOptions, Transformation, Vector3} from '../../types';
 
 const EPSILON: number = 0.000001;

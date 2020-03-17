@@ -1,6 +1,5 @@
 import {useRef, useEffect} from 'react';
-
-const MAX_IDLE_TIME: number = 1000;
+import {MAX_IDLE_TIME} from '../../lib/gl/settings';
 
 interface UsePauseWhileOffScreenProps {
 	canvasRef: React.MutableRefObject<HTMLCanvasElement>;

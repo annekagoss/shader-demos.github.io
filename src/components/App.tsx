@@ -1,20 +1,13 @@
 import * as React from 'react';
 import cx from 'classnames';
-import {useAnimationFrame} from '../hooks/animation';
-import {SceneProps, UNIFORM_TYPE, UniformSetting} from '../../types';
-import GLScene from './GLScene/GLScene';
-import Section from './Section/Section';
-import BaseCanvas from './BaseCanvas/BaseCanvas';
-import ShaderText from './ShaderText/ShaderText';
-import Inputs from './Inputs/Inputs';
-import baseVertexShader from '../../lib/gl/shaders/base.vert';
-import {BASE_UNIFORMS} from '../utils/general';
+import {SceneProps} from '../../types';
+import {glSupported} from '../utils/general';
 import FormPage from '../pages/FormPage/FormPage';
 import MotionPage from '../pages/MotionPage/MotionPage';
 import DepthPage from '../pages/DepthPage/DepthPage';
 import styles from './app.module.scss';
 
-//FOX SKULL
+// FOX SKULL
 import OBJSource from '../../lib/gl/assets/fox/fox3.obj';
 import MTLSource from '../../lib/gl/assets/fox/fox.mtl';
 import diffuseSource0 from '../../lib/gl/assets/fox/fox_skull_0.jpg';
@@ -52,6 +45,7 @@ const GL_PROPS: SceneProps = {
 
 const App = () => {
 	const [activePageIndex, setActivePageIndex] = React.useState<number>(2);
+	if (!glSupported) return <div>'WebGL is not supported on this device.'</div>;
 	return (
 		<div className={styles.app}>
 			{/* <div className={styles.GLScene}>

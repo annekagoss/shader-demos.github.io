@@ -191,11 +191,6 @@ export interface Materials {
 	textures?: Textures;
 }
 
-// export interface Mesh {
-// 	geometry: Geometry;
-// 	materials: Materials;
-// }
-
 export interface Mesh extends Geometry {
 	materials: Materials;
 }

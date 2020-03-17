@@ -6,7 +6,7 @@ import {useInitializeGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
 import styles from './DepthCanvas.module.scss';
 import {applyRotation, createMat4} from '../../../lib/gl/matrix';
-import {addVectors} from '../../../lib/gl/helpers';
+import {addVectors} from '../../../lib/gl/math';
 import {useWindowSize} from '../../hooks/resize';
 
 interface Props {

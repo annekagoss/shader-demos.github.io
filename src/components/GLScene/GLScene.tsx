@@ -22,7 +22,7 @@ import {
 	Vector3
 } from '../../../types';
 
-import {glslColors, supportsDepth, applyBrightness} from '../../../lib/gl/helpers';
+import {glslColors, supportsDepth, applyBrightness} from '../../../lib/gl/math';
 import {loadTextures} from '../../../lib/gl/loader';
 import {assignStaticUniforms, legacyAssignProjectionMatrix, initShaderProgram, initBuffers, legacyInitFrameBufferObject, initPlaceholderTexture} from '../../../lib/gl/initialize';
 import {updateColors, updateLightSettings, updateMaterials, removeMaterials} from '../../../lib/gl/update';
@@ -50,7 +50,7 @@ import {
 	DEFAULT_ROTATION_SPEED,
 	DEFAULT_SHININESS,
 	MAX_IDLE_TIME
-} from '../../../lib/gl/defaults';
+} from '../../../lib/gl/settings';
 
 interface SceneState {
 	idle: boolean;

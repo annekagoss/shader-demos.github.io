@@ -5,7 +5,7 @@ import {useAnimationFrame} from '../../hooks/animation';
 import {assignUniforms} from '../../../lib/gl/render';
 import styles from './FeedbackCanvas.module.scss';
 import {useWindowSize} from '../../hooks/resize';
-import {BASE_TRIANGLE_MESH} from '../../../lib/gl/initialize';
+import {BASE_TRIANGLE_MESH} from '../../../lib/gl/settings';
 
 interface Props {
 	fragmentShader: string;

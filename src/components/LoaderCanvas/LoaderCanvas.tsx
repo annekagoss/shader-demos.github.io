@@ -5,9 +5,10 @@ import {useAnimationFrame} from '../../hooks/animation';
 import {useWindowSize} from '../../hooks/resize';
 import {assignProjectionMatrix} from '../../../lib/gl/initialize';
 import {createMat4, applyTransformation, invertMatrix, transposeMatrix} from '../../../lib/gl/matrix';
-import {addVectors, formatAttributes} from '../../../lib/gl/helpers';
+import {addVectors} from '../../../lib/gl/math';
 import {useOBJLoaderWebWorker} from '../../hooks/webWorker';
 import {assignUniforms} from '../../../lib/gl/render';
+import {formatAttributes} from '../../utils/general';
 
 import styles from './LoaderCanvas.module.scss';
 

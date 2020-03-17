@@ -1,13 +1,22 @@
-import {UNIFORM_TYPE, UniformSetting} from '../../types';
+import {UNIFORM_TYPE, UniformSetting, Buffers} from '../../types';
 
-export const calcWindowDiagonalAngle = (): number => {
-	const {innerWidth, innerHeight} = window;
-	return Math.atan(innerHeight / innerWidth);
-};
+export const BASE_UNIFORMS: UniformSetting[] = [
+	{
+		defaultValue: {x: 400, y: 400},
+		name: 'uResolution',
+		readonly: true,
+		type: UNIFORM_TYPE.VEC_2,
+		value: {x: 400, y: 400}
+	}
+];
 
-export const calcWindowHypotenuse = (): number => {
-	const {innerWidth, innerHeight} = window;
-	return Math.sqrt(Math.pow(innerWidth, 2) + Math.pow(innerHeight, 2));
+export const glSupported = (): boolean => {
+	// Check https://github.com/AnalyticalGraphicsInc/webglreport for more detailed compatibility tests
+	const supported: boolean = Boolean(window.WebGLRenderingContext || window.WebGL2RenderingContext);
+	if (!supported) {
+		console.warn('WebGL is not supported on this device. Skipping 3D.'); // eslint-disable-line no-console
+	}
+	return supported;
 };
 
 export const parseUniform = (value: any, type: UNIFORM_TYPE) => {
@@ -23,12 +32,18 @@ export const parseUniform = (value: any, type: UNIFORM_TYPE) => {
 	}
 };
 
-export const BASE_UNIFORMS: UniformSetting[] = [
-	{
-		defaultValue: {x: 400, y: 400},
-		name: 'uResolution',
-		readonly: true,
-		type: UNIFORM_TYPE.VEC_2,
-		value: {x: 400, y: 400}
-	}
-];
+export const formatAttributes = (buffersRef: React.MutableRefObject<Buffers>): Record<string, string>[] => {
+	if (!buffersRef.current) return [];
+	return Object.keys(buffersRef.current).reduce((result, bufferName) => {
+		const buffer = buffersRef.current[bufferName];
+		if (!buffer || !buffer.data) return result;
+		result.push({
+			name: bufferName,
+			value: `${buffer.data
+				.slice(0, 10)
+				.map(item => Math.round(item * 100) / 100)
+				.join(', ')}... (${buffer.data.length} total)`
+		});
+		return result;
+	}, []);
+};

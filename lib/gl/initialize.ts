@@ -1,20 +1,81 @@
-import {Buffer, Buffers, GLSLColors, FBO, GLContext, LightSettings, Mesh, Material, Matrix, Transformation, Vector3, Vector2, FaceArray} from '../../types';
-
-import {degreesToRadians, normalizeVector, subtractVectors, crossVectors} from './helpers';
+import {Buffer, Buffers, FBO, Mesh, Material, Matrix, Vector2, FaceArray, UniformSetting, MESH_TYPE, Materials} from '../../types';
+import {degreesToRadians} from './math';
 import {createMat4, applyPerspective, lookAt} from './matrix';
+import {MAX_SUPPORTED_MATERIAL_TEXTURES, NEAR_CLIPPING, FAR_CLIPPING, FIELD_OF_VIEW} from './settings';
+import outlineFragmentSource from '../../lib/gl/shaders/outline.frag';
+import outlineVertexSource from '../../lib/gl/shaders/base.vert';
+import {initBaseMeshBuffers, initMeshBuffersFromFaceArray, initBuffers} from './buffers';
+import {initFrameBufferObject} from './frameBuffer';
 
-import {MAX_SUPPORTED_MATERIAL_TEXTURES} from './defaults';
-
-interface BufferInput {
-	gl: WebGLRenderingContext;
-	type: number;
-	data: number[];
-	itemSize: number;
+export interface InitializeProps {
+	gl: React.MutableRefObject<WebGLRenderingContext>;
+	programRef?: React.MutableRefObject<WebGLProgram>;
+	uniformLocations: React.MutableRefObject<Record<string, WebGLUniformLocation>>;
+	outlineUniformLocations?: React.MutableRefObject<Record<string, WebGLUniformLocation>>;
+	canvasRef: React.MutableRefObject<HTMLCanvasElement>;
+	fragmentSource: string;
+	vertexSource: string;
+	uniforms: UniformSetting[];
+	size: React.MutableRefObject<Vector2>;
+	FBOA?: React.MutableRefObject<FBO>;
+	FBOB?: React.MutableRefObject<FBO>;
+	faceArray?: FaceArray;
+	buffersRef?: React.MutableRefObject<Buffers>;
+	mesh?: Mesh;
+	meshType: MESH_TYPE;
+	shouldUseDepth?: boolean;
+	supportsDepthRef?: React.MutableRefObject<boolean>;
+	outlineProgramRef?: React.MutableRefObject<WebGLProgram>;
+	baseVertexBufferRef?: React.MutableRefObject<Buffer>;
 }
 
-export const BASE_TRIANGLE_MESH: number[] = [-1, 1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0];
+export const initializeRenderer = ({uniformLocations, canvasRef, fragmentSource, vertexSource, uniforms, size, FBOA, FBOB, outlineUniformLocations}: InitializeProps) => {
+	const {width, height} = canvasRef.current.getBoundingClientRect();
+	const x: number = width * window.devicePixelRatio;
+	const y: number = height * window.devicePixelRatio;
+	size.current = {x, y};
+	canvasRef.current.width = x;
+	canvasRef.current.height = y;
 
-export function initShaderProgram(gl: WebGLRenderingContext, vertSource: string, fragSource: string): WebGLProgram {
+	const gl: WebGLRenderingContext = (canvasRef.current.getContext('experimental-webgl') as WebGLRenderingContext) || (canvasRef.current.getContext('webgl') as WebGLRenderingContext);
+
+	gl.clearColor(0, 0, 0, 0);
+	gl.clearDepth(1);
+	gl.enable(gl.DEPTH_TEST);
+	gl.depthFunc(gl.LEQUAL);
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	gl.viewport(0, 0, x, y);
+	gl.enable(gl.SAMPLE_ALPHA_TO_COVERAGE); // Prevents culling for wireframes
+
+	const program: WebGLProgram = initShaderProgram(gl, vertexSource, fragmentSource);
+	gl.useProgram(program);
+
+	const usePingPongBuffers: boolean = Boolean(FBOA && FBOB);
+
+	uniformLocations.current = {
+		...mapUniformSettingsToLocations(uniforms, gl, program, usePingPongBuffers),
+		uProjectionMatrix: gl.getUniformLocation(program, 'uProjectionMatrix'),
+		uModelViewMatrix: gl.getUniformLocation(program, 'uModelViewMatrix'),
+		uNormalMatrix: gl.getUniformLocation(program, 'uNormalMatrix'),
+		uDisplacement: gl.getUniformLocation(program, 'uDisplacement'),
+		uOutlinePass: gl.getUniformLocation(program, 'uOutlinePass'),
+		uDiffuse0: gl.getUniformLocation(program, 'uDiffuse0'),
+		uDiffuse1: gl.getUniformLocation(program, 'uDiffuse1')
+	};
+
+	if (usePingPongBuffers) {
+		FBOA.current = initFrameBufferObject(gl, x, y);
+		FBOB.current = initFrameBufferObject(gl, x, y);
+	}
+	let outlineProgram;
+	if (outlineUniformLocations) {
+		outlineProgram = initializeOutlineProgram(gl, outlineUniformLocations, x, y);
+	}
+
+	return {gl, program, outlineProgram};
+};
+
+const initShaderProgram = (gl: WebGLRenderingContext, vertSource: string, fragSource: string): WebGLProgram => {
 	const vertexShader: WebGLShader = loadShader(gl, gl.VERTEX_SHADER, vertSource);
 	const fragmentShader: WebGLShader = loadShader(gl, gl.FRAGMENT_SHADER, fragSource);
 	const program: WebGLProgram = gl.createProgram();
@@ -25,11 +86,68 @@ export function initShaderProgram(gl: WebGLRenderingContext, vertSource: string,
 	if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
 		console.warn('Unabled to initialize the shader program: ' + gl.getProgramInfoLog(program)); /* tslint:disable-line no-console */
 	}
-
 	return program;
-}
+};
 
-export function loadShader(gl: WebGLRenderingContext, type: number, source: string): WebGLShader {
+const initializeOutlineProgram = (gl: WebGLRenderingContext, outlineUniformLocations: React.MutableRefObject<Record<string, WebGLUniformLocation>>) => {
+	const outlineProgram: WebGLProgram = initShaderProgram(gl, outlineVertexSource, outlineFragmentSource);
+	outlineUniformLocations.current = {
+		uSource: gl.getUniformLocation(outlineProgram, 'uSource'),
+		uOutline: gl.getUniformLocation(outlineProgram, 'uOutline'),
+		uResolution: gl.getUniformLocation(outlineProgram, 'uResolution')
+	};
+	return outlineProgram;
+};
+
+const mapUniformSettingsToLocations = (settings: UniformSetting[], gl: WebGLRenderingContext, program: WebGLProgram, useFrameBuffer: boolean): Record<string, WebGLUniformLocation> => {
+	if (!settings.length) return null;
+	const locations: Record<string, WebGLUniformLocation> = useFrameBuffer
+		? {
+				frameBufferTexture0: gl.getUniformLocation(program, 'frameBufferTexture0')
+		  }
+		: {};
+	return settings.reduce((result, setting) => {
+		result[setting.name] = gl.getUniformLocation(program, setting.name);
+		return result;
+	}, locations);
+};
+
+export const initializeMesh = ({faceArray, buffersRef, meshType, mesh, baseVertexBufferRef}: InitializeProps, gl: WebGLRenderingContext, program: WebGLProgram, outlineProgram: WebGLProgram) => {
+	switch (meshType) {
+		case MESH_TYPE.BASE_TRIANGLES:
+			initBaseMeshBuffers(gl, program);
+			break;
+		case MESH_TYPE.FACE_ARRAY:
+			if (!faceArray) return;
+			buffersRef.current = initMeshBuffersFromFaceArray(gl, program, faceArray, true);
+			break;
+		case MESH_TYPE.OBJ:
+			if (outlineProgram) {
+				gl.useProgram(outlineProgram);
+				baseVertexBufferRef.current = initBaseMeshBuffers(gl, outlineProgram);
+			}
+			gl.useProgram(program);
+			buffersRef.current = initBuffers(gl, program, mesh, true);
+			break;
+		default:
+			initBaseMeshBuffers(gl, program);
+	}
+};
+
+export const bindMaterials = (gl, uniformLocations, materials: Materials) => {
+	Object.keys(materials).forEach((name, i) => {
+		if (i <= MAX_SUPPORTED_MATERIAL_TEXTURES) {
+			const mat: Material = materials[name];
+			if (mat.textures && mat.textures.diffuseMap) {
+				gl.activeTexture(gl[`TEXTURE${i}`] as number);
+				gl.bindTexture(gl.TEXTURE_2D, mat.textures.diffuseMap.texture);
+				gl.uniform1i(uniformLocations.current[`uDiffuse${i}`], i);
+			}
+		}
+	});
+};
+
+export const loadShader = (gl: WebGLRenderingContext, type: number, source: string): WebGLShader => {
 	const shader: WebGLShader = gl.createShader(type);
 	gl.shaderSource(shader, source);
 	gl.compileShader(shader);
@@ -39,165 +157,16 @@ export function loadShader(gl: WebGLRenderingContext, type: number, source: stri
 		return;
 	}
 	return shader;
-}
-
-export function initBuffers(gl: WebGLRenderingContext, program: WebGLProgram, loadedMesh: Mesh, useBarycentric: boolean): Buffers {
-	const {positions, normals, textures, textureAddresses, indices}: Mesh = loadedMesh;
-	const vertexBuffer: Buffer = buildBuffer({
-		gl,
-		type: gl.ARRAY_BUFFER,
-		data: positions,
-		itemSize: 3
-	});
-	const vertexPosition = gl.getAttribLocation(program, 'aVertexPosition');
-	gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
-	gl.enableVertexAttribArray(vertexPosition);
-
-	const normalBuffer: Buffer = buildBuffer({
-		gl,
-		type: gl.ARRAY_BUFFER,
-		data: normals,
-		itemSize: 3
-	});
-	const vertexNormal = gl.getAttribLocation(program, 'aVertexNormal');
-	gl.vertexAttribPointer(vertexNormal, 3, gl.FLOAT, false, 0, 0);
-	gl.enableVertexAttribArray(vertexNormal);
-
-	const textureBuffer: Buffer = buildBuffer({
-		gl,
-		type: gl.ARRAY_BUFFER,
-		data: textures,
-		itemSize: 2
-	});
-	const textureCoord = gl.getAttribLocation(program, 'aTextureCoord');
-	gl.vertexAttribPointer(textureCoord, 2, gl.FLOAT, false, 0, 0);
-	gl.enableVertexAttribArray(textureCoord);
-
-	const textureAddressBuffer: Buffer = buildBuffer({
-		gl,
-		type: gl.ARRAY_BUFFER,
-		data: textureAddresses,
-		itemSize: 1
-	});
-	const textureAddress = gl.getAttribLocation(program, 'aTextureAddress');
-	gl.vertexAttribPointer(textureAddress, 1, gl.FLOAT, false, 0, 0);
-	gl.enableVertexAttribArray(textureAddress);
-
-	const indexBuffer: Buffer = buildBuffer({
-		gl,
-		type: gl.ELEMENT_ARRAY_BUFFER,
-		data: indices,
-		itemSize: 1
-	});
-
-	let buffers = {
-		indexBuffer: {...indexBuffer, data: indices},
-		normalBuffer: {...normalBuffer, data: normals},
-		textureAddressBuffer: {...textureAddressBuffer, data: textureAddresses},
-		textureBuffer: {...textureBuffer, data: textures},
-		vertexBuffer: {...vertexBuffer, data: positions}
-	};
-
-	if (useBarycentric) {
-		const barycentric = computeBarycentricCoords(Math.round(positions.length / 3));
-		const barycentricBuffer = buildBuffer({
-			gl,
-			type: gl.ARRAY_BUFFER,
-			data: barycentric,
-			itemSize: 3
-		});
-		const barycentricLocation = gl.getAttribLocation(program, 'aBarycentric');
-		gl.vertexAttribPointer(barycentricLocation, 3, gl.FLOAT, false, 0, 0);
-		gl.enableVertexAttribArray(barycentricLocation);
-		buffers = {
-			...buffers,
-			barycentricBuffer: {...barycentricBuffer, data: barycentric}
-		};
-	}
-
-	return buffers;
-}
-
-export function buildBuffer({gl, type, data, itemSize}: BufferInput): Buffer {
-	const buffer: WebGLBuffer = gl.createBuffer();
-	const ArrayView: Float32ArrayConstructor | Uint16ArrayConstructor = type === gl.ARRAY_BUFFER ? Float32Array : Uint16Array;
-	gl.bindBuffer(type, buffer);
-	gl.bufferData(type, new ArrayView(data), gl.STATIC_DRAW);
-	const numItems: number = data.length / itemSize;
-	return {
-		buffer,
-		data,
-		itemSize,
-		numItems
-	};
-}
-
-export function legacyInitFrameBufferObject(gl: WebGLRenderingContext): FBO {
-	const level: number = 0;
-	const internalFormat: number = gl.RGBA;
-	const border: number = 0;
-	const format: number = gl.RGBA;
-	const type: number = gl.UNSIGNED_BYTE;
-	const data: ArrayBufferView | null = null;
-	const textureWidth: number = 2048;
-	const textureHeight: number = 2048;
-
-	const targetTexture: WebGLTexture = gl.createTexture();
-	gl.bindTexture(gl.TEXTURE_2D, targetTexture);
-	gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureWidth, textureHeight, border, format, type, data);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-	const depthBuffer: WebGLRenderbuffer = gl.createRenderbuffer();
-	gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
-	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, textureWidth, textureHeight);
-
-	const frameBuffer: WebGLFramebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, level);
-	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
-
-	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-	gl.bindTexture(gl.TEXTURE_2D, null);
-	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-	gl.activeTexture(gl.TEXTURE);
-	gl.bindTexture(gl.TEXTURE_2D, targetTexture);
-
-	return {
-		buffer: frameBuffer,
-		targetTexture,
-		textureWidth,
-		textureHeight
-	};
-}
-
-export const legacyAssignProjectionMatrix = (glContext: GLContext): void => {
-	const {gl, programInfo} = glContext;
-	let projectionMatrix: Matrix = applyPerspective({
-		sourceMatrix: createMat4(),
-		fieldOfView: degreesToRadians(40),
-		aspect: gl.canvas.clientWidth / gl.canvas.clientHeight,
-		near: 0.1,
-		far: 100
-	});
-	projectionMatrix = lookAt(projectionMatrix, {
-		target: {x: 0, y: 0, z: 0},
-		origin: {x: 0, y: 0, z: 6},
-		up: {x: 0, y: 1, z: 0}
-	});
-	gl.useProgram(programInfo.program);
-	gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
 };
 
 export const assignProjectionMatrix = (gl: WebGLRenderingContext, uniformLocations: Record<string, WebGLUniformLocation>, size: Vector2) => {
 	if (!size) return;
 	let projectionMatrix: Matrix = applyPerspective({
 		sourceMatrix: createMat4(),
-		fieldOfView: degreesToRadians(40),
+		fieldOfView: degreesToRadians(FIELD_OF_VIEW),
 		aspect: size.x / size.y,
-		near: 0.01,
-		far: 100
+		near: NEAR_CLIPPING,
+		far: FAR_CLIPPING
 	});
 	projectionMatrix = lookAt(projectionMatrix, {
 		target: {x: 0, y: 0, z: 0},
@@ -208,288 +177,10 @@ export const assignProjectionMatrix = (gl: WebGLRenderingContext, uniformLocatio
 	gl.uniformMatrix4fv(uniformLocations.uProjectionMatrix, false, projectionMatrix);
 };
 
-export function assignStaticUniforms(glContext: GLContext, lightSettings: LightSettings, colors: GLSLColors, transformation: Transformation): void {
-	const {gl, supportsDepth, fbo, programInfo, shadowProgramInfo, mesh, placeholderTexture} = glContext;
-
-	assignProjectionMatrix(glContext);
-
-	if (supportsDepth) {
-		const lightMatrix: Matrix = applyPerspective({
-			sourceMatrix: createMat4(),
-			fieldOfView: degreesToRadians(70),
-			aspect: fbo.textureWidth / fbo.textureHeight,
-			near: 1,
-			far: 200
-		});
-		const leftLightMatrix: Matrix = lookAt(lightMatrix, {
-			target: transformation.translation,
-			origin: {
-				x: lightSettings.positions.left[0],
-				y: lightSettings.positions.left[1],
-				z: lightSettings.positions.left[2]
-			},
-			up: {x: 0, y: 1, z: 0}
-		});
-		gl.uniform1i(programInfo.uniformLocations.uDepthEnabled, 1);
-		gl.uniformMatrix4fv(programInfo.uniformLocations.leftLightMatrix, false, leftLightMatrix);
-		gl.useProgram(shadowProgramInfo.program);
-		gl.uniformMatrix4fv(shadowProgramInfo.uniformLocations.leftLightMatrix, false, leftLightMatrix);
-	} else {
-		gl.uniform1i(programInfo.uniformLocations.uDepthEnabled, 0);
-	}
-
-	gl.useProgram(programInfo.program);
-
-	if (mesh.materials) {
-		Object.keys(mesh.materials).forEach((name, i) => {
-			if (i <= MAX_SUPPORTED_MATERIAL_TEXTURES) {
-				const mat: Material = mesh.materials[name] as Material;
-
-				if (mat.textures && mat.textures.diffuseMap) {
-					gl.activeTexture(gl[`TEXTURE${i}`] as number);
-
-					gl.bindTexture(gl.TEXTURE_2D, mat.textures.diffuseMap);
-					gl.uniform1i(programInfo.uniformLocations[`uSampler${i}`], i);
-					gl.uniform1f(programInfo.uniformLocations[`uHasTexture`], 1);
-				}
-
-				gl.uniform3fv(programInfo.uniformLocations[`uDiffuseColor${i}`], mat.diffuse || [1, 1, 1]);
-				gl.uniform3fv(programInfo.uniformLocations[`uEmissiveColor${i}`], mat.emissive || [0, 0, 0]);
-				gl.uniform3fv(programInfo.uniformLocations[`uSpecularColor${i}`], mat.specular || [1, 1, 1]);
-				gl.uniform1f(programInfo.uniformLocations[`uReflectivity${i}`], mat.reflectivity ? mat.reflectivity : 1000);
-				gl.uniform1f(programInfo.uniformLocations[`uOpacity${i}`], mat.opacity || 1);
-			}
-		});
-	} else {
-		gl.uniform1f(programInfo.uniformLocations[`uHasTexture`], 0);
-
-		for (let i: number = 0; i <= MAX_SUPPORTED_MATERIAL_TEXTURES; i++) {
-			gl.activeTexture(gl[`TEXTURE${i}`] as number);
-			gl.bindTexture(gl.TEXTURE_2D, placeholderTexture);
-			gl.uniform1i(programInfo.uniformLocations[`uSampler${i}`], i);
-		}
-
-		gl.uniform3fv(programInfo.uniformLocations[`uDiffuseColor0`], [1, 1, 1]);
-		gl.uniform3fv(programInfo.uniformLocations[`uEmissiveColor0`], [0, 0, 0]);
-		gl.uniform3fv(programInfo.uniformLocations[`uSpecularColor0`], [1, 1, 1]);
-		gl.uniform1f(programInfo.uniformLocations[`uReflectivity0`], 1000);
-		gl.uniform1f(programInfo.uniformLocations[`uOpacity0`], 1);
-
-		gl.uniform3fv(programInfo.uniformLocations[`uDiffuseColor1`], [1, 1, 1]);
-		gl.uniform3fv(programInfo.uniformLocations[`uEmissiveColor1`], [0, 0, 0]);
-		gl.uniform3fv(programInfo.uniformLocations[`uSpecularColor1`], [1, 1, 1]);
-		gl.uniform1f(programInfo.uniformLocations[`uReflectivity1`], 1000);
-		gl.uniform1f(programInfo.uniformLocations[`uOpacity1`], 1);
-
-		gl.uniform3fv(programInfo.uniformLocations[`uDiffuseColor2`], [1, 1, 1]);
-		gl.uniform3fv(programInfo.uniformLocations[`uEmissiveColor2`], [0, 0, 0]);
-		gl.uniform3fv(programInfo.uniformLocations[`uSpecularColor2`], [1, 1, 1]);
-		gl.uniform1f(programInfo.uniformLocations[`uReflectivity2`], 1000);
-		gl.uniform1f(programInfo.uniformLocations[`uOpacity2`], 1);
-	}
-
-	gl.uniform1f(programInfo.uniformLocations.uCustomShininess, lightSettings.customShininess);
-	gl.uniform1f(programInfo.uniformLocations.uShadowStrength, lightSettings.shadowStrength);
-
-	gl.uniform3fv(programInfo.uniformLocations.uAmbientLightColor, colors.ambientLight);
-	gl.uniform3fv(programInfo.uniformLocations.uLeftLightColor, colors.leftLight);
-	gl.uniform3fv(programInfo.uniformLocations.uRightLightColor, colors.rightLight);
-	gl.uniform3fv(programInfo.uniformLocations.uTopLightColor, colors.topSpot);
-	gl.uniform3fv(programInfo.uniformLocations.uBottomLightColor, colors.bottomSpot);
-
-	gl.uniform1f(programInfo.uniformLocations.uAmbientLightIntensity, lightSettings.intensities.ambient);
-	gl.uniform1f(programInfo.uniformLocations.uLeftLightIntensity, lightSettings.intensities.left);
-	gl.uniform1f(programInfo.uniformLocations.uRightLightIntensity, lightSettings.intensities.right);
-	gl.uniform1f(programInfo.uniformLocations.uTopLightIntensity, lightSettings.intensities.top);
-	gl.uniform1f(programInfo.uniformLocations.uBottomLightIntensity, lightSettings.intensities.bottom);
-
-	gl.uniform3fv(programInfo.uniformLocations.uLeftLightPosition, lightSettings.positions.left);
-	gl.uniform3fv(programInfo.uniformLocations.uRightLightPosition, lightSettings.positions.right);
-	gl.uniform3fv(programInfo.uniformLocations.uTopLightPosition, lightSettings.positions.top);
-	gl.uniform3fv(programInfo.uniformLocations.uBottomLightPosition, lightSettings.positions.bottom);
-}
-
+// Initialize texture to be displayed while webworker loads OBJ
 export function initPlaceholderTexture(gl: WebGLRenderingContext): WebGLTexture {
 	const texture: WebGLTexture = gl.createTexture();
 	gl.bindTexture(gl.TEXTURE_2D, texture);
 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
 	return texture;
 }
-
-// Base mesh made of two triangles
-export const initBaseMesh = (gl: WebGLRenderingContext, program: WebGLProgram) => {
-	const buffer = buildBuffer({
-		gl,
-		type: gl.ARRAY_BUFFER,
-		data: BASE_TRIANGLE_MESH,
-		itemSize: 3
-	});
-	const vertexPosition = gl.getAttribLocation(program, 'aBaseVertexPosition');
-	gl.enableVertexAttribArray(vertexPosition);
-	gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
-	return buffer;
-};
-
-const computeFaceNormal = (face: Vector3[]): Vector3 => {
-	const [a, b, c] = face;
-	const cb: Vector3 = subtractVectors(c, b);
-	const ab: Vector3 = subtractVectors(a, b);
-	const cross: Vector3 = crossVectors(cb, ab);
-	/* We need to use === on -0 here because the recommended Object.is
-      is not supported on IE. */
-	if (cross.x === -0) cross.x = 0; // eslint-disable-line no-compare-neg-zero
-	if (cross.y === -0) cross.y = 0; // eslint-disable-line no-compare-neg-zero
-	if (cross.z === -0) cross.z = 0; // eslint-disable-line no-compare-neg-zero
-	return normalizeVector(cross);
-};
-
-const computeFaceNormals = (mesh: Vector3[][]): number[] =>
-	mesh.reduce((result, face) => {
-		const normal: Vector3 = computeFaceNormal(face);
-		result = result.concat([normal.x, normal.y, normal.z, normal.x, normal.y, normal.z, normal.x, normal.y, normal.z]);
-		return result;
-	}, [] as number[]);
-
-const computeBarycentricCoords = (numFaces: number): number[] => {
-	const coords: number[] = [];
-	for (let i = 0; i < numFaces; i++) {
-		if (i % 2 === 0) {
-			coords.push(0, 0, 1, 0, 1, 0, 1, 0, 0);
-		} else {
-			coords.push(0, 1, 0, 0, 0, 1, 1, 0, 0);
-		}
-	}
-	return coords;
-};
-
-export const initMeshFromFaceArray = (gl: WebGLRenderingContext, program: WebGLProgram, faceArray: FaceArray, useBarycentric: boolean) => {
-	const vertices = faceArray.flat();
-	const positions: number[] = vertices.map((coordinate: Vector3) => Object.values(coordinate)).flat();
-
-	const vertexBuffer = buildBuffer({
-		gl,
-		type: gl.ARRAY_BUFFER,
-		data: positions,
-		itemSize: 3
-	});
-	const vertexPosition = gl.getAttribLocation(program, 'aVertexPosition');
-	gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
-	gl.enableVertexAttribArray(vertexPosition);
-
-	const normals = computeFaceNormals(faceArray);
-	const normalBuffer = buildBuffer({
-		gl,
-		type: gl.ARRAY_BUFFER,
-		data: normals,
-		itemSize: 3
-	});
-	const vertexNormal = gl.getAttribLocation(program, 'aVertexNormal');
-	gl.vertexAttribPointer(vertexNormal, 3, gl.FLOAT, false, 0, 0);
-	gl.enableVertexAttribArray(vertexNormal);
-
-	if (useBarycentric) {
-		const barycentric = computeBarycentricCoords(faceArray.length);
-		buildBuffer({
-			gl,
-			type: gl.ARRAY_BUFFER,
-			data: barycentric,
-			itemSize: 3
-		});
-		const barycentricLocation = gl.getAttribLocation(program, 'aBarycentric');
-		gl.vertexAttribPointer(barycentricLocation, 3, gl.FLOAT, false, 0, 0);
-		gl.enableVertexAttribArray(barycentricLocation);
-	}
-
-	return {
-		vertexBuffer: {...vertexBuffer, data: positions},
-		normalBuffer: {...normalBuffer, data: normals},
-		indexBuffer: null,
-		textureBuffer: null,
-		textureAddressBuffer: null,
-		barycentricBuffer: null
-	};
-};
-
-const FBOConstants = (gl: WebGLRenderingContext): Record<string, any> => ({
-	level: 0,
-	internalFormat: gl.RGBA,
-	border: 0,
-	format: gl.RGBA,
-	type: gl.UNSIGNED_BYTE,
-	data: null
-});
-
-const createTargetTexture = (gl: WebGLRenderingContext, textureWidth: number, textureHeight: number, constants: Record<string, number>): WebGLTexture => {
-	const {level, internalFormat, border, format, type, data} = constants;
-	const targetTexture: WebGLTexture = gl.createTexture();
-	gl.bindTexture(gl.TEXTURE_2D, null);
-	gl.bindTexture(gl.TEXTURE_2D, targetTexture);
-	gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureWidth, textureHeight, border, format, type, data);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	return targetTexture;
-};
-
-const createFrameBuffer = (gl: WebGLRenderingContext, targetTexture, textureWidth, textureHeight, level: number): WebGLFramebuffer => {
-	const frameBuffer: WebGLFramebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, level);
-
-	const depthBuffer: WebGLRenderbuffer = gl.createRenderbuffer();
-	gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
-	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, textureWidth, textureHeight);
-
-	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
-	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-	gl.bindTexture(gl.TEXTURE_2D, null);
-	return frameBuffer;
-};
-
-export const initFrameBufferObject = (gl: WebGLRenderingContext, textureWidth: number, textureHeight: number): FBO => {
-	const constants = FBOConstants(gl);
-
-	const targetTexture: WebGLTexture = createTargetTexture(gl, textureWidth, textureHeight, constants);
-	const frameBuffer: WebGLFramebuffer = createFrameBuffer(gl, targetTexture, textureWidth, textureHeight, constants.level);
-
-	if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
-		console.error(new Error('Could not attach frame buffer'));
-	}
-
-	return {
-		buffer: frameBuffer,
-		targetTexture,
-		textureWidth,
-		textureHeight
-	};
-};
-
-export const initDepthBufferObject = (gl: WebGLRenderingContext, textureWidth: number, textureHeight: number): FBO => {
-	const constants = FBOConstants(gl);
-
-	const targetTexture: WebGLTexture = createTargetTexture(gl, textureWidth, textureHeight, constants);
-	const frameBuffer: WebGLFramebuffer = createFrameBuffer(gl, targetTexture, constants.level);
-
-	// Create depth buffer
-	const depthBuffer: WebGLRenderbuffer = gl.createRenderbuffer();
-	gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
-	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, textureWidth, textureHeight);
-
-	// Bnd depth buffer to frame buffer
-	gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
-	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
-
-	// reset
-	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-	gl.bindTexture(gl.TEXTURE_2D, null);
-	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-	gl.activeTexture(gl.TEXTURE4);
-	gl.bindTexture(gl.TEXTURE_2D, targetTexture);
-
-	return {
-		buffer: frameBuffer,
-		targetTexture,
-		textureWidth,
-		textureHeight
-	};
-};
