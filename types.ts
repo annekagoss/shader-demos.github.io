@@ -286,6 +286,8 @@ export enum UNIFORM_TYPE {
 export interface UniformSetting {
 	defaultValue: any;
 	isBool?: boolean;
+	isRadio?: boolean;
+	radioChoices?: string[];
 	name: string;
 	readonly: boolean;
 	type: UNIFORM_TYPE;

@@ -61,6 +61,30 @@ const BoolInput = ({uniform, updateUniforms}: TypeInputProps) => (
 	/>
 );
 
+const RadioInput = ({uniform, updateUniforms}: TypeInputProps) => {
+	const [selectedOption, setSelectedOption] = React.useState<number>(0);
+	return (
+		<form>
+			{uniform.radioChoices.map((choice, i) => (
+				<label style={{display: 'block'}}>
+					<input
+						type='radio'
+						key={i}
+						value={i}
+						defaultChecked={uniform.defaultValue === i}
+						checked={selectedOption === i}
+						onChange={() => {
+							setSelectedOption(i);
+							updateUniforms(uniform.name, i);
+						}}
+					/>
+					{choice}
+				</label>
+			))}
+		</form>
+	);
+};
+
 const Vec2Input = ({uniform, updateUniforms}: TypeInputProps) => {
 	return (
 		<div>
@@ -151,6 +175,7 @@ const UniformInput = ({uniform, updateUniforms, pageMousePosRef}: UniformInputPr
 			return <FloatInput uniform={uniform} updateUniforms={updateUniforms} />;
 		case UNIFORM_TYPE.INT_1:
 			if (uniform.isBool) return <BoolInput uniform={uniform} updateUniforms={updateUniforms} />;
+			if (uniform.isRadio) return <RadioInput uniform={uniform} updateUniforms={updateUniforms} />;
 			return <IntInput uniform={uniform} updateUniforms={updateUniforms} />;
 		case UNIFORM_TYPE.VEC_2:
 			return <Vec2Input uniform={uniform} updateUniforms={updateUniforms} />;

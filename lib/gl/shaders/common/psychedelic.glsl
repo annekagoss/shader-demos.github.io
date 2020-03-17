@@ -62,7 +62,6 @@ vec3 psychedelic(vec3 normal, float time) {
 	float hueShiftParam = normal.z * 3.0 + mod(time*.001, 1.0);
 	normalHSL = hueShift(normalHSL, hueShiftParam);
 	vec3 color = hslTorgb(normalHSL);
-	color *= 1.5; // exposure
 	return pow(color,vec3(.85)); // gamma
 }
 

@@ -37,6 +37,8 @@ const BASE_MESH_UNIFORMS: UniformSetting[] = [
 		defaultValue: 0,
 		name: 'uMaterialType',
 		isBool: false,
+		isRadio: true,
+		radioChoices: ['Vertex Position', 'Phong', 'Wireframe'],
 		readonly: false,
 		type: UNIFORM_TYPE.INT_1,
 		value: 0
@@ -77,6 +79,8 @@ const BASE_PHONG_UNIFORMS: UniformSetting[] = [
 		defaultValue: 0,
 		name: 'uMaterialType',
 		isBool: false,
+		isRadio: true,
+		radioChoices: ['Phong', 'Texture', 'Toon', 'Wireframe', 'Psychedelic'],
 		readonly: false,
 		type: UNIFORM_TYPE.INT_1,
 		value: 0
