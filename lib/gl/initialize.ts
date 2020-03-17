@@ -30,7 +30,7 @@ export interface InitializeProps {
 }
 
 export const initializeRenderer = ({uniformLocations, canvasRef, fragmentSource, vertexSource, uniforms, size, FBOA, FBOB, outlineUniformLocations}: InitializeProps) => {
-	const {width, height} = canvasRef.current.getBoundingClientRect();
+	const {width, height} = canvasRef.current ? canvasRef.current.getBoundingClientRect() : {width: 400, height: 400};
 	const x: number = width * window.devicePixelRatio;
 	const y: number = height * window.devicePixelRatio;
 	size.current = {x, y};

@@ -2,9 +2,9 @@ import * as React from 'react';
 import cx from 'classnames';
 import {SceneProps} from '../../types';
 import {glSupported} from '../utils/general';
-import FormPage from '../pages/FormPage/FormPage';
-import MotionPage from '../pages/MotionPage/MotionPage';
-import DepthPage from '../pages/DepthPage/DepthPage';
+import FormPage from '../pages/FormPage';
+import MotionPage from '../pages/MotionPage';
+import DepthPage from '../pages/DepthPage';
 import styles from './app.module.scss';
 
 // FOX SKULL

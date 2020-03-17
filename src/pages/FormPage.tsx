@@ -1,19 +1,17 @@
 import * as React from 'react';
-import Section from '../../components/Section/Section';
-import BaseCanvas from '../../components/BaseCanvas/BaseCanvas';
-import ShaderText from '../../components/ShaderText/ShaderText';
-import Inputs from '../../components/Inputs/Inputs';
-import baseVertexShader from '../../../lib/gl/shaders/base.vert';
-import {BASE_UNIFORMS} from '../../utils/general';
-import {UNIFORM_TYPE, UniformSetting} from '../../../types';
-
-import helloWorldFragmentShader from '../../../lib/gl/shaders/hello-world.frag';
-import stepFragmentShader from '../../../lib/gl/shaders/step.frag';
-import lineFragmentShader from '../../../lib/gl/shaders/line.frag';
-import rectangleFragmentShader from '../../../lib/gl/shaders/rectangle.frag';
-import circleFragmentShader from '../../../lib/gl/shaders/circle.frag';
-import polygonFragmentShader from '../../../lib/gl/shaders/polygon.frag';
-import styles from './FormPage.module.scss';
+import {BASE_UNIFORMS} from '../utils/general';
+import Section from '../components/Section/Section';
+import BaseCanvas from '../components/BaseCanvas';
+import ShaderText from '../components/ShaderText/ShaderText';
+import Inputs from '../components/Inputs/Inputs';
+import baseVertexShader from '../../lib/gl/shaders/base.vert';
+import helloWorldFragmentShader from '../../lib/gl/shaders/hello-world.frag';
+import stepFragmentShader from '../../lib/gl/shaders/step.frag';
+import lineFragmentShader from '../../lib/gl/shaders/line.frag';
+import rectangleFragmentShader from '../../lib/gl/shaders/rectangle.frag';
+import circleFragmentShader from '../../lib/gl/shaders/circle.frag';
+import polygonFragmentShader from '../../lib/gl/shaders/polygon.frag';
+import {UNIFORM_TYPE, UniformSetting} from '../../types';
 
 const BASE_STEP_UNIFORMS: UniformSetting[] = [
 	...BASE_UNIFORMS,
@@ -145,7 +143,7 @@ const FormPage = ({isActive}: Props) => {
 	if (!isActive) return <></>;
 
 	return (
-		<div className={styles.page}>
+		<div>
 			<Section
 				title='0.0: Hello World'
 				notes={`

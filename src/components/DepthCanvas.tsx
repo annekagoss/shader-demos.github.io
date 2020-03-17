@@ -1,13 +1,11 @@
 import * as React from 'react';
-import {assignProjectionMatrix} from '../../../lib/gl/initialize';
-import {assignUniforms} from '../../../lib/gl/render';
-import {UniformSetting, Vector2, UNIFORM_TYPE, Matrix, Vector3, FaceArray, MESH_TYPE, Buffers} from '../../../types';
-import {useInitializeGL} from '../../hooks/gl';
-import {useAnimationFrame} from '../../hooks/animation';
-import styles from './DepthCanvas.module.scss';
-import {applyRotation, createMat4} from '../../../lib/gl/matrix';
-import {addVectors} from '../../../lib/gl/math';
-import {useWindowSize} from '../../hooks/resize';
+import {UniformSetting, Vector2, Matrix, Vector3, FaceArray, MESH_TYPE, Buffers} from '../../types';
+import {assignProjectionMatrix, assignUniforms} from '../../lib/gl/initialize';
+import {useInitializeGL} from '../hooks/gl';
+import {useAnimationFrame} from '../hooks/animation';
+import {applyRotation, createMat4} from '../../lib/gl/matrix';
+import {addVectors} from '../../lib/gl/math';
+import {useWindowSize} from '../hooks/resize';
 
 interface Props {
 	fragmentShader: string;
@@ -54,7 +52,8 @@ const DepthCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pag
 		normalBuffer: null,
 		indexBuffer: null,
 		textureBuffer: null,
-		textureAddressBuffer: null
+		textureAddressBuffer: null,
+		barycentricBuffer: null
 	});
 	const rotationRef: React.MutableRefObject<Vector3> = React.useRef<Vector3>({x: 0, y: 0, z: 0});
 
@@ -99,7 +98,6 @@ const DepthCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pag
 			ref={canvasRef}
 			width={size.current.x}
 			height={size.current.y}
-			className={styles.canvas}
 			onMouseDown={() => {
 				mouseDownRef.current = true;
 			}}

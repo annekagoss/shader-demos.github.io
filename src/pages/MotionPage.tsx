@@ -1,20 +1,18 @@
 import * as React from 'react';
-import Section from '../../components/Section/Section';
-import BaseCanvas from '../../components/BaseCanvas/BaseCanvas';
-import ShaderText from '../../components/ShaderText/ShaderText';
-import Inputs from '../../components/Inputs/Inputs';
-import baseVertexShader from '../../../lib/gl/shaders/base.vert';
-import {BASE_UNIFORMS} from '../../utils/general';
-import {UNIFORM_TYPE, Vector2, UniformSetting} from '../../../types';
-import translationFragmentShader from '../../../lib/gl/shaders/translate.frag';
-import scaleFragmentShader from '../../../lib/gl/shaders/scale.frag';
-import rotationFragmentShader from '../../../lib/gl/shaders/rotation.frag';
-import signalFragmentShader from '../../../lib/gl/shaders/signal.frag';
-import noiseFragmentShader from '../../../lib/gl/shaders/noise.frag';
-import feedbackFragmentShader from '../../../lib/gl/shaders/feedback.frag';
-import FeedbackCanvas from '../../components/FeedbackCanvas/FeedbackCanvas';
-
-import styles from './MotionPage.module.scss';
+import {UNIFORM_TYPE, Vector2, UniformSetting} from '../../types';
+import {BASE_UNIFORMS} from '../utils/general';
+import Section from '../components/Section/Section';
+import BaseCanvas from '../components/BaseCanvas';
+import FeedbackCanvas from '../components/FeedbackCanvas';
+import ShaderText from '../components/ShaderText/ShaderText';
+import Inputs from '../components/Inputs/Inputs';
+import baseVertexShader from '../../lib/gl/shaders/base.vert';
+import translationFragmentShader from '../../lib/gl/shaders/translate.frag';
+import scaleFragmentShader from '../../lib/gl/shaders/scale.frag';
+import rotationFragmentShader from '../../lib/gl/shaders/rotation.frag';
+import signalFragmentShader from '../../lib/gl/shaders/signal.frag';
+import noiseFragmentShader from '../../lib/gl/shaders/noise.frag';
+import feedbackFragmentShader from '../../lib/gl/shaders/feedback.frag';
 
 const BASE_TRANSLATION_UNIFORMS: UniformSetting[] = [
 	...BASE_UNIFORMS,
@@ -194,7 +192,7 @@ const MotionPage = ({isActive}: Props) => {
 	if (!isActive) return <></>;
 
 	return (
-		<div className={styles.page}>
+		<div>
 			<Section
 				title='1.0: Translation'
 				notes={`To change the position of a shape in a shader, you actually change the coordinate system itself.  In this example we move the screen space around in a circle, and then draw the square inside it.  If there are multiple Form that are moving independantly would each have their own unique coordinate system.`}>

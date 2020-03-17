@@ -1,27 +1,24 @@
 import * as React from 'react';
-import Section from '../../components/Section/Section';
-import BaseCanvas from '../../components/BaseCanvas/BaseCanvas';
-import DepthCanvas from '../../components/DepthCanvas/DepthCanvas';
-import LoaderCanvas from '../../components/LoaderCanvas/LoaderCanvas';
-import ShaderText from '../../components/ShaderText/ShaderText';
-import Inputs from '../../components/Inputs/Inputs';
-import meshFragmentShader from '../../../lib/gl/shaders/mesh.frag';
-import meshVertexShader from '../../../lib/gl/shaders/mesh.vert';
-import phongFragmentShader from '../../../lib/gl/shaders/phong.frag';
-import phongVertexShader from '../../../lib/gl/shaders/phong.vert';
-import mandelbulbFragmentShader from '../../../lib/gl/shaders/mandelbulb.frag';
-import baseVertexShader from '../../../lib/gl/shaders/base.vert';
-import {BASE_UNIFORMS} from '../../utils/general';
-import {UNIFORM_TYPE, Vector2, UniformSetting, Vector3} from '../../../types';
-import desertBg from '../../assets/desert.jpg';
-
-import styles from './DepthPage.module.scss';
+import Section from '../components/Section/Section';
+import BaseCanvas from '../components/BaseCanvas';
+import DepthCanvas from '../components/DepthCanvas';
+import LoaderCanvas from '../components/LoaderCanvas';
+import ShaderText from '../components/ShaderText/ShaderText';
+import Inputs from '../components/Inputs/Inputs';
+import meshFragmentShader from '../../lib/gl/shaders/mesh.frag';
+import meshVertexShader from '../../lib/gl/shaders/mesh.vert';
+import phongFragmentShader from '../../lib/gl/shaders/phong.frag';
+import phongVertexShader from '../../lib/gl/shaders/phong.vert';
+import mandelbulbFragmentShader from '../../lib/gl/shaders/mandelbulb.frag';
+import baseVertexShader from '../../lib/gl/shaders/base.vert';
+import {BASE_UNIFORMS} from '../utils/general';
+import {UNIFORM_TYPE, Vector2, UniformSetting, Vector3} from '../../types';
 
 //FOX SKULL
-import foxOBJ from '../../../lib/gl/assets/fox/fox3.obj';
-import foxMTL from '../../../lib/gl/assets/fox/fox.mtl';
-import foxDiffuseSource0 from '../../../lib/gl/assets/fox/fox_skull_0.jpg';
-import foxDiffuseSource1 from '../../../lib/gl/assets/fox/fox_skull_1.jpg';
+import foxOBJ from '../../lib/gl/assets/fox/fox3.obj';
+import foxMTL from '../../lib/gl/assets/fox/fox.mtl';
+import foxDiffuseSource0 from '../../lib/gl/assets/fox/fox_skull_0.jpg';
+import foxDiffuseSource1 from '../../lib/gl/assets/fox/fox_skull_1.jpg';
 
 interface Props {
 	isActive: boolean;
@@ -285,7 +282,7 @@ const DepthPage = ({isActive}: Props) => {
 	};
 
 	return (
-		<div className={styles.page}>
+		<div>
 			<Section title='2.0: Mesh' notes={``}>
 				<DepthCanvas
 					fragmentShader={meshFragmentShader}
@@ -311,7 +308,7 @@ const DepthPage = ({isActive}: Props) => {
 				<Inputs attributes={attributes} uniforms={phongUniforms} pageMousePosRef={pageMousePosRef} />
 			</Section>
 			<Section title='2.2: Fractal' notes={``}>
-				<BaseCanvas fragmentShader={mandelbulbFragmentShader} vertexShader={baseVertexShader} uniforms={fractalUniforms} setAttributes={setAttributes} textureSource={desertBg} />
+				<BaseCanvas fragmentShader={mandelbulbFragmentShader} vertexShader={baseVertexShader} uniforms={fractalUniforms} setAttributes={setAttributes} />
 				<ShaderText fragmentShader={mandelbulbFragmentShader} vertexShader={baseVertexShader} />
 				<Inputs attributes={attributes} uniforms={fractalUniforms} pageMousePosRef={pageMousePosRef} />
 			</Section>

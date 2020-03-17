@@ -1,16 +1,13 @@
 import * as React from 'react';
-import {UniformSetting, Vector2, Matrix, Vector3, Mesh, Buffers, MESH_TYPE, Buffer, OBJData, FBO} from '../../../types';
-import {initializeGL} from '../../hooks/gl';
-import {useAnimationFrame} from '../../hooks/animation';
-import {useWindowSize} from '../../hooks/resize';
-import {assignProjectionMatrix} from '../../../lib/gl/initialize';
-import {createMat4, applyTransformation, invertMatrix, transposeMatrix} from '../../../lib/gl/matrix';
-import {addVectors} from '../../../lib/gl/math';
-import {useOBJLoaderWebWorker} from '../../hooks/webWorker';
-import {assignUniforms} from '../../../lib/gl/render';
-import {formatAttributes} from '../../utils/general';
-
-import styles from './LoaderCanvas.module.scss';
+import {UniformSetting, Vector2, Matrix, Vector3, Mesh, Buffers, MESH_TYPE, Buffer, OBJData, FBO} from '../../types';
+import {initializeGL} from '../hooks/gl';
+import {useAnimationFrame} from '../hooks/animation';
+import {useWindowSize} from '../hooks/resize';
+import {assignProjectionMatrix, assignUniforms} from '../../lib/gl/initialize';
+import {createMat4, applyTransformation, invertMatrix, transposeMatrix} from '../../lib/gl/matrix';
+import {addVectors} from '../../lib/gl/math';
+import {useOBJLoaderWebWorker} from '../hooks/webWorker';
+import {formatAttributes} from '../utils/general';
 
 interface Props {
 	fragmentShader: string;
@@ -135,7 +132,8 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 		normalBuffer: null,
 		indexBuffer: null,
 		textureBuffer: null,
-		textureAddressBuffer: null
+		textureAddressBuffer: null,
+		barycentricBuffer: null
 	});
 	const rotationRef: React.MutableRefObject<Vector3> = React.useRef<Vector3>({x: 0, y: 0, z: 0});
 	const meshRef: React.MutableRefObject<Mesh> = React.useRef<Mesh>();
@@ -201,7 +199,6 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 			ref={canvasRef}
 			width={size.current.x}
 			height={size.current.y}
-			className={styles.canvas}
 			onMouseDown={() => {
 				mouseDownRef.current = true;
 			}}
