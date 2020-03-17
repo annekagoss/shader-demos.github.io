@@ -12,6 +12,9 @@ precision mediump float;
 uniform vec2 uResolution;
 uniform vec2 uMouse;
 uniform float uTime;
+uniform vec3 uFractalColor1;
+uniform vec3 uFractalColor2;
+uniform vec3 uFractalColor3;
 
 float circle(vec2 st, float radius, vec2 resolution) {
 	st.x *= resolution.x/resolution.y;
@@ -51,8 +54,8 @@ float map(vec3 rayPosition, out vec4 surfaceColor )
         float a = size*atan( _rayPosition.x, _rayPosition.z ) - time + mouse.x;
         dz = size*pow(sqrt(raySqMagnitude),7.0)*dz;
 		
-		vec3 fractal = pow(r,size) * vec3(sin(b)*sin(a), cos(b), sin(b)*cos(a));
-		vec3 distortedFractal = pow(r,9.0) * vec3(sin(b)*sin(a), cos(b), sin(b)*cos(a));
+		vec3 fractal = pow(r, size) * vec3(sin(b)*sin(a), cos(b), sin(b)*cos(a));
+		vec3 distortedFractal = pow(r, 9.0) * vec3(sin(b)*sin(a), cos(b), sin(b)*cos(a));
 		_rayPosition = mix(rayPosition + distortedFractal, rayPosition + fractal, circle());       
         _surfaceColor = min(_surfaceColor, vec4(abs(_rayPosition),raySqMagnitude));
 
@@ -157,9 +160,9 @@ vec3 render(vec2 fragCoord, mat4 cameraMatrix )
 
     // fractal
 	vec3 color = vec3(0.01);
-	color = mix( color, vec3(0.5,0.5,0.5), clamp(surfaceColor.y,0.0,1.0) );
-	color = mix( color, vec3(0.25,0.25,0.25), clamp(surfaceColor.z*surfaceColor.z,0.0,1.0) );
-	color = mix( color, vec3(0.10,0.10,0.10), clamp(pow(surfaceColor.w,6.0),0.0,1.0) );
+	color = mix( color, uFractalColor1, clamp(surfaceColor.y,0.0,1.0) );
+	color = mix( color, uFractalColor2, clamp(surfaceColor.z*surfaceColor.z,0.0,1.0) );
+	color = mix( color, uFractalColor3, clamp(pow(surfaceColor.w,6.0),0.0,1.0) );
 	color *= 0.5;
 	
 	// lighting terms
