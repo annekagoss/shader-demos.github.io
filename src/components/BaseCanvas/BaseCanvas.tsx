@@ -3,7 +3,7 @@ import {UniformSetting, Vector2, UNIFORM_TYPE, FBO, MESH_TYPE, Buffers} from '..
 import {useInitializeGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
 import {useWindowSize} from '../../hooks/resize';
-import {assignUniforms} from '../../../lib/gl/render';
+import {assignUniforms} from '../../../lib/gl/initialize';
 import styles from './BaseCanvas.module.scss';
 import {BASE_TRIANGLE_MESH} from '../../../lib/gl/settings';
 

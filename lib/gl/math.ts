@@ -1,65 +1,48 @@
 import {Vector3} from '../../types';
 
-export function degreesToRadians(degrees: number): number {
-	return degrees * (Math.PI / 180);
-}
+export const degreesToRadians = (degrees: number): number => degrees * (Math.PI / 180);
 
-export function clamp(value: number, min: number, max: number): number {
-	return Math.min(Math.max(value, min), max);
-}
+export const clamp = (value: number, min: number, max: number): number => Math.min(Math.max(value, min), max);
 
-export function lerp(v0: number, v1: number, t: number): number {
-	return v0 * (1 - t) + v1 * t;
-}
+export const lerp = (v0: number, v1: number, t: number): number => v0 * (1 - t) + v1 * t;
 
-export function interpolateVectors(sourceVector: Vector3, targetVector: Vector3, amount: number): Vector3 {
-	const x: number = lerp(sourceVector.x, targetVector.x, amount);
-	const y: number = lerp(sourceVector.y, targetVector.y, amount);
-	const z: number = lerp(sourceVector.z, targetVector.z, amount);
-	return {x, y, z};
-}
+export const interpolateVectors = (sourceVector: Vector3, targetVector: Vector3, amount: number): Vector3 => ({
+	x: lerp(sourceVector.x, targetVector.x, amount),
+	y: lerp(sourceVector.y, targetVector.y, amount),
+	z: lerp(sourceVector.z, targetVector.z, amount)
+});
 
-export function addVectors(a: Vector3, b: Vector3): Vector3 {
-	return {
-		x: a.x + b.x,
-		y: a.y + b.y,
-		z: a.z + b.z
-	};
-}
+export const addVectors = (a: Vector3, b: Vector3): Vector3 => ({
+	x: a.x + b.x,
+	y: a.y + b.y,
+	z: a.z + b.z
+});
 
-export function subtractVectors(a: Vector3, b: Vector3): Vector3 {
-	return {
-		x: a.x - b.x,
-		y: a.y - b.y,
-		z: a.z - b.z
-	};
-}
+export const subtractVectors = (a: Vector3, b: Vector3): Vector3 => ({
+	x: a.x - b.x,
+	y: a.y - b.y,
+	z: a.z - b.z
+});
 
-export function multiplyScalar(v: Vector3, scalar: number): Vector3 {
-	return {
-		x: v.x * scalar,
-		y: v.y * scalar,
-		z: v.z * scalar
-	};
-}
+export const multiplyScalar = (v: Vector3, scalar: number): Vector3 => ({
+	x: v.x * scalar,
+	y: v.y * scalar,
+	z: v.z * scalar
+});
 
-export function crossVectors(a: Vector3, b: Vector3): Vector3 {
-	return {
-		x: a.y * b.z - a.z * b.y,
-		y: a.z * b.x - a.x * b.z,
-		z: a.x * b.y - a.y * b.x
-	};
-}
+export const crossVectors = (a: Vector3, b: Vector3): Vector3 => ({
+	x: a.y * b.z - a.z * b.y,
+	y: a.z * b.x - a.x * b.z,
+	z: a.x * b.y - a.y * b.x
+});
 
-export function normalizeVector(v: Vector3): Vector3 {
+export const normalizeVector = (v: Vector3): Vector3 => {
 	const magnitude: number = vectorMagnitude(v);
 	if (magnitude === 0) return v;
 	return multiplyScalar(v, 1 / magnitude);
-}
+};
 
-export function vectorMagnitude({x, y, z}: Vector3): number {
-	return Math.sqrt(x * x + y * y + z * z);
-}
+export const vectorMagnitude = ({x, y, z}: Vector3): number => Math.sqrt(x * x + y * y + z * z);
 
 const computeFaceNormal = (face: Vector3[]): Vector3 => {
 	const [a, b, c] = face;

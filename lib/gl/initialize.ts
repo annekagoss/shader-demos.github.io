@@ -1,4 +1,4 @@
-import {Buffer, Buffers, FBO, Mesh, Material, Matrix, Vector2, FaceArray, UniformSetting, MESH_TYPE, Materials} from '../../types';
+import {Buffer, Buffers, FBO, Mesh, Material, Matrix, Vector2, FaceArray, UniformSetting, MESH_TYPE, Materials, UNIFORM_TYPE} from '../../types';
 import {degreesToRadians} from './math';
 import {createMat4, applyPerspective, lookAt} from './matrix';
 import {MAX_SUPPORTED_MATERIAL_TEXTURES, NEAR_CLIPPING, FAR_CLIPPING, FIELD_OF_VIEW} from './settings';
@@ -184,3 +184,30 @@ export function initPlaceholderTexture(gl: WebGLRenderingContext): WebGLTexture 
 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
 	return texture;
 }
+
+export const assignUniforms = (uniforms: UniformSetting[], uniformLocations: Record<string, WebGLUniformLocation>, gl: WebGLRenderingContext, time: number, mousePos?: Vector2) => {
+	uniforms.forEach((uniform: UniformSetting) => {
+		switch (uniform.type) {
+			case UNIFORM_TYPE.FLOAT_1:
+				if (uniform.name === 'uTime') {
+					uniform.value = time;
+				}
+				gl.uniform1f(uniformLocations[uniform.name], uniform.value);
+				break;
+			case UNIFORM_TYPE.INT_1:
+				gl.uniform1i(uniformLocations[uniform.name], uniform.value);
+				break;
+			case UNIFORM_TYPE.VEC_2:
+				if (uniform.name === 'uMouse') {
+					uniform.value = Object.values(mousePos);
+				}
+				gl.uniform2fv(uniformLocations[uniform.name], Object.values(uniform.value));
+				break;
+			case UNIFORM_TYPE.VEC_3:
+				gl.uniform3fv(uniformLocations[uniform.name], Object.values(uniform.value));
+				break;
+			default:
+				break;
+		}
+	});
+};
