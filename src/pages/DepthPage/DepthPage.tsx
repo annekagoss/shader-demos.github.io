@@ -160,18 +160,11 @@ const BASE_FRACTAL_UNIFORMS = [
 		value: 0
 	},
 	{
-		defaultValue: {x: 0.5, y: 0.5},
+		defaultValue: {x: 0.6, y: 0.7},
 		name: 'uMouse',
 		readonly: true,
 		type: UNIFORM_TYPE.VEC_2,
-		value: {x: 0.5, y: 0.5}
-	},
-	{
-		defaultValue: {x: 0, y: 0},
-		name: 'uBackgroundSize',
-		readonly: true,
-		type: UNIFORM_TYPE.VEC_2,
-		value: {x: 0, y: 0}
+		value: {x: 0.6, y: 0.7}
 	}
 ];
 
@@ -283,8 +276,8 @@ const DepthPage = ({isActive}: Props) => {
 				/>
 				<ShaderText fragmentShader={meshFragmentShader} vertexShader={meshVertexShader} />
 				<Inputs attributes={attributes} uniforms={meshUniforms} pageMousePosRef={pageMousePosRef} />
-			</Section>
-			<Section title='2.1: File Loader' notes={``}>
+			</Section> */}
+			{/* <Section title='2.1: File Loader' notes={``}>
 				<LoaderCanvas
 					fragmentShader={phongFragmentShader}
 					vertexShader={phongVertexShader}

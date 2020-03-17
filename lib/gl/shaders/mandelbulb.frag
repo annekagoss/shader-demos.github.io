@@ -5,31 +5,13 @@ precision mediump float;
 // Based on this example from Inigo Iquilez
 // https://www.shadertoy.com/view/ltfSWn
 
-// #define AA 1
-// #else
-#define AA 1  // make AA 1 for slow machines or 3 for fast machines
-// #endif
-#define ZERO 0
+#define ANTI_ALIAS_PASSES 1  // make ANTI_ALIAS_PASSES 1 for slow machines or 3 for fast machines
+#define CAMERA_DISTANCE 2.1
+#define TARGET vec3(0.0)
 
 uniform vec2 uResolution;
 uniform vec2 uMouse;
 uniform float uTime;
-uniform sampler2D uBackground;
-
-vec2 isphere(vec4 sph, vec3 ro, vec3 rd )
-{
-    vec3 oc = ro - sph.xyz;
-    
-	float b = dot(oc,rd);
-	float c = dot(oc,oc) - sph.w*sph.w;
-    float h = b*b - c;
-    
-    if( h<0.0 ) return vec2(-1.0);
-
-    h = sqrt( h );
-
-    return -b + vec2(-h,h);
-}
 
 float circle(vec2 st, float radius, vec2 resolution) {
 	st.x *= resolution.x/resolution.y;
@@ -50,86 +32,96 @@ float circle() {
 	return circle(mouseSt, .375, uResolution);
 }
 
-float map(vec3 p, out vec4 resColor )
+float map(vec3 rayPosition, out vec4 surfaceColor )
 {
-    vec3 w = p;
-    float m = dot(w,w);
-
-    vec4 trap = vec4(abs(w),m);
-	float dz = 1.0;
-	
+    vec3 _rayPosition = rayPosition;
+    float raySqMagnitude = dot(_rayPosition, _rayPosition);
+    vec4 _surfaceColor = vec4(abs(_rayPosition), raySqMagnitude);
 	vec2 st = gl_FragCoord.xy/uResolution;
 	vec2 mouse = translateWithMouse(st) * 10.0;
-    
+	float dz = 1.0;
+	float size = 8.0;
+	float time = uTime*0.001;
+	
+	// Fractal form
 	for( int i=0; i<4; i++)
     {
-		float size = 8.0;
-        dz = size*pow(sqrt(m),7.0)*dz;
-		float r = length(w);
-        float b = -size*acos((w.y/r)) + (uTime*0.001)+mouse.y;
-        float a = size*atan( w.x, w.z ) - (uTime*0.001)+mouse.x;
-		vec3 original = pow(r,size) * vec3( sin(b)*sin(a), cos(b), sin(b)*cos(a) );
-		vec3 new = pow(r,9.0) * vec3( sin(b)*sin(a), cos(b), sin(b)*cos(a) );
-		w = mix( p + new, p + original, circle());       
-        trap = min( trap, vec4(abs(w),m) );
+		float r = length(_rayPosition);
+        float b = -size*acos((_rayPosition.y/r)) + time + mouse.y;
+        float a = size*atan( _rayPosition.x, _rayPosition.z ) - time + mouse.x;
+        dz = size*pow(sqrt(raySqMagnitude),7.0)*dz;
+		
+		vec3 fractal = pow(r,size) * vec3(sin(b)*sin(a), cos(b), sin(b)*cos(a));
+		vec3 distortedFractal = pow(r,9.0) * vec3(sin(b)*sin(a), cos(b), sin(b)*cos(a));
+		_rayPosition = mix(rayPosition + distortedFractal, rayPosition + fractal, circle());       
+        _surfaceColor = min(_surfaceColor, vec4(abs(_rayPosition),raySqMagnitude));
 
-        m = dot(w,w);
-		if( m > 256.0 )
+        raySqMagnitude = dot(_rayPosition, _rayPosition);
+		if( raySqMagnitude > 256.0 )
             break;
     }
-
-    resColor = vec4(m,trap.yzw);
-
-    return 0.25*log(m)*sqrt(m)/dz;
+    surfaceColor = vec4(raySqMagnitude, _surfaceColor.yzw);
+    return 0.25*log(raySqMagnitude)*sqrt(raySqMagnitude)/dz;
 }
 
-float intersect(vec3 ro, vec3 rd, out vec4 rescol, float px)
+// Raymarching bounding sphere
+vec2 sphere(vec4 sphereCoordinates, vec3 rayOrigin, vec3 rayDirection )
 {
-    float res = -1.0;
+    vec3 oc = rayOrigin - sphereCoordinates.xyz;
+	float b = dot(oc, rayDirection);
+	float c = dot(oc, oc) - sphereCoordinates.w*sphereCoordinates.w;
+    float h = b*b - c;
+    if (h < 0.0) return vec2(-1.0);
+    h = sqrt(h);
+    return -b + vec2(-h,h);
+}
+
+float intersect(vec3 rayOrigin, vec3 rayDirection, out vec4 surfaceColor, float pixelDensity)
+{
+    float resolvedDistanceField = -1.0;
 
     // bounding sphere
-    vec2 dis = isphere( vec4(0.0,0.0,0.0,1.25), ro, rd );
-    if( dis.y<0.0 )
-        return -1.0;
-    dis.x = max( dis.x, 0.0 );
-    dis.y = min( dis.y, 10.0 );
+    vec2 boundingSphere = sphere(vec4(0.0,0.0,0.0,1.25), rayOrigin, rayDirection);
+    if(boundingSphere.y < 0.0) return -1.0; // Bounding sphere not in view
 
     // raymarch fractal distance field
-	vec4 trap;
+	vec4 tempSurfaceColor;
 
-	float t = dis.x;
-	for( int i=0; i<128; i++  )
+	float distanceField = boundingSphere.x;
+	for(int i=0; i<70; i++)
     { 
-        vec3 pos = ro + rd*t;
-        float th = 0.25*px*t;
-		float h = map( pos, trap );
-		if( t>dis.y || h<th ) break;
-        t += h;
+        vec3 rayPosition = rayOrigin + rayDirection*distanceField;
+        float minDistance = 0.25 * pixelDensity * distanceField;
+		float tempDistanceField = map(rayPosition, tempSurfaceColor);
+		if(distanceField > boundingSphere.y || tempDistanceField < minDistance ) break;
+        distanceField += tempDistanceField;
     }
     
-    
-    if( t<dis.y )
+    if(distanceField < boundingSphere.y)
     {
-        rescol = trap;
-        res = t;
+        surfaceColor = tempSurfaceColor;
+        resolvedDistanceField = distanceField;
     }
 
-    return res;
+    return resolvedDistanceField;
 }
 
-float softshadow(vec3 ro, vec3 rd, float k )
+float softshadow(vec3 rayOrigin, vec3 rayDirection, float strength )
 {
-    float res = 1.0;
+    float lighting = 1.0;
     float t = 0.0;
     for( int i=0; i<32; i++ )
     {
         vec4 kk;
-        float h = map(ro + rd*t, kk);
-        res = min( res, k*h/t );
-        if( res<0.001 ) break;
-        t += clamp( h, 0.01, 0.2 );
+		// Raymarch again from the position back to the light
+        float distanceField = map(rayOrigin + rayDirection*t, kk);
+        lighting = min( lighting, strength*distanceField/t );
+		
+		// If there is an obstacle, don't add light value
+        if( lighting<0.001 ) break;
+        t += clamp( distanceField, 0.01, 0.2 );
     }
-    return clamp( res, 0.0, 1.0 );
+    return clamp( lighting, 0.0, 1.0 );
 }
 
 vec3 calcNormal(vec3 pos, float t, float px )
@@ -142,120 +134,91 @@ vec3 calcNormal(vec3 pos, float t, float px )
 					  e.xxx*map( pos + e.xxx,tmp ) );
 }
 
-const vec3 light1 = vec3(  0.577, 0.577, -0.577 );
-const vec3 light2 = vec3( -0.707, 0.000,  0.707 );
+const vec3 lightPosition1 = vec3(  0.577, 0.577, -0.577 );
+const vec3 lightPosition2 = vec3( -0.707, 0.000,  0.707 );
 
-vec4 cubemap( sampler2D sam, vec3 d )
-{
-    // intersect cube
-    vec3 n = abs(d);
-    vec3 v = (n.x>n.y && n.x>n.z) ? d.xyz: 
-             (n.y>n.x && n.y>n.z) ? d.yzx:
-                                    d.zxy;
-    // project into face
-    vec2 q = v.yz/v.x;
-    // undistort in the edges
-    q *= 1.25 - 0.25*q*q;
-    // sample
-    return texture2D( sam, 0.5+0.5*q );
-}
-
-vec3 render(vec2 p, mat4 cam )
+vec3 render(vec2 fragCoord, mat4 cameraMatrix )
 {
 	// ray setup
-    const float fle = 1.5;
+    const float zoom = 1.5;
 
-    vec2  sp = (2.0*p-uResolution.xy) / uResolution.y;
-    float px = 2.0/(uResolution.y*fle);
+    vec2 screenSpace = (2.0*fragCoord-uResolution.xy) / uResolution.y;
+    float pixelDepth = 2.0/(uResolution.y*zoom);
 
-    vec3  ro = vec3( cam[0].w, cam[1].w, cam[2].w );
-	vec3  rd = normalize( (cam*vec4(sp,fle,0.0)).xyz );
+    vec3 rayOrigin = vec3( cameraMatrix[0].w, cameraMatrix[1].w, cameraMatrix[2].w );
+	vec3 rayDirection = normalize((cameraMatrix*vec4(screenSpace,zoom,0.0)).xyz);
 
     // intersect fractal
-	vec4 tra;
-    float t = intersect( ro, rd, tra, px );
-    
-	vec3 col;
+	vec4 surfaceColor;
+    float distanceField = intersect( rayOrigin, rayDirection, surfaceColor, pixelDepth );
 
-    // color sky
-    if( t<0.0 )
-    {
-     	col  = vec3(0.8,.9,1.1)*(0.6+0.4*rd.y);
-		col += 5.0*vec3(0.8,0.7,0.5)*pow( clamp(dot(rd,light1),0.0,1.0), 32.0 );
-		col = vec3(1.0);
-	}
-    // color fractal
-	else
-	{
-        // color
-        col = vec3(0.01);
-		col = mix( col, vec3(0.20,0.20,0.20), clamp(tra.y,0.0,1.0) );
-	 	col = mix( col, vec3(0.10,0.10,0.10), clamp(tra.z*tra.z,0.0,1.0) );
-        col = mix( col, vec3(0.10,0.10,0.10), clamp(pow(tra.w,6.0),0.0,1.0) );
-        col *= 0.5;
-        
-        // lighting terms
-        vec3 pos = ro + t*rd;
-        vec3 nor = calcNormal( pos, t, px );
-        vec3 hal = normalize( light1-rd);
-        vec3 ref = reflect( rd, nor );
-        float occ = clamp(0.05*log(tra.x),0.0,1.0);
-        float fac = clamp(1.0+dot(rd,nor),0.0,1.0);
+    // sky
+    if (distanceField < 0.0) return vec3(1.0);
 
-        // sun
-        float sha1 = softshadow( pos+0.001*nor, light1, 32.0 );
-        float dif1 = clamp( dot( light1, nor ), 0.0, 1.0 )*sha1;
-        float spe1 = pow( clamp(dot(nor,hal),0.0,1.0), 32.0 )*dif1*(0.04+0.96*pow(clamp(1.0-dot(hal,light1),0.0,1.0),5.0));
-        // bounce
-        float dif2 = clamp( 0.5 + 0.5*dot( light2, nor ), 0.0, 1.0 )*occ;
-        // sky
-        float dif3 = (0.7+0.3*nor.y)*(0.2+0.8*occ);
-        
-		vec3 lin = vec3(0.0); 
-		     lin += 7.0*vec3(1.10,1.10,1.10)*dif1;
-		     lin += 4.0*vec3(0.25,0.25,0.25)*dif2;
-        	 lin += 1.5*vec3(0.20,0.20,0.20)*dif3;
-             lin += 2.5*vec3(0.30,0.30,0.30)*(0.05+0.95*occ); // ambient
-        	 lin += 4.0*fac*occ;                          // fake SSS
-		col *= lin;
-        col += spe1*15.0;
-    }
+    // fractal
+	vec3 color = vec3(0.01);
+	color = mix( color, vec3(0.5,0.5,0.5), clamp(surfaceColor.y,0.0,1.0) );
+	color = mix( color, vec3(0.25,0.25,0.25), clamp(surfaceColor.z*surfaceColor.z,0.0,1.0) );
+	color = mix( color, vec3(0.10,0.10,0.10), clamp(pow(surfaceColor.w,6.0),0.0,1.0) );
+	color *= 0.5;
+	
+	// lighting terms
+	vec3 position = rayOrigin + distanceField*rayDirection;
+	vec3 normal = calcNormal( position, distanceField, pixelDepth );
+	vec3 specularDirection = normalize(lightPosition1-rayDirection);
+	float ambientOcclusion = clamp(0.05*log(surfaceColor.x),0.0,1.0);
+	float fac = clamp(1.0+dot(rayDirection,normal),0.0,1.0);
+
+	// sun
+	float shadow = softshadow(position+0.001*normal, lightPosition1, 32.0);
+	float diffuse1 = clamp( dot( lightPosition1, normal ), 0.0, 1.0 )*shadow;
+	float specular = pow( clamp(dot(normal,specularDirection),0.0,1.0), 32.0 )*diffuse1*(0.04+0.96*pow(clamp(1.0-dot(specularDirection,lightPosition1),0.0,1.0),5.0));
+	// bounce
+	float diffuse2 = clamp( 0.5 + 0.5*dot( lightPosition2, normal ), 0.0, 1.0 )*ambientOcclusion;
+	// sky
+	float diffuse3 = (0.7+0.3*normal.y)*(0.2+0.8*ambientOcclusion);
+	
+	vec3 lighting = vec3(0.0); 
+			lighting += 7.0*vec3(1.10,1.10,1.10)*diffuse1;
+			lighting += 4.0*vec3(0.25,0.25,0.25)*diffuse2;
+			lighting += 1.5*vec3(0.20,0.20,0.20)*diffuse3;
+			lighting += 2.5*vec3(0.30,0.30,0.30)*(0.05+0.95*ambientOcclusion); // ambient
+			lighting += 4.0*fac*ambientOcclusion;                          // fake SSS
+	color *= lighting;
+	color += specular*15.0;
 
     // gamma
-	col = sqrt( col );
+	return sqrt( color );
+}
 
-    return col;
+mat4 createCameraMatrix(vec3 cameraPosition, float cameraRollAngle) {
+	vec3 cp = vec3(sin(cameraRollAngle), cos(cameraRollAngle),0.0);
+    vec3 cw = normalize(TARGET-cameraPosition);
+	vec3 cu = normalize(cross(cw,cp));
+	vec3 cv = cross(cu,cw);
+    return mat4(cu, cameraPosition.x, cv, cameraPosition.y, cw, cameraPosition.z, 0.0, 0.0, 0.0, 1.0);
 }
 
 void main() {
-
 	float time = uTime*0.0001;
 	
     // camera
-	float di =2.0+0.1;
-	vec3  ro = di * vec3(cos(.33*time), 0.8*sin(.37*time), sin(.31*time));
-	vec3  ta = vec3(0.0,0.1,0.0);
-	float cr = 0.5*cos(0.1*time);
-
-    // camera matrix
-	vec3 cp = vec3(sin(cr), cos(cr),0.0);
-    vec3 cw = normalize(ta-ro);
-	vec3 cu = normalize(cross(cw,cp));
-	vec3 cv =          (cross(cu,cw));
-    mat4 cam = mat4(cu, ro.x, cv, ro.y, cw, ro.z, 0.0, 0.0, 0.0, 1.0);
+	vec3 cameraPosition = CAMERA_DISTANCE * vec3(1.0, 0.0, 0.0);
+	float cameraRollAngle = 0.5*cos(time*.1); // Camera rotation perpendicular to view angle
+    mat4 cameraMatrix = createCameraMatrix(cameraPosition, cameraRollAngle);
 
     // render
-    #if AA<2
-	vec3 col = render(gl_FragCoord.xy, cam);
+    #if ANTI_ALIAS_PASSES<2
+	vec3 color = render(gl_FragCoord.xy, cameraMatrix);
     #else
-    vec3 col = vec3(0.0);
-    for(int j=ZERO; j<AA; j++)
-    for(int i=ZERO; i<AA; i++)
+    vec3 color = vec3(0.0);
+    for(int j=0; j<ANTI_ALIAS_PASSES; j++)
+    for(int i=0; i<ANTI_ALIAS_PASSES; i++)
     {
-	    col += render(gl_FragCoord.xy + (vec2(i,j)/float(AA)), cam);
+	    color += render(gl_FragCoord.xy + (vec2(i,j)/float(ANTI_ALIAS_PASSES)), cameraMatrix);
     }
-	col /= float(AA*AA);
+	color /= float(ANTI_ALIAS_PASSES*ANTI_ALIAS_PASSES);
     #endif
 
-	gl_FragColor = vec4(col, 1.0);
+	gl_FragColor = vec4(color, 1.0);
 }

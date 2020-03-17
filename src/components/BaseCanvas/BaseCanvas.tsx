@@ -47,7 +47,9 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, text
 		y: uniforms.current[0].value.y * window.devicePixelRatio
 	});
 	const mouseDownRef: React.MutableRefObject<boolean> = React.useRef<boolean>(false);
-	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: size.current.x * 0.5, y: size.current.y * -0.5});
+	const initialMouse = uniforms.current.find(uniform => uniform.name === 'uMouse');
+	const initialMousePosition = initialMouse ? initialMouse.defaultValue : {x: 0.5, y: 0.5};
+	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: size.current.x * initialMousePosition.x, y: size.current.y * -initialMousePosition.y});
 	const gl = React.useRef<WebGLRenderingContext>();
 	const uniformLocations = React.useRef<Record<string, WebGLUniformLocation>>();
 
