@@ -106,10 +106,11 @@ const calculateVelocity = (interaction: Interaction): Vector3 => {
 	return enabled ? interpolateVectors(velocity, targetVelocity, accelerateTimer) : interpolateVectors(velocity, targetVelocity, decelerateTimer);
 };
 
-export const normalizeScreenCoordinates = (mousePos: Vector2, size: Vector2): {x: number; y: number} => {
+// Map mouse position from pixel coordinate to a range of -1 to 1
+export const mapMouseToScreenSpace = (mousePos: Vector2, size: Vector2): {x: number; y: number} => {
 	return {
 		x: 1 - 2 * (mousePos.x / size.x),
-		y: 2 * (mousePos.y / size.x)
+		y: (mousePos.y / size.y) * 2 + 1
 	};
 };
 

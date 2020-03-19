@@ -9,7 +9,7 @@ import {addVectors, degreesToRadians} from '../../../lib/gl/math';
 import {useOBJLoaderWebWorker} from '../../hooks/webWorker';
 import {formatAttributes} from '../../utils/general';
 import styles from './InteractionCanvas.module.scss';
-import {normalizeScreenCoordinates, unprojectCoordinate} from '../../../lib/gl/interaction';
+import {normalizeScreenCoordinates, unprojectCoordinate, mapMouseToScreenSpace} from '../../../lib/gl/interaction';
 
 interface Props {
 	fragmentShader: string;
@@ -92,10 +92,10 @@ const drawOutlines = ({gl, outlineProgram, uniforms, outlineUniformLocations, pr
 	gl.disableVertexAttribArray(vertexPosition);
 };
 
-const draw = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, rotation, outlineProgram, program}: RenderProps): void => {
+const draw = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, program}: RenderProps): void => {
 	const projectionMatrix: Matrix = assignProjectionMatrix(gl, uniformLocations, size);
-	const {x, y} = normalizeScreenCoordinates(mousePos, size);
-	const targetCoord: Vector3 = unprojectCoordinate({x, y}, projectionMatrix);
+	const screenSpaceTarget = mapMouseToScreenSpace(mousePos, size);
+	const targetCoord: Vector3 = unprojectCoordinate(screenSpaceTarget, projectionMatrix);
 	let modelViewMatrix: Matrix = lookAt(createMat4(), {
 		target: targetCoord,
 		origin: {x: 0, y: 0, z: 0},
@@ -125,7 +125,7 @@ const draw = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, ro
 	gl.drawElements(gl.TRIANGLES, vertexCount, indexType, indexOffset);
 };
 
-const InteractionCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef, OBJData, rotationDelta}: Props) => {
+const InteractionCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, OBJData, rotationDelta}: Props) => {
 	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
 	const size: React.MutableRefObject<Vector2> = React.useRef<Vector2>({
 		x: window.innerWidth * window.devicePixelRatio,
