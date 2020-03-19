@@ -13,8 +13,18 @@
 .childrenWrapper {
 	display: flex;
 
+	.root.fullScreen & {
+		flex-wrap: wrap;
+	}
+
 	@media (max-width: 900px) {
-		flex-direction: column;
+		flex-wrap: wrap;
+
+		.root:not(.fullScreen) & {
+			canvas {
+				flex-basis: 100%;
+			}
+		}
 	}
 }
 

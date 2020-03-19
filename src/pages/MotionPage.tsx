@@ -147,7 +147,7 @@ const BASE_FEEDBACK_UNIFORMS: UniformSetting[] = [
 		value: 0
 	},
 	{
-		defaultValue: {x: BASE_UNIFORMS[0].defaultValue / 2, y: BASE_UNIFORMS[0].defaultValue / -2},
+		defaultValue: {x: 0.5, y: 0.5},
 		name: 'uMouse',
 		readonly: true,
 		type: UNIFORM_TYPE.VEC_2,

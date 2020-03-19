@@ -9,6 +9,7 @@ interface Props {
 	attributes: any[];
 	uniforms: React.MutableRefObject<UniformSetting[]>;
 	pageMousePosRef?: React.MutableRefObject<Vector2>;
+	fullScreen?: boolean;
 }
 
 interface UniformInputProps {
@@ -62,16 +63,16 @@ const BoolInput = ({uniform, updateUniforms}: TypeInputProps) => (
 );
 
 const RadioInput = ({uniform, updateUniforms}: TypeInputProps) => {
-	const [selectedOption, setSelectedOption] = React.useState<number>(0);
+	const [selectedOption, setSelectedOption] = React.useState<number>(uniform.defaultValue);
 	return (
 		<form>
 			{uniform.radioChoices.map((choice, i) => (
-				<label style={{display: 'block'}}>
+				<label style={{display: 'block'}} key={i}>
 					<input
 						type='radio'
 						key={i}
 						value={i}
-						defaultChecked={uniform.defaultValue === i}
+						// defaultChecked={uniform.defaultValue === i}
 						checked={selectedOption === i}
 						onChange={() => {
 							setSelectedOption(i);
@@ -186,7 +187,7 @@ const UniformInput = ({uniform, updateUniforms, pageMousePosRef}: UniformInputPr
 	}
 };
 
-const Inputs = ({uniforms, attributes, pageMousePosRef}: Props) => {
+const Inputs = ({uniforms, attributes, pageMousePosRef, fullScreen}: Props) => {
 	const [uniformsVisible, setUniformsVisible] = React.useState<boolean>(true);
 	const [attributesVisible, setAttributesVisible] = React.useState<boolean>(false);
 
@@ -208,7 +209,7 @@ const Inputs = ({uniforms, attributes, pageMousePosRef}: Props) => {
 	};
 
 	return (
-		<div className={styles.root}>
+		<div className={cx(styles.root, fullScreen && styles.fullScreen)}>
 			<div className={styles.tabs}>
 				<button
 					className={cx(styles.tab, uniformsVisible && styles.active)}

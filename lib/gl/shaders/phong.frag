@@ -20,7 +20,6 @@ uniform mediump int uOutlinePass;
 uniform float uTime;
 
 #pragma glslify: wireframe = require('./common/wireframe.glsl');
-#pragma glslify: shadow = require('./common/shadow-map.glsl');
 #pragma glslify: toonShading = require('./common/toon.glsl');
 #pragma glslify: psychedelic = require('./common/psychedelic.glsl');
 
@@ -40,8 +39,8 @@ vec3 phongLighting() {
 }
 
 const vec3 eye = vec3(0, 0, 6); // TODO pass in camera position as uniform
-const vec3 lightPosition = vec3(1, 1, 1);
-const vec3 baseColor = vec3(.3);
+const vec3 lightPosition = vec3(1, 1, 1); // TODO: use position from uniform
+const vec3 baseColor = vec3(.3); // TODO: move to uniform
 
 void main() {  
 	vec2 st = gl_FragCoord.xy/uResolution;

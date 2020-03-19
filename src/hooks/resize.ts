@@ -27,7 +27,7 @@ const updateRendererSize = (
 	FBOA?: React.MutableRefObject<FBO>,
 	FBOB?: React.MutableRefObject<FBO>
 ) => {
-	if (!canvas.current) return;
+	if (!canvas.current || !gl.current) return;
 	const {width, height} = canvas.current.getBoundingClientRect();
 	size.current = {
 		x: width * window.devicePixelRatio,

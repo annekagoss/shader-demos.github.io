@@ -65,6 +65,8 @@ const BaseCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, text
 
 	React.useEffect(() => {
 		setAttributes([{name: 'aVertexPosition', value: BASE_TRIANGLE_MESH.join(', ')}]);
+		uniforms.current[0].value = size.current;
+		gl.current.viewport(0, 0, size.current.x, size.current.y);
 	}, []);
 
 	useWindowSize(canvasRef, gl, uniforms.current, size);

@@ -1,58 +1,17 @@
 import * as React from 'react';
 import cx from 'classnames';
-import {SceneProps} from '../../types';
 import {glSupported} from '../utils/general';
 import FormPage from '../pages/FormPage';
 import MotionPage from '../pages/MotionPage';
 import DepthPage from '../pages/DepthPage';
+import IntegrationPage from '../pages/IntegrationPage';
 import styles from './app.module.scss';
 
-// FOX SKULL
-import OBJSource from '../../lib/gl/assets/fox/fox3.obj';
-import MTLSource from '../../lib/gl/assets/fox/fox.mtl';
-import diffuseSource0 from '../../lib/gl/assets/fox/fox_skull_0.jpg';
-import diffuseSource1 from '../../lib/gl/assets/fox/fox_skull_1.jpg';
-
-const GL_PROPS: SceneProps = {
-	colors: {
-		ambientLight: 'rgba(100, 100, 100, 1)',
-		backgroundA: 'rgba(255, 0, 0, 1)',
-		backgroundB: 'rgba(0, 0, 255, 1)',
-		leftLight: 'rgba(150, 150, 150, 1)',
-		rightLight: 'rgba(150, 150, 150, 1)'
-	},
-	OBJSource,
-	MTLSource,
-	diffuseSources: {
-		'material_0.001': diffuseSource0,
-		'material_1.001': diffuseSource1
-	},
-	positionOffset: {
-		x: 0,
-		y: 0.3,
-		z: 0
-	},
-	rotationOffset: {
-		x: 0.3,
-		y: 1.9,
-		z: 0
-	},
-	brightness: 0.8,
-	shininess: 0,
-	shadowStrength: 0.33,
-	scale: 0.0485
-};
-
 const App = () => {
-	const [activePageIndex, setActivePageIndex] = React.useState<number>(2);
-	if (!glSupported) return <div>'WebGL is not supported on this device.'</div>;
+	const [activePageIndex, setActivePageIndex] = React.useState<number>(3);
+	if (!glSupported()) return <div>'WebGL is not supported on this device.'</div>;
 	return (
 		<div className={styles.app}>
-			{/* <div className={styles.GLScene}>
-				<div className={styles.section}>
-					<GLScene {...GL_PROPS} />
-				</div>
-			</div> */}
 			<div className={styles.navigation}>
 				<div
 					className={cx(styles.navItem, activePageIndex === 0 && styles.active)}
@@ -87,6 +46,7 @@ const App = () => {
 				<FormPage isActive={activePageIndex === 0} />
 				<MotionPage isActive={activePageIndex === 1} />
 				<DepthPage isActive={activePageIndex === 2} />
+				<IntegrationPage isActive={activePageIndex === 3} />
 			</div>
 		</div>
 	);

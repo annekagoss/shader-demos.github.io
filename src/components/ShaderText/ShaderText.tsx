@@ -8,9 +8,10 @@ import styles from './ShaderText.module.scss';
 interface Props {
 	fragmentShader: string;
 	vertexShader: string;
+	fullScreen?: boolean;
 }
 
-const ShaderText = ({ fragmentShader, vertexShader }: Props) => {
+const ShaderText = ({fragmentShader, vertexShader, fullScreen}: Props) => {
 	const [fragVisible, setFragVisible] = React.useState<boolean>(true);
 	const [vertVisible, setVertVisible] = React.useState<boolean>(false);
 
@@ -19,7 +20,7 @@ const ShaderText = ({ fragmentShader, vertexShader }: Props) => {
 	}, []);
 
 	return (
-		<div className={styles.root}>
+		<div className={cx(styles.root, fullScreen && styles.fullScreen)}>
 			<div className={styles.tabs}>
 				<button
 					className={cx(styles.tab, fragVisible && styles.active)}
@@ -28,8 +29,7 @@ const ShaderText = ({ fragmentShader, vertexShader }: Props) => {
 							setFragVisible(true);
 							setVertVisible(false);
 						}
-					}}
-				>
+					}}>
 					Fragment Shader
 				</button>
 				<button
@@ -39,28 +39,17 @@ const ShaderText = ({ fragmentShader, vertexShader }: Props) => {
 							setVertVisible(true);
 							setFragVisible(false);
 						}
-					}}
-				>
+					}}>
 					Vertex Shader
 				</button>
 			</div>
 			<div className={styles.textContainer}>
-				<div
-					className={cx(
-						styles.textBlock,
-						fragVisible && styles.active
-					)}
-				>
+				<div className={cx(styles.textBlock, fragVisible && styles.active)}>
 					<pre>
 						<code className='language-glsl'>{fragmentShader}</code>
 					</pre>
 				</div>
-				<div
-					className={cx(
-						styles.textBlock,
-						vertVisible && styles.active
-					)}
-				>
+				<div className={cx(styles.textBlock, vertVisible && styles.active)}>
 					<pre>
 						<code className='language-glsl'>{vertexShader}</code>
 					</pre>

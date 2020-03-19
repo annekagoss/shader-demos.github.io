@@ -1,18 +1,18 @@
 import * as React from 'react';
-import Section from '../components/Section/Section';
-import BaseCanvas from '../components/BaseCanvas';
-import DepthCanvas from '../components/DepthCanvas';
-import LoaderCanvas from '../components/LoaderCanvas';
-import ShaderText from '../components/ShaderText/ShaderText';
-import Inputs from '../components/Inputs/Inputs';
+import {UNIFORM_TYPE, Vector2, UniformSetting, Vector3} from '../../types';
+import {BASE_UNIFORMS} from '../utils/general';
 import meshFragmentShader from '../../lib/gl/shaders/mesh.frag';
 import meshVertexShader from '../../lib/gl/shaders/mesh.vert';
 import phongFragmentShader from '../../lib/gl/shaders/phong.frag';
 import phongVertexShader from '../../lib/gl/shaders/phong.vert';
 import mandelbulbFragmentShader from '../../lib/gl/shaders/mandelbulb.frag';
 import baseVertexShader from '../../lib/gl/shaders/base.vert';
-import {BASE_UNIFORMS} from '../utils/general';
-import {UNIFORM_TYPE, Vector2, UniformSetting, Vector3} from '../../types';
+import Section from '../components/Section/Section';
+import BaseCanvas from '../components/BaseCanvas';
+import DepthCanvas from '../components/DepthCanvas';
+import LoaderCanvas from '../components/LoaderCanvas';
+import ShaderText from '../components/ShaderText/ShaderText';
+import Inputs from '../components/Inputs/Inputs';
 
 //FOX SKULL
 import foxOBJ from '../../lib/gl/assets/fox/fox3.obj';
