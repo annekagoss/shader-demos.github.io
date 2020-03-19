@@ -1,10 +1,10 @@
 import {subtractVectors, normalizeVector, crossVectors} from './math';
-import {Axis, LookAtOptions, PerspectiveOptions, Transformation, Vector3} from '../../types';
+import {Axis, LookAtOptions, PerspectiveOptions, Transformation, Vector3, Matrix} from '../../types';
 
 const EPSILON: number = 0.000001;
 
-export const createMat4 = (): Float32Array => {
-	const matrix: Float32Array = new Float32Array(16);
+export const createMat4 = (): Matrix => {
+	const matrix: Matrix = new Float32Array(16);
 	matrix[0] = 1;
 	matrix[1] = 0;
 	matrix[2] = 0;
@@ -24,8 +24,8 @@ export const createMat4 = (): Float32Array => {
 	return matrix;
 };
 
-export const applyPerspective = ({sourceMatrix, fieldOfView, aspect, near, far}: PerspectiveOptions): Float32Array => {
-	const matrix: Float32Array = sourceMatrix.slice();
+export const applyPerspective = ({sourceMatrix, fieldOfView, aspect, near, far}: PerspectiveOptions): Matrix => {
+	const matrix: Matrix = sourceMatrix.slice();
 	const f: number = 1.0 / Math.tan(fieldOfView / 2);
 	matrix[0] = f / aspect;
 	matrix[1] = 0;
@@ -52,7 +52,7 @@ export const applyPerspective = ({sourceMatrix, fieldOfView, aspect, near, far}:
 	return matrix;
 };
 
-export const applyTransformation = (sourceMatrix: Float32Array, {translation, rotation, scale}: Transformation): Float32Array => {
+export const applyTransformation = (sourceMatrix: Matrix, {translation, rotation, scale}: Transformation): Matrix => {
 	let matrix = sourceMatrix.slice();
 	matrix = applyTranslation(matrix, translation);
 	matrix = applyRotation(matrix, rotation);
@@ -60,8 +60,8 @@ export const applyTransformation = (sourceMatrix: Float32Array, {translation, ro
 	return matrix;
 };
 
-export const invertMatrix = (sourceMatrix: Float32Array): Float32Array => {
-	const matrix: Float32Array = sourceMatrix.slice();
+export const invertMatrix = (sourceMatrix: Matrix): Matrix => {
+	const matrix: Matrix = sourceMatrix.slice();
 
 	const a00: number = sourceMatrix[0];
 	const a01: number = sourceMatrix[1];
@@ -120,8 +120,8 @@ export const invertMatrix = (sourceMatrix: Float32Array): Float32Array => {
 	return matrix;
 };
 
-export const transposeMatrix = (sourceMatrix: Float32Array): Float32Array => {
-	const matrix: Float32Array = sourceMatrix.slice();
+export const transposeMatrix = (sourceMatrix: Matrix): Matrix => {
+	const matrix: Matrix = sourceMatrix.slice();
 
 	matrix[1] = sourceMatrix[4];
 	matrix[2] = sourceMatrix[8];
@@ -139,9 +139,9 @@ export const transposeMatrix = (sourceMatrix: Float32Array): Float32Array => {
 	return matrix;
 };
 
-const applyTranslation = (sourceMatrix: Float32Array, translation: Vector3): Float32Array => {
+export const applyTranslation = (sourceMatrix: Matrix, translation: Vector3): Matrix => {
 	const {x, y, z} = translation;
-	const matrix: Float32Array = sourceMatrix.slice();
+	const matrix: Matrix = sourceMatrix.slice();
 	matrix[12] = sourceMatrix[0] * x + sourceMatrix[4] * y + sourceMatrix[8] * z + sourceMatrix[12];
 	matrix[13] = sourceMatrix[1] * x + sourceMatrix[5] * y + sourceMatrix[9] * z + sourceMatrix[13];
 	matrix[14] = sourceMatrix[2] * x + sourceMatrix[6] * y + sourceMatrix[10] * z + sourceMatrix[14];
@@ -149,17 +149,17 @@ const applyTranslation = (sourceMatrix: Float32Array, translation: Vector3): Flo
 	return matrix;
 };
 
-export const applyRotation = (sourceMatrix: Float32Array, rotation: Vector3): Float32Array => {
+export const applyRotation = (sourceMatrix: Matrix, rotation: Vector3): Matrix => {
 	const {x, y, z} = rotation;
-	let matrix: Float32Array = sourceMatrix.slice();
+	let matrix: Matrix = sourceMatrix.slice();
 	matrix = rotateAlongAxis(matrix, x, 'x');
 	matrix = rotateAlongAxis(matrix, y, 'y');
 	matrix = rotateAlongAxis(matrix, z, 'z');
 	return matrix;
 };
 
-const applyScale = (sourceMatrix: Float32Array, scale: number): Float32Array => {
-	const matrix: Float32Array = sourceMatrix.slice();
+const applyScale = (sourceMatrix: Matrix, scale: number): Matrix => {
+	const matrix: Matrix = sourceMatrix.slice();
 	matrix[0] *= scale;
 	matrix[1] *= scale;
 	matrix[2] *= scale;
@@ -175,7 +175,7 @@ const applyScale = (sourceMatrix: Float32Array, scale: number): Float32Array => 
 	return matrix;
 };
 
-const rotateAlongAxis = (sourceMatrix: Float32Array, angle: number, axis: Axis) => {
+const rotateAlongAxis = (sourceMatrix: Matrix, angle: number, axis: Axis) => {
 	let x: number;
 	let y: number;
 	let z: number;
@@ -194,7 +194,7 @@ const rotateAlongAxis = (sourceMatrix: Float32Array, angle: number, axis: Axis) 
 			return sourceMatrix;
 	}
 
-	const matrix: Float32Array = sourceMatrix.slice();
+	const matrix: Matrix = sourceMatrix.slice();
 	const length: number = 1 / Math.sqrt(x * x + y * y + z * z);
 	x *= length;
 	y *= length;
@@ -247,8 +247,8 @@ const rotateAlongAxis = (sourceMatrix: Float32Array, angle: number, axis: Axis) 
 	return matrix;
 };
 
-export const lookAt = (sourceMatrix: Float32Array, {target, origin, up}: LookAtOptions): Float32Array => {
-	const matrix: Float32Array = sourceMatrix.slice();
+export const lookAt = (sourceMatrix: Matrix, {target, origin, up}: LookAtOptions): Matrix => {
+	const matrix: Matrix = sourceMatrix.slice();
 
 	const distance: Vector3 = subtractVectors(origin, target);
 	if (Math.abs(distance.x) < EPSILON && Math.abs(distance.y) < EPSILON && Math.abs(distance.z) < EPSILON) {
@@ -282,8 +282,8 @@ export const lookAt = (sourceMatrix: Float32Array, {target, origin, up}: LookAtO
 	return concat(sourceMatrix, matrix);
 };
 
-export const concat = (a: Float32Array, b: Float32Array): Float32Array => {
-	const matrix: Float32Array = createMat4();
+export const concat = (a: Matrix, b: Matrix): Matrix => {
+	const matrix: Matrix = createMat4();
 	const a00: number = a[0];
 	const a01: number = a[1];
 	const a02: number = a[2];
@@ -339,4 +339,14 @@ export const concat = (a: Float32Array, b: Float32Array): Float32Array => {
 	matrix[14] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
 	matrix[15] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
 	return matrix;
+};
+
+export const applyMatrixToVector3 = ({x, y, z}: Vector3, sourceMatrix: Matrix): Vector3 => {
+	const matrix: Matrix = sourceMatrix.slice();
+	const w = 1 / (matrix[3] * x + matrix[7] * y + matrix[11] * z + matrix[15]);
+	return {
+		x: (matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12]) * w,
+		y: (matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13]) * w,
+		z: (matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14]) * w
+	};
 };

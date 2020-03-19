@@ -1,3 +1,5 @@
+import {Vector3} from '../../types';
+
 // Time without user input before animations pause
 export const MAX_IDLE_TIME: number = 1000;
 
@@ -10,3 +12,4 @@ export const FAR_CLIPPING: number = 100;
 
 // Mesh made of two triangles that acts as a projection screen for fragment shaders
 export const BASE_TRIANGLE_MESH: number[] = [-1, 1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0];
+export const DEFAULT_ROTATION_SPEED: Vector3 = {x: 0, y: 0.01, z: 0};

@@ -1,8 +1,9 @@
-import {Interaction, Transformation, Vector3} from '../../types';
+import {Interaction, Transformation, Vector3, Vector2, Matrix} from '../../types';
 
 import {DEFAULT_ROTATION_SPEED} from './settings';
 
 import {interpolateVectors, clamp, addVectors, degreesToRadians} from './math';
+import {invertMatrix, applyMatrixToVector3} from './matrix';
 
 interface InteractionSettings {
 	betaMouseWeight: number;
@@ -105,11 +106,18 @@ const calculateVelocity = (interaction: Interaction): Vector3 => {
 	return enabled ? interpolateVectors(velocity, targetVelocity, accelerateTimer) : interpolateVectors(velocity, targetVelocity, decelerateTimer);
 };
 
-// Maps a position within a DOM element from -1 to 1
-const normalizeScreenCoordinates = ({x, y, containerWidth, containerHeight}: {x: number; y: number; containerWidth: number; containerHeight: number}): {x: number; y: number} => {
+export const normalizeScreenCoordinates = (mousePos: Vector2, size: Vector2): {x: number; y: number} => {
 	return {
-		x: 2 * (x / containerWidth) - 1,
-		y: 1 - 2 * (y / containerHeight)
+		x: 1 - 2 * (mousePos.x / size.x),
+		y: 2 * (mousePos.y / size.x)
+	};
+};
+
+export const unprojectCoordinate = (screenSpaceCoordinate: Vector2, projectionMatrix: Matrix): Vector3 => {
+	const inverseProjectionMatrix: Matrix = invertMatrix(projectionMatrix);
+	return {
+		...applyMatrixToVector3({x: screenSpaceCoordinate.x, y: screenSpaceCoordinate.y, z: -1}, inverseProjectionMatrix),
+		z: 0.5 // 0.5 places the mouse just in front of the object
 	};
 };
 

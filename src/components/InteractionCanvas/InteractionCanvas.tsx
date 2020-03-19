@@ -4,11 +4,12 @@ import {initializeGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
 import {useWindowSize} from '../../hooks/resize';
 import {assignProjectionMatrix, assignUniforms} from '../../../lib/gl/initialize';
-import {createMat4, applyTransformation, invertMatrix, transposeMatrix} from '../../../lib/gl/matrix';
-import {addVectors} from '../../../lib/gl/math';
+import {createMat4, applyTransformation, invertMatrix, transposeMatrix, lookAt, applyTranslation} from '../../../lib/gl/matrix';
+import {addVectors, degreesToRadians} from '../../../lib/gl/math';
 import {useOBJLoaderWebWorker} from '../../hooks/webWorker';
 import {formatAttributes} from '../../utils/general';
 import styles from './InteractionCanvas.module.scss';
+import {normalizeScreenCoordinates, unprojectCoordinate} from '../../../lib/gl/interaction';
 
 interface Props {
 	fragmentShader: string;
@@ -92,16 +93,21 @@ const drawOutlines = ({gl, outlineProgram, uniforms, outlineUniformLocations, pr
 };
 
 const draw = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, rotation, outlineProgram, program}: RenderProps): void => {
-	assignProjectionMatrix(gl, uniformLocations, size);
-	const modelViewMatrix: Matrix = applyTransformation(createMat4(), {
+	const projectionMatrix: Matrix = assignProjectionMatrix(gl, uniformLocations, size);
+	const {x, y} = normalizeScreenCoordinates(mousePos, size);
+	const targetCoord: Vector3 = unprojectCoordinate({x, y}, projectionMatrix);
+	let modelViewMatrix: Matrix = lookAt(createMat4(), {
+		target: targetCoord,
+		origin: {x: 0, y: 0, z: 0},
+		up: {x: 0, y: 1, z: 0}
+	});
+
+	modelViewMatrix = applyTransformation(modelViewMatrix, {
 		translation: uniforms.find(uniform => uniform.name === 'uTranslation').value,
-		rotation: {
-			x: Math.sin(time * 0.0005) * 0.25,
-			y: rotation.y,
-			z: rotation.z
-		},
+		rotation: {x: degreesToRadians(14.9), y: degreesToRadians(180 + 50.7), z: degreesToRadians(28.8)},
 		scale: uniforms.find(uniform => uniform.name === 'uScale').value
 	});
+
 	gl.uniformMatrix4fv(uniformLocations.uModelViewMatrix, false, modelViewMatrix);
 	let normalMatrix: Float32Array = invertMatrix(modelViewMatrix);
 	normalMatrix = transposeMatrix(normalMatrix);
@@ -210,15 +216,12 @@ const InteractionCanvas = ({fragmentShader, vertexShader, uniforms, setAttribute
 				mouseDownRef.current = false;
 			}}
 			onMouseMove={e => {
-				if (!mouseDownRef.current) return;
+				// if (!mouseDownRef.current) return;
 				const {left, top} = canvasRef.current.getBoundingClientRect();
 				mousePosRef.current = {
 					x: e.clientX - left,
 					y: (e.clientY - top) * -1
 				};
-				if (pageMousePosRef) {
-					pageMousePosRef.current = mousePosRef.current;
-				}
 			}}
 		/>
 	);

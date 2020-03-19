@@ -28,11 +28,11 @@ const BASE_INTERACTION_UNIFORMS: UniformSetting[] = [
 		value: 0
 	},
 	{
-		defaultValue: {x: 0, y: 0.3, z: 0},
+		defaultValue: {x: 0, y: 0, z: 0},
 		name: 'uTranslation',
 		readonly: false,
 		type: UNIFORM_TYPE.VEC_3,
-		value: {x: 0, y: 0.3, z: 0}
+		value: {x: 0, y: 0, z: 0}
 	},
 	{
 		defaultValue: 0.0485,

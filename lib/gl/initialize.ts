@@ -159,7 +159,7 @@ export const loadShader = (gl: WebGLRenderingContext, type: number, source: stri
 	return shader;
 };
 
-export const assignProjectionMatrix = (gl: WebGLRenderingContext, uniformLocations: Record<string, WebGLUniformLocation>, size: Vector2) => {
+export const assignProjectionMatrix = (gl: WebGLRenderingContext, uniformLocations: Record<string, WebGLUniformLocation>, size: Vector2): Matrix => {
 	if (!size) return;
 	let projectionMatrix: Matrix = applyPerspective({
 		sourceMatrix: createMat4(),
@@ -175,6 +175,8 @@ export const assignProjectionMatrix = (gl: WebGLRenderingContext, uniformLocatio
 	});
 
 	gl.uniformMatrix4fv(uniformLocations.uProjectionMatrix, false, projectionMatrix);
+
+	return projectionMatrix;
 };
 
 // Initialize texture to be displayed while webworker loads OBJ
