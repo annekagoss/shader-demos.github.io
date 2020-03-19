@@ -9,10 +9,10 @@ import Inputs from '../components/Inputs/Inputs';
 import InteractionCanvas from '../components/InteractionCanvas/InteractionCanvas';
 
 // FOX SKULL
-import foxOBJ from '../../lib/gl/assets/fox/fox3.obj';
-import foxMTL from '../../lib/gl/assets/fox/fox.mtl';
-import foxDiffuseSource0 from '../../lib/gl/assets/fox/fox_skull_0.jpg';
-import foxDiffuseSource1 from '../../lib/gl/assets/fox/fox_skull_1.jpg';
+import foxOBJ from '../assets/fox/fox3.obj';
+import foxMTL from '../assets/fox/fox.mtl';
+import foxDiffuseSource0 from '../assets/fox/fox_skull_0.jpg';
+import foxDiffuseSource1 from '../assets/fox/fox_skull_1.jpg';
 
 interface Props {
 	isActive: boolean;
@@ -33,6 +33,13 @@ const BASE_INTERACTION_UNIFORMS: UniformSetting[] = [
 		readonly: false,
 		type: UNIFORM_TYPE.VEC_3,
 		value: {x: 0, y: 0, z: 0}
+	},
+	{
+		defaultValue: {x: 14.9, y: 180 + 50.7, z: 28.8},
+		name: 'uRotation',
+		readonly: false,
+		type: UNIFORM_TYPE.VEC_3,
+		value: {x: 14.9, y: 180 + 50.7, z: 28.8}
 	},
 	{
 		defaultValue: 0.0485,

@@ -1,15 +1,16 @@
 import * as React from 'react';
-import {UniformSetting, Vector2, Matrix, Vector3, Mesh, Buffers, MESH_TYPE, Buffer, OBJData, FBO} from '../../../types';
+import {UniformSetting, Vector2, Matrix, Vector3, Mesh, Buffers, MESH_TYPE, Buffer, OBJData, FBO, GyroscopeData} from '../../../types';
 import {initializeGL} from '../../hooks/gl';
 import {useAnimationFrame} from '../../hooks/animation';
 import {useWindowSize} from '../../hooks/resize';
 import {assignProjectionMatrix, assignUniforms} from '../../../lib/gl/initialize';
 import {createMat4, applyTransformation, invertMatrix, transposeMatrix, lookAt, applyTranslation} from '../../../lib/gl/matrix';
-import {addVectors, degreesToRadians} from '../../../lib/gl/math';
+import {degreesToRadians} from '../../../lib/gl/math';
 import {useOBJLoaderWebWorker} from '../../hooks/webWorker';
 import {formatAttributes} from '../../utils/general';
 import styles from './InteractionCanvas.module.scss';
-import {normalizeScreenCoordinates, unprojectCoordinate, mapMouseToScreenSpace} from '../../../lib/gl/interaction';
+import {unprojectCoordinate, mapMouseToScreenSpace} from '../../../lib/gl/interaction';
+import {useGyroscope} from '../../hooks/gyroscope';
 
 interface Props {
 	fragmentShader: string;
@@ -18,7 +19,6 @@ interface Props {
 	setAttributes: (attributes: any[]) => void;
 	pageMousePosRef?: React.MutableRefObject<Vector2>;
 	OBJData: OBJData;
-	rotationDelta: Vector3;
 }
 
 interface RenderProps {
@@ -28,39 +28,31 @@ interface RenderProps {
 	time: number;
 	mousePos: Vector2;
 	size: Vector2;
-	rotation: Vector3;
 	buffers: Buffers;
 	outlineProgram: WebGLProgram;
 	program: WebGLProgram;
 	outlineUniformLocations: Record<string, WebGLUniformLocation>;
 	baseVertexBuffer: Buffer;
-	FBOA: React.MutableRefObject<FBO>;
-	FBOB: React.MutableRefObject<FBO>;
+	FBOA: FBO;
+	FBOB: FBO;
 	pingPong: number;
+	gyroscope: GyroscopeData;
 }
 
 const render = (props: RenderProps) => {
 	if (!props.gl) return;
-	const {gl, size, uniforms, uniformLocations, outlineUniformLocations, program, outlineProgram, FBOA, FBOB} = props;
-
-	// if (parseInt(uniforms.find(uniform => uniform.name === 'uMaterialType').value) !== 2) {
-	// 	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-	// 	gl.useProgram(program);
-	// 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-	// 	draw(props);
-	// 	return;
-	// }
+	const {gl, size, uniformLocations, outlineUniformLocations, program, outlineProgram, FBOA, FBOB} = props;
 
 	gl.activeTexture(gl.TEXTURE4);
-	gl.bindFramebuffer(gl.FRAMEBUFFER, FBOA.current.buffer);
-	gl.viewport(0, 0, FBOA.current.textureWidth, FBOA.current.textureHeight);
+	gl.bindFramebuffer(gl.FRAMEBUFFER, FBOA.buffer);
+	gl.viewport(0, 0, FBOA.textureWidth, FBOA.textureHeight);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	gl.useProgram(program);
 	gl.uniform1i(uniformLocations.uOutlinePass, 1);
 	draw(props);
 
 	gl.activeTexture(gl.TEXTURE5);
-	gl.bindFramebuffer(gl.FRAMEBUFFER, FBOB.current.buffer);
+	gl.bindFramebuffer(gl.FRAMEBUFFER, FBOB.buffer);
 	gl.uniform1i(uniformLocations.uOutlinePass, 0);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	draw(props);
@@ -70,11 +62,11 @@ const render = (props: RenderProps) => {
 	gl.useProgram(outlineProgram);
 
 	gl.activeTexture(gl.TEXTURE4);
-	gl.bindTexture(gl.TEXTURE_2D, FBOA.current.targetTexture);
+	gl.bindTexture(gl.TEXTURE_2D, FBOA.targetTexture);
 	gl.uniform1i(outlineUniformLocations.uOutline, 4);
 
 	gl.activeTexture(gl.TEXTURE5);
-	gl.bindTexture(gl.TEXTURE_2D, FBOB.current.targetTexture);
+	gl.bindTexture(gl.TEXTURE_2D, FBOB.targetTexture);
 	gl.uniform1i(outlineUniformLocations.uSource, 5);
 
 	gl.uniform2fv(outlineUniformLocations.uResolution, [size.x, size.y]);
@@ -82,7 +74,7 @@ const render = (props: RenderProps) => {
 	drawOutlines(props);
 };
 
-const drawOutlines = ({gl, outlineProgram, uniforms, outlineUniformLocations, program, baseVertexBuffer, buffers}: RenderProps) => {
+const drawOutlines = ({gl, outlineProgram, uniforms, outlineUniformLocations, baseVertexBuffer}: RenderProps) => {
 	const vertexPosition = gl.getAttribLocation(outlineProgram, 'aBaseVertexPosition');
 	gl.uniform2fv(outlineUniformLocations.uResolution, Object.values(uniforms[0].value));
 	gl.enableVertexAttribArray(vertexPosition);
@@ -92,7 +84,7 @@ const drawOutlines = ({gl, outlineProgram, uniforms, outlineUniformLocations, pr
 	gl.disableVertexAttribArray(vertexPosition);
 };
 
-const draw = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, program}: RenderProps): void => {
+const draw = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, program, gyroscope}: RenderProps): void => {
 	const projectionMatrix: Matrix = assignProjectionMatrix(gl, uniformLocations, size);
 	const screenSpaceTarget = mapMouseToScreenSpace(mousePos, size);
 	const targetCoord: Vector3 = unprojectCoordinate(screenSpaceTarget, projectionMatrix);
@@ -101,10 +93,10 @@ const draw = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, pr
 		origin: {x: 0, y: 0, z: 0},
 		up: {x: 0, y: 1, z: 0}
 	});
-
+	const rotation = uniforms.find(uniform => uniform.name === 'uRotation').value;
 	modelViewMatrix = applyTransformation(modelViewMatrix, {
 		translation: uniforms.find(uniform => uniform.name === 'uTranslation').value,
-		rotation: {x: degreesToRadians(14.9), y: degreesToRadians(180 + 50.7), z: degreesToRadians(28.8)},
+		rotation: {x: degreesToRadians(rotation.x), y: degreesToRadians(rotation.y), z: degreesToRadians(rotation.z)},
 		scale: uniforms.find(uniform => uniform.name === 'uScale').value
 	});
 
@@ -125,7 +117,7 @@ const draw = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, pr
 	gl.drawElements(gl.TRIANGLES, vertexCount, indexType, indexOffset);
 };
 
-const InteractionCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, OBJData, rotationDelta}: Props) => {
+const InteractionCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, OBJData}: Props) => {
 	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
 	const size: React.MutableRefObject<Vector2> = React.useRef<Vector2>({
 		x: window.innerWidth * window.devicePixelRatio,
@@ -134,8 +126,14 @@ const InteractionCanvas = ({fragmentShader, vertexShader, uniforms, setAttribute
 	uniforms.current[0].value = size.current;
 	const mouseDownRef: React.MutableRefObject<boolean> = React.useRef<boolean>(false);
 	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: size.current.x * 0.5, y: size.current.y * -0.5});
+	const gyroscopeRef: React.MutableRefObject<GyroscopeData> = React.useRef<GyroscopeData>({
+		beta: 0,
+		gamma: 0,
+		enabled: false
+	});
 	const gl = React.useRef<WebGLRenderingContext>();
 	const uniformLocations: React.MutableRefObject<Record<string, WebGLUniformLocation>> = React.useRef<Record<string, WebGLUniformLocation>>();
+	const meshRef: React.MutableRefObject<Mesh> = React.useRef<Mesh>();
 	const buffersRef: React.MutableRefObject<Buffers> = React.useRef<Buffers>({
 		vertexBuffer: null,
 		normalBuffer: null,
@@ -144,8 +142,6 @@ const InteractionCanvas = ({fragmentShader, vertexShader, uniforms, setAttribute
 		textureAddressBuffer: null,
 		barycentricBuffer: null
 	});
-	const rotationRef: React.MutableRefObject<Vector3> = React.useRef<Vector3>({x: 0, y: 0, z: 0});
-	const meshRef: React.MutableRefObject<Mesh> = React.useRef<Mesh>();
 	// Toon outline pass
 	const programRef: React.MutableRefObject<WebGLProgram> = React.useRef<WebGLProgram>();
 	const outlineProgramRef: React.MutableRefObject<WebGLProgram> = React.useRef<WebGLProgram>();
@@ -181,24 +177,24 @@ const InteractionCanvas = ({fragmentShader, vertexShader, uniforms, setAttribute
 	});
 
 	useWindowSize(canvasRef, gl, uniforms.current, size);
+	useGyroscope(gyroscopeRef);
 
 	useAnimationFrame(canvasRef, (time: number, pingPong: number) => {
-		rotationRef.current = addVectors(rotationRef.current, rotationDelta);
 		render({
 			gl: gl.current,
 			uniformLocations: uniformLocations.current,
 			uniforms: uniforms.current,
 			time,
 			mousePos: mousePosRef.current,
+			gyroscope: gyroscopeRef.current,
 			size: size.current,
-			rotation: rotationRef.current,
 			buffers: buffersRef.current,
 			outlineProgram: outlineProgramRef.current,
 			program: programRef.current,
 			outlineUniformLocations: outlineUniformLocations.current,
 			baseVertexBuffer: baseVertexBufferRef.current,
-			FBOA,
-			FBOB,
+			FBOA: FBOA.current,
+			FBOB: FBOB.current,
 			pingPong
 		});
 	});

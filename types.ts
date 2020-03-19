@@ -316,3 +316,9 @@ export enum MESH_TYPE {
 	FACE_ARRAY,
 	OBJ
 }
+
+export interface GyroscopeData {
+	beta: number;
+	gamma: number;
+	enabled: boolean;
+}

@@ -20,8 +20,8 @@ interface RenderProps {
 	uniforms: UniformSetting[];
 	time: number;
 	mousePos: Vector2;
-	FBOA: React.MutableRefObject<FBO>;
-	FBOB: React.MutableRefObject<FBO>;
+	FBOA: FBO;
+	FBOB: FBO;
 	pingPong: number;
 	size: Vector2;
 }
@@ -29,8 +29,8 @@ interface RenderProps {
 const render = ({gl, uniformLocations, uniforms, time, mousePos, FBOA, FBOB, pingPong}: RenderProps) => {
 	assignUniforms(uniforms, uniformLocations, gl, time, mousePos);
 
-	const buffer: WebGLFramebuffer = pingPong === 0 ? FBOA.current.buffer : FBOB.current.buffer;
-	const targetTexture: WebGLTexture = pingPong === 0 ? FBOA.current.targetTexture : FBOB.current.targetTexture;
+	const buffer: WebGLFramebuffer = pingPong === 0 ? FBOA.buffer : FBOB.buffer;
+	const targetTexture: WebGLTexture = pingPong === 0 ? FBOA.targetTexture : FBOB.targetTexture;
 
 	// Draw to frame buffer
 	gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
@@ -46,7 +46,7 @@ const render = ({gl, uniformLocations, uniforms, time, mousePos, FBOA, FBOB, pin
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 };
 
-const FeedbackCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef}: Props) => {
+const FeedbackCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes}: Props) => {
 	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
 	const size: React.MutableRefObject<Vector2> = React.useRef<Vector2>({
 		x: uniforms.current[0].value.x * window.devicePixelRatio,
@@ -87,8 +87,8 @@ const FeedbackCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, 
 			uniforms: uniforms.current,
 			time,
 			mousePos: mousePosRef.current,
-			FBOA,
-			FBOB,
+			FBOA: FBOA.current,
+			FBOB: FBOB.current,
 			pingPong,
 			size: size.current
 		});
@@ -112,9 +112,6 @@ const FeedbackCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, 
 					x: e.clientX - left,
 					y: (e.clientY - top) * -1
 				};
-				if (pageMousePosRef) {
-					pageMousePosRef.current = mousePosRef.current;
-				}
 			}}
 		/>
 	);

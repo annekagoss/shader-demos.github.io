@@ -1,6 +1,5 @@
 import {useEffect} from 'react';
 import {UniformSetting, FBO, Vector2} from '../../types';
-import {initFrameBufferObject} from '../../lib/gl/initialize';
 
 export const useWindowSize = (
 	canvas: React.MutableRefObject<HTMLCanvasElement>,

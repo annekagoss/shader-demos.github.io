@@ -15,10 +15,10 @@ import ShaderText from '../components/ShaderText/ShaderText';
 import Inputs from '../components/Inputs/Inputs';
 
 //FOX SKULL
-import foxOBJ from '../../lib/gl/assets/fox/fox3.obj';
-import foxMTL from '../../lib/gl/assets/fox/fox.mtl';
-import foxDiffuseSource0 from '../../lib/gl/assets/fox/fox_skull_0.jpg';
-import foxDiffuseSource1 from '../../lib/gl/assets/fox/fox_skull_1.jpg';
+import foxOBJ from '../assets/fox/fox3.obj';
+import foxMTL from '../assets/fox/fox.mtl';
+import foxDiffuseSource0 from '../assets/fox/fox_skull_0.jpg';
+import foxDiffuseSource1 from '../assets/fox/fox_skull_1.jpg';
 
 interface Props {
 	isActive: boolean;
