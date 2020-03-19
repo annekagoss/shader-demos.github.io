@@ -168,6 +168,13 @@ const BASE_FRACTAL_UNIFORMS = [
 		value: {x: 0.6, y: 0.7}
 	},
 	{
+		defaultValue: 3,
+		name: 'uIterations',
+		readonly: false,
+		type: UNIFORM_TYPE.INT_1,
+		value: 3
+	},
+	{
 		defaultValue: {x: 1.0, y: 0.0, z: 0.0},
 		name: 'uFractalColor1',
 		readonly: false,

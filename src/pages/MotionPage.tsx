@@ -101,6 +101,8 @@ const BASE_SIGNAL_UNIFORMS: UniformSetting[] = [
 	{
 		defaultValue: 0,
 		isBool: false,
+		isRadio: true,
+		radioChoices: ['Sine', 'Square', 'Sawtooth', 'Triangle'],
 		name: 'uSignalType',
 		readonly: false,
 		type: UNIFORM_TYPE.INT_1,

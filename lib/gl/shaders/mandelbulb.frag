@@ -12,6 +12,7 @@ precision mediump float;
 uniform vec2 uResolution;
 uniform vec2 uMouse;
 uniform float uTime;
+uniform mediump int uIterations;
 uniform vec3 uFractalColor1;
 uniform vec3 uFractalColor2;
 uniform vec3 uFractalColor3;
@@ -47,8 +48,9 @@ float map(vec3 rayPosition, out vec4 surfaceColor )
 	float time = uTime*0.001;
 	
 	// Fractal form
-	for( int i=0; i<4; i++)
+	for( int i = 0; i < 6; i ++)
     {
+		if (i > uIterations) break;
 		float r = length(_rayPosition);
         float b = -size*acos((_rayPosition.y/r)) + time + mouse.y;
         float a = size*atan( _rayPosition.x, _rayPosition.z ) - time + mouse.x;
