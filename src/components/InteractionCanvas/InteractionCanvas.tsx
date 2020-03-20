@@ -1,16 +1,17 @@
 import * as React from 'react';
-import {UniformSetting, Vector2, Matrix, Vector3, Mesh, Buffers, MESH_TYPE, Buffer, OBJData, FBO, GyroscopeData} from '../../../types';
-import {initializeGL} from '../../hooks/gl';
-import {useAnimationFrame} from '../../hooks/animation';
-import {useWindowSize} from '../../hooks/resize';
-import {assignProjectionMatrix, assignUniforms} from '../../../lib/gl/initialize';
-import {createMat4, applyTransformation, invertMatrix, transposeMatrix, lookAt, applyTranslation} from '../../../lib/gl/matrix';
-import {degreesToRadians} from '../../../lib/gl/math';
-import {useOBJLoaderWebWorker} from '../../hooks/webWorker';
-import {formatAttributes} from '../../utils/general';
+import { UniformSetting, Vector2, Matrix, Vector3, Mesh, Buffers, MESH_TYPE, Buffer, OBJData, FBO, GyroscopeData, Interaction } from '../../../types';
+import { initializeGL } from '../../hooks/gl';
+import { useAnimationFrame } from '../../hooks/animation';
+import { useWindowSize } from '../../hooks/resize';
+import { assignProjectionMatrix, assignUniforms } from '../../../lib/gl/initialize';
+import { createMat4, applyTransformation, invertMatrix, transposeMatrix, lookAt, applyTranslation } from '../../../lib/gl/matrix';
+import { degreesToRadians } from '../../../lib/gl/math';
+import { useOBJLoaderWebWorker } from '../../hooks/webWorker';
+import { formatAttributes } from '../../utils/general';
 import styles from './InteractionCanvas.module.scss';
-import {unprojectCoordinate, mapMouseToScreenSpace} from '../../../lib/gl/interaction';
-import {useGyroscope} from '../../hooks/gyroscope';
+import { unprojectCoordinate, mapMouseToScreenSpace, lookAtMouse, updateMouseInteraction, updateInteraction } from '../../../lib/gl/interaction';
+import { useGyroscope } from '../../hooks/gyroscope';
+import { DEFAULT_ROTATION_VELOCITY } from '../../../lib/gl/settings';
 
 interface Props {
 	fragmentShader: string;
@@ -36,12 +37,12 @@ interface RenderProps {
 	FBOA: FBO;
 	FBOB: FBO;
 	pingPong: number;
-	gyroscope: GyroscopeData;
+	interaction: Interaction;
 }
 
 const render = (props: RenderProps) => {
 	if (!props.gl) return;
-	const {gl, size, uniformLocations, outlineUniformLocations, program, outlineProgram, FBOA, FBOB} = props;
+	const { gl, size, uniformLocations, outlineUniformLocations, program, outlineProgram, FBOA, FBOB } = props;
 
 	gl.activeTexture(gl.TEXTURE4);
 	gl.bindFramebuffer(gl.FRAMEBUFFER, FBOA.buffer);
@@ -74,7 +75,7 @@ const render = (props: RenderProps) => {
 	drawOutlines(props);
 };
 
-const drawOutlines = ({gl, outlineProgram, uniforms, outlineUniformLocations, baseVertexBuffer}: RenderProps) => {
+const drawOutlines = ({ gl, outlineProgram, uniforms, outlineUniformLocations, baseVertexBuffer }: RenderProps) => {
 	const vertexPosition = gl.getAttribLocation(outlineProgram, 'aBaseVertexPosition');
 	gl.uniform2fv(outlineUniformLocations.uResolution, Object.values(uniforms[0].value));
 	gl.enableVertexAttribArray(vertexPosition);
@@ -84,21 +85,34 @@ const drawOutlines = ({gl, outlineProgram, uniforms, outlineUniformLocations, ba
 	gl.disableVertexAttribArray(vertexPosition);
 };
 
-const draw = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, program, gyroscope}: RenderProps): void => {
+const createModelViewMatrix = (mousePos, size, projectionMatrix, interaction, uniforms): Matrix => {
+	const translation: Vector3 = uniforms.find(uniform => uniform.name === 'uTranslation').value;
+	const scale: number = uniforms.find(uniform => uniform.name === 'uScale').value;
+	if (interaction.gyroscope.enabled) {
+		const modelViewMatrix = lookAt(createMat4(), {
+			target: { x: 0, y: 0, z: 0.5 },
+			origin: { x: 0, y: 0, z: 0 },
+			up: { x: 0, y: 1, z: 0 }
+		});
+		return applyTransformation(modelViewMatrix, {
+			translation,
+			rotation: interaction.rotation,
+			scale
+		});
+	} else {
+		const rotation = uniforms.find(uniform => uniform.name === 'uRotation').value;
+		const modelViewMatrix = lookAtMouse(mousePos, size, projectionMatrix, createMat4());
+		return applyTransformation(modelViewMatrix, {
+			translation,
+			rotation: { x: degreesToRadians(rotation.x), y: degreesToRadians(rotation.y), z: degreesToRadians(rotation.z) },
+			scale
+		});
+	}
+};
+
+const draw = ({ gl, uniformLocations, uniforms, buffers, time, mousePos, size, program, interaction }: RenderProps): void => {
 	const projectionMatrix: Matrix = assignProjectionMatrix(gl, uniformLocations, size);
-	const screenSpaceTarget = mapMouseToScreenSpace(mousePos, size);
-	const targetCoord: Vector3 = unprojectCoordinate(screenSpaceTarget, projectionMatrix);
-	let modelViewMatrix: Matrix = lookAt(createMat4(), {
-		target: targetCoord,
-		origin: {x: 0, y: 0, z: 0},
-		up: {x: 0, y: 1, z: 0}
-	});
-	const rotation = uniforms.find(uniform => uniform.name === 'uRotation').value;
-	modelViewMatrix = applyTransformation(modelViewMatrix, {
-		translation: uniforms.find(uniform => uniform.name === 'uTranslation').value,
-		rotation: {x: degreesToRadians(rotation.x), y: degreesToRadians(rotation.y), z: degreesToRadians(rotation.z)},
-		scale: uniforms.find(uniform => uniform.name === 'uScale').value
-	});
+	const modelViewMatrix: Matrix = createModelViewMatrix(mousePos, size, projectionMatrix, interaction, uniforms);
 
 	gl.uniformMatrix4fv(uniformLocations.uModelViewMatrix, false, modelViewMatrix);
 	let normalMatrix: Float32Array = invertMatrix(modelViewMatrix);
@@ -117,7 +131,7 @@ const draw = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, pr
 	gl.drawElements(gl.TRIANGLES, vertexCount, indexType, indexOffset);
 };
 
-const InteractionCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, OBJData}: Props) => {
+const InteractionCanvas = ({ fragmentShader, vertexShader, uniforms, setAttributes, OBJData }: Props) => {
 	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
 	const size: React.MutableRefObject<Vector2> = React.useRef<Vector2>({
 		x: window.innerWidth * window.devicePixelRatio,
@@ -125,11 +139,18 @@ const InteractionCanvas = ({fragmentShader, vertexShader, uniforms, setAttribute
 	});
 	uniforms.current[0].value = size.current;
 	const mouseDownRef: React.MutableRefObject<boolean> = React.useRef<boolean>(false);
-	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: size.current.x * 0.5, y: size.current.y * -0.5});
-	const gyroscopeRef: React.MutableRefObject<GyroscopeData> = React.useRef<GyroscopeData>({
-		beta: 0,
-		gamma: 0,
-		enabled: false
+	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({ x: size.current.x * 0.5, y: size.current.y * -0.5 });
+	const rotation = uniforms.current.find(uniform => uniform.name === 'uRotation').value;
+	const interactionRef: React.MutableRefObject<Interaction> = React.useRef<Interaction>({
+		decelerateTimer: 1,
+		accelerateTimer: 0,
+		velocity: { x: 0, y: 0, z: 0 },
+		gyroscope: {
+			beta: 0,
+			gamma: 0,
+			enabled: false
+		},
+		rotation: { x: degreesToRadians(rotation.x), y: degreesToRadians(rotation.y), z: degreesToRadians(rotation.z) }
 	});
 	const gl = React.useRef<WebGLRenderingContext>();
 	const uniformLocations: React.MutableRefObject<Record<string, WebGLUniformLocation>> = React.useRef<Record<string, WebGLUniformLocation>>();
@@ -177,16 +198,17 @@ const InteractionCanvas = ({fragmentShader, vertexShader, uniforms, setAttribute
 	});
 
 	useWindowSize(canvasRef, gl, uniforms.current, size);
-	useGyroscope(gyroscopeRef);
+	useGyroscope(interactionRef);
 
 	useAnimationFrame(canvasRef, (time: number, pingPong: number) => {
+		interactionRef.current = updateInteraction(interactionRef.current);
 		render({
 			gl: gl.current,
 			uniformLocations: uniformLocations.current,
 			uniforms: uniforms.current,
 			time,
 			mousePos: mousePosRef.current,
-			gyroscope: gyroscopeRef.current,
+			interaction: interactionRef.current,
 			size: size.current,
 			buffers: buffersRef.current,
 			outlineProgram: outlineProgramRef.current,
@@ -213,7 +235,7 @@ const InteractionCanvas = ({fragmentShader, vertexShader, uniforms, setAttribute
 			}}
 			onMouseMove={e => {
 				// if (!mouseDownRef.current) return;
-				const {left, top} = canvasRef.current.getBoundingClientRect();
+				const { left, top } = canvasRef.current.getBoundingClientRect();
 				mousePosRef.current = {
 					x: e.clientX - left,
 					y: (e.clientY - top) * -1

@@ -1,9 +1,9 @@
-import {Interaction, Transformation, Vector3, Vector2, Matrix} from '../../types';
+import { Interaction, Transformation, Vector3, Vector2, Matrix } from '../../types';
 
-import {DEFAULT_ROTATION_SPEED} from './settings';
+import { DEFAULT_ROTATION_VELOCITY } from './settings';
 
-import {interpolateVectors, clamp, addVectors, degreesToRadians} from './math';
-import {invertMatrix, applyMatrixToVector3} from './matrix';
+import { interpolateVectors, clamp, addVectors, degreesToRadians } from './math';
+import { invertMatrix, applyMatrixToVector3, lookAt } from './matrix';
 
 interface InteractionSettings {
 	betaMouseWeight: number;
@@ -37,77 +37,88 @@ export const stopInteraction = (animState: Interaction): Interaction => ({
 	enabled: false
 });
 
-export const updateMouseInteraction = ({clientX, clientY}: React.MouseEvent, interaction: Interaction, $container: HTMLDivElement): Interaction => {
-	const {width, height, left, top} = $container.getBoundingClientRect();
+// export const updateMouseInteraction = ({ clientX, clientY }: React.MouseEvent, interaction: Interaction, $container: HTMLDivElement): Interaction => {
+// 	const { width, height, left, top } = $container.getBoundingClientRect();
 
-	const {x, y} = normalizeScreenCoordinates({
-		x: clientX - left,
-		y: clientY - top,
-		containerWidth: width,
-		containerHeight: height
-	});
+// 	const { x, y } = normalizeScreenCoordinates({
+// 		x: clientX - left,
+// 		y: clientY - top,
+// 		containerWidth: width,
+// 		containerHeight: height
+// 	});
 
+// 	return {
+// 		...interaction,
+// 		beta: y * -1 * INTERACTION_SETTINGS.betaMouseWeight,
+// 		gamma: x * INTERACTION_SETTINGS.gammaMouseWeight
+// 	};
+// };
+
+// export const updateDeviceInteraction = (e: DeviceOrientationEvent, interaction: Interaction): Interaction => {
+// 	const { beta, gamma } = normalizeOrientation(e);
+// 	return {
+// 		...interaction,
+// 		beta: beta * INTERACTION_SETTINGS.betaDeviceWeight,
+// 		gamma: gamma * INTERACTION_SETTINGS.gammaDeviceWeight,
+// 		enabled: true
+// 	};
+// };
+
+// export const applyInteraction = ({ transformation, interaction }: { transformation: Transformation; interaction: Interaction }): { newTransformation: Transformation; newInteraction: Interaction } => {
+// 	const { accelerateTimer, decelerateTimer } = interaction;
+
+// 	const newVelocity = calculateVelocity(interaction);
+
+// 	const newAccelerateTimer = accelerateTimer < 1 ? clamp(accelerateTimer + INTERACTION_SETTINGS.friction, 0, 1) : accelerateTimer;
+
+// 	const newDecelerateTimer = decelerateTimer < 1 ? clamp(decelerateTimer + INTERACTION_SETTINGS.friction, 0, 1) : decelerateTimer;
+
+// 	const newRotation = addVectors(transformation.rotation, newVelocity);
+
+// 	return {
+// 		newInteraction: {
+// 			...interaction,
+// 			velocity: newVelocity,
+// 			accelerateTimer: newAccelerateTimer,
+// 			decelerateTimer: newDecelerateTimer
+// 		},
+// 		newTransformation: {
+// 			...transformation,
+// 			rotation: newRotation
+// 		}
+// 	};
+// };
+
+export const updateInteraction = (interaction: Interaction): Interaction => {
+	const { accelerateTimer, decelerateTimer, rotation } = interaction;
+	const newVelocity = updateVelocity(interaction);
 	return {
 		...interaction,
-		beta: y * -1 * INTERACTION_SETTINGS.betaMouseWeight,
-		gamma: x * INTERACTION_SETTINGS.gammaMouseWeight
+		velocity: newVelocity,
+		accelerateTimer: updateTimer(accelerateTimer),
+		decelerateTimer: updateTimer(decelerateTimer),
+		rotation: addVectors(rotation, newVelocity)
 	};
 };
 
-export const updateDeviceInteraction = (e: DeviceOrientationEvent, interaction: Interaction): Interaction => {
-	const {beta, gamma} = normalizeOrientation(e);
-	return {
-		...interaction,
-		beta: beta * INTERACTION_SETTINGS.betaDeviceWeight,
-		gamma: gamma * INTERACTION_SETTINGS.gammaDeviceWeight,
-		enabled: true
-	};
-};
+const updateTimer = (timer: number): number => (timer < 1 ? clamp(timer + INTERACTION_SETTINGS.friction, 0, 1) : timer);
 
-export const applyInteraction = ({transformation, interaction}: {transformation: Transformation; interaction: Interaction}): {newTransformation: Transformation; newInteraction: Interaction} => {
-	const {accelerateTimer, decelerateTimer} = interaction;
+const updateVelocity = (interaction: Interaction): Vector3 => {
+	const { gyroscope, accelerateTimer, decelerateTimer, velocity } = interaction;
 
-	const newVelocity = calculateVelocity(interaction);
-
-	const newAccelerateTimer = accelerateTimer < 1 ? clamp(accelerateTimer + INTERACTION_SETTINGS.friction, 0, 1) : accelerateTimer;
-
-	const newDecelerateTimer = decelerateTimer < 1 ? clamp(decelerateTimer + INTERACTION_SETTINGS.friction, 0, 1) : decelerateTimer;
-
-	const newRotation = addVectors(transformation.rotation, newVelocity);
-
-	return {
-		newInteraction: {
-			...interaction,
-			velocity: newVelocity,
-			accelerateTimer: newAccelerateTimer,
-			decelerateTimer: newDecelerateTimer
-		},
-		newTransformation: {
-			...transformation,
-			rotation: newRotation
-		}
-	};
-};
-
-const calculateVelocity = (interaction: Interaction): Vector3 => {
-	const {beta, gamma, accelerateTimer, decelerateTimer, enabled, velocity} = interaction;
-
-	const targetVelocity: Vector3 = enabled
+	const targetVelocity: Vector3 = gyroscope.enabled
 		? {
-				x: beta,
-				y: DEFAULT_ROTATION_SPEED + gamma,
+				x: gyroscope.beta,
+				y: gyroscope.gamma,
 				z: 0
 		  }
-		: {
-				x: 0,
-				y: DEFAULT_ROTATION_SPEED,
-				z: 0
-		  };
-	return enabled ? interpolateVectors(velocity, targetVelocity, accelerateTimer) : interpolateVectors(velocity, targetVelocity, decelerateTimer);
+		: { x: 0, y: 0, z: 0 };
+
+	return gyroscope.enabled ? interpolateVectors(velocity, targetVelocity, accelerateTimer) : interpolateVectors(velocity, targetVelocity, decelerateTimer);
 };
 
 // Map mouse position from pixel coordinate to a range of -1 to 1
-export const mapMouseToScreenSpace = (mousePos: Vector2, size: Vector2): {x: number; y: number} => {
+export const mapMouseToScreenSpace = (mousePos: Vector2, size: Vector2): { x: number; y: number } => {
 	return {
 		x: 1 - 2 * (mousePos.x / size.x),
 		y: (mousePos.y / size.y) * 2 + 1
@@ -117,16 +128,26 @@ export const mapMouseToScreenSpace = (mousePos: Vector2, size: Vector2): {x: num
 export const unprojectCoordinate = (screenSpaceCoordinate: Vector2, projectionMatrix: Matrix): Vector3 => {
 	const inverseProjectionMatrix: Matrix = invertMatrix(projectionMatrix);
 	return {
-		...applyMatrixToVector3({x: screenSpaceCoordinate.x, y: screenSpaceCoordinate.y, z: -1}, inverseProjectionMatrix),
+		...applyMatrixToVector3({ x: screenSpaceCoordinate.x, y: screenSpaceCoordinate.y, z: -1 }, inverseProjectionMatrix),
 		z: 0.5 // 0.5 places the mouse just in front of the object
 	};
 };
 
-const normalizeOrientation = ({beta, gamma}: {beta: number; gamma: number}): {beta: number; gamma: number} => {
-	const normBeta = Math.sin(degreesToRadians(beta + INTERACTION_SETTINGS.betaOffsetDegrees));
-	const normGamma = Math.sin(degreesToRadians(2 * gamma));
+export const normalizeOrientation = (e: DeviceOrientationEvent): { beta: number; gamma: number } => {
+	const normBeta = Math.sin(degreesToRadians(e.beta + INTERACTION_SETTINGS.betaOffsetDegrees));
+	const normGamma = Math.sin(degreesToRadians(2 * e.gamma));
 	return {
-		beta: normBeta,
-		gamma: normGamma
+		beta: normBeta * INTERACTION_SETTINGS.betaDeviceWeight,
+		gamma: normGamma * INTERACTION_SETTINGS.gammaMouseWeight
 	};
+};
+
+export const lookAtMouse = (mousePos: Vector2, size: Vector2, projectionMatrix: Matrix, modelViewMatrix: Matrix): Matrix => {
+	const screenSpaceTarget = mapMouseToScreenSpace(mousePos, size);
+	const targetCoord: Vector3 = unprojectCoordinate(screenSpaceTarget, projectionMatrix);
+	return lookAt(modelViewMatrix, {
+		target: targetCoord,
+		origin: { x: 0, y: 0, z: 0 },
+		up: { x: 0, y: 1, z: 0 }
+	});
 };

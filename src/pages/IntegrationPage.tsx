@@ -50,8 +50,6 @@ const BASE_INTERACTION_UNIFORMS: UniformSetting[] = [
 	}
 ];
 
-const OBJ_ROTATION_DELTA: Vector3 = {x: 0, y: 0.01, z: 0};
-
 const IntegrationPage = ({isActive}: Props) => {
 	const interactionUniforms = React.useRef<UniformSetting[]>(BASE_INTERACTION_UNIFORMS);
 	const pageMousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({
@@ -80,7 +78,6 @@ const IntegrationPage = ({isActive}: Props) => {
 					uniforms={interactionUniforms}
 					setAttributes={setAttributes}
 					OBJData={foxOBJData}
-					rotationDelta={OBJ_ROTATION_DELTA}
 				/>
 				<ShaderText fragmentShader={interactionFragmentShader} vertexShader={interactionVertexShader} fullScreen={true} />
 				<Inputs attributes={attributes} uniforms={interactionUniforms} pageMousePosRef={pageMousePosRef} fullScreen={true} />

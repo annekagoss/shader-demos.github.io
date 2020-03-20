@@ -18,8 +18,8 @@
 		"clean-dist": "rm -f -r -d dist",
 		"lint": "tslint './src|lib$/**/*.ts*' --format stylish --force",
 		"lint-fix": "tslint './src|lib$/**/*.ts*' --fix --format stylish --force",
-		"start": "yarn run start-dev --https",
-		"start-dev": "webpack-dev-server --config=configs/webpack/dev.js --https",
+		"start": "yarn run start-dev --http",
+		"start-dev": "webpack-dev-server --config=configs/webpack/dev.js --http",
 		"start-prod": "yarn run build && node express.js",
 		"test": "jest --watch --coverage --config=configs/jest.json"
 	},

@@ -1,7 +1,7 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import classnames from 'classnames';
 // import glslify from 'glslify';
-import {calcWindowDiagonalAngle, calcWindowHypotenuse} from '../../utils/general';
+import { calcWindowDiagonalAngle, calcWindowHypotenuse } from '../../utils/general';
 import styles from './GLScene.module.scss';
 
 import {
@@ -22,16 +22,16 @@ import {
 	Vector3
 } from '../../../types';
 
-import {glslColors, supportsDepth, applyBrightness} from '../../../lib/gl/math';
-import {loadTextures} from '../../../lib/gl/loader';
-import {assignStaticUniforms, legacyAssignProjectionMatrix, initShaderProgram, initBuffers, legacyInitFrameBufferObject, initPlaceholderTexture} from '../../../lib/gl/initialize';
-import {updateColors, updateLightSettings, updateMaterials, removeMaterials} from '../../../lib/gl/update';
-import {render} from '../../../lib/gl/render';
+import { glslColors, supportsDepth, applyBrightness } from '../../../lib/gl/math';
+import { loadTextures } from '../../../lib/gl/loader';
+import { assignStaticUniforms, legacyAssignProjectionMatrix, initShaderProgram, initBuffers, legacyInitFrameBufferObject, initPlaceholderTexture } from '../../../lib/gl/initialize';
+import { updateColors, updateLightSettings, updateMaterials, removeMaterials } from '../../../lib/gl/update';
+import { render } from '../../../lib/gl/render';
 
 import loadMeshWorker from '../../../lib/gl/legacyLoadMeshWorker';
 import WebWorker from '../../../lib/gl/WebWorker';
 
-import {startInteraction, stopInteraction, updateMouseInteraction, updateDeviceInteraction, applyInteraction} from '../../../lib/gl/interaction';
+import { startInteraction, stopInteraction, updateMouseInteraction, updateDeviceInteraction, applyInteraction } from '../../../lib/gl/interaction';
 
 import vertSource from '../../../lib/gl/shaders/phong.vert';
 import shadowVert from '../../../lib/gl/shaders/shadow.vert';
@@ -47,7 +47,7 @@ import {
 	DEFAULT_OFFSET,
 	DEFAULT_ROTATION,
 	DEFAULT_SCALE,
-	DEFAULT_ROTATION_SPEED,
+	DEFAULT_ROTATION_VELOCITY,
 	DEFAULT_SHININESS,
 	MAX_IDLE_TIME
 } from '../../../lib/gl/settings';
@@ -79,10 +79,10 @@ export default class GLScene extends Component<SceneProps> {
 		enabled: false,
 		beta: null,
 		gamma: null,
-		speed: DEFAULT_ROTATION_SPEED,
+		speed: DEFAULT_ROTATION_VELOCITY,
 		velocity: {
 			x: 0,
-			y: DEFAULT_ROTATION_SPEED,
+			y: DEFAULT_ROTATION_VELOCITY,
 			z: 0
 		}
 	};
@@ -113,7 +113,7 @@ export default class GLScene extends Component<SceneProps> {
 			shininess
 		} = this.props;
 
-		this.colors = {...glslColors(DEFAULT_COLORS), ...glslColors(colors)};
+		this.colors = { ...glslColors(DEFAULT_COLORS), ...glslColors(colors) };
 
 		const positions: LightPositions = {
 			...DEFAULT_LIGHT_POSITIONS,
@@ -150,7 +150,7 @@ export default class GLScene extends Component<SceneProps> {
 		}
 
 		const worker: any = new WebWorker(loadMeshWorker);
-		worker.addEventListener('message', (event: {data: Mesh}) => {
+		worker.addEventListener('message', (event: { data: Mesh }) => {
 			this.init(event.data);
 		});
 
@@ -169,7 +169,7 @@ export default class GLScene extends Component<SceneProps> {
 	}
 
 	componentDidUpdate(): void {
-		const {loaded} = this.state;
+		const { loaded } = this.state;
 		if (!loaded) return;
 
 		this.updateColors();
@@ -180,16 +180,16 @@ export default class GLScene extends Component<SceneProps> {
 	}
 
 	updateColors(): void {
-		const {colors} = this.props;
+		const { colors } = this.props;
 		const newColors: GLSLColors = glslColors(colors);
 		if (!newColors) return;
 
-		this.colors = {...glslColors(DEFAULT_COLORS), ...newColors};
+		this.colors = { ...glslColors(DEFAULT_COLORS), ...newColors };
 		updateColors(this.colors, this.glContext);
 	}
 
 	updateLightSettings(): void {
-		const {brightness, shininess, shadowStrength} = this.props;
+		const { brightness, shininess, shadowStrength } = this.props;
 		this.lightSettings.shadowStrength = shadowStrength;
 		this.lightSettings.intensities = applyBrightness(brightness, DEFAULT_LIGHT_INTENSITIES);
 		this.lightSettings.customShininess = shininess || this.lightSettings.customShininess;
@@ -197,7 +197,7 @@ export default class GLScene extends Component<SceneProps> {
 	}
 
 	updateTransformation(): void {
-		const {positionOffset, rotationOffset, scale} = this.props;
+		const { positionOffset, rotationOffset, scale } = this.props;
 		this.transformation.translation = {
 			...this.transformation.translation,
 			...positionOffset
@@ -210,8 +210,8 @@ export default class GLScene extends Component<SceneProps> {
 	}
 
 	updateTextures(): void {
-		const {diffuseSources} = this.props;
-		const {textureCount} = this.glContext;
+		const { diffuseSources } = this.props;
+		const { textureCount } = this.glContext;
 
 		const diffuseCount: number = Object.keys(diffuseSources).length;
 		if (diffuseCount > 0 && textureCount !== diffuseCount) {
@@ -221,8 +221,8 @@ export default class GLScene extends Component<SceneProps> {
 	}
 
 	updateMaterials(): void {
-		const {MTLSource} = this.props;
-		const {hasMaterial} = this.glContext;
+		const { MTLSource } = this.props;
+		const { hasMaterial } = this.glContext;
 
 		if (hasMaterial !== !!MTLSource) {
 			this.glContext.hasMaterial = !hasMaterial;
@@ -231,10 +231,10 @@ export default class GLScene extends Component<SceneProps> {
 	}
 
 	addMaterial(): void {
-		const {diffuseSources, MTLSource} = this.props;
+		const { diffuseSources, MTLSource } = this.props;
 
 		const MTLWorker: any = new WebWorker(loadMeshWorker); /* tslint:disable-line no-any */
-		MTLWorker.addEventListener('message', (event: {data: Materials}) => {
+		MTLWorker.addEventListener('message', (event: { data: Materials }) => {
 			/* tslint:disable-line no-unsafe-any */
 			this.glContext.mesh.materials = event.data;
 			updateMaterials(this.glContext, null);
@@ -247,7 +247,7 @@ export default class GLScene extends Component<SceneProps> {
 	}
 
 	init = (mesh: Mesh): void => {
-		const {width, height} = this.$container.getBoundingClientRect();
+		const { width, height } = this.$container.getBoundingClientRect();
 		this.$canvas.width = Math.round(width * window.devicePixelRatio);
 		this.$canvas.height = Math.round(height * window.devicePixelRatio);
 		this.glContext.$canvas = this.$canvas;
@@ -412,10 +412,10 @@ export default class GLScene extends Component<SceneProps> {
 	};
 
 	renderGL = (): void => {
-		const {glContext, transformation, colors, lightSettings, interaction} = this;
-		const {loaded} = this.state;
-		const {needsFrameCapture} = this.props;
-		const {newTransformation, newInteraction} = applyInteraction({
+		const { glContext, transformation, colors, lightSettings, interaction } = this;
+		const { loaded } = this.state;
+		const { needsFrameCapture } = this.props;
+		const { newTransformation, newInteraction } = applyInteraction({
 			transformation,
 			interaction
 		});
@@ -446,9 +446,9 @@ export default class GLScene extends Component<SceneProps> {
 
 	updateRendererSize = (): void => {
 		if (!this.$container) return;
-		const {gl, $canvas} = this.glContext;
+		const { gl, $canvas } = this.glContext;
 		if (!$canvas) return;
-		const {width, height} = this.$container.getBoundingClientRect();
+		const { width, height } = this.$container.getBoundingClientRect();
 		const targetWidth: number = Math.round(width * window.devicePixelRatio);
 		const targetHeight: number = Math.round(height * window.devicePixelRatio);
 		if ($canvas.width !== targetWidth || $canvas.height !== targetHeight) {
@@ -479,8 +479,8 @@ export default class GLScene extends Component<SceneProps> {
 	};
 
 	handleScroll = (): void => {
-		const {idle} = this.state;
-		const {y, height} = this.$container.getBoundingClientRect() as DOMRect;
+		const { idle } = this.state;
+		const { y, height } = this.$container.getBoundingClientRect() as DOMRect;
 		const inView: boolean = y > 0 || y + height > 0;
 
 		if (!inView && !idle) {
@@ -491,16 +491,16 @@ export default class GLScene extends Component<SceneProps> {
 	};
 
 	captureFrame(): void {
-		const {onFrameCapture} = this.props;
+		const { onFrameCapture } = this.props;
 		if (!onFrameCapture) return;
 		const frameExport = this.$canvas.toDataURL('image/png', 0.25);
 		onFrameCapture(frameExport);
 	}
 
 	render(): React.ReactNode {
-		const {placeholderImage, colors} = this.props;
-		const {backgroundA, backgroundB} = colors;
-		const {loaded} = this.state;
+		const { placeholderImage, colors } = this.props;
+		const { backgroundA, backgroundB } = colors;
+		const { loaded } = this.state;
 		return (
 			<div
 				className={classnames(styles.scene, loaded && styles.loaded)}

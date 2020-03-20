@@ -229,16 +229,6 @@ export interface LightSettings {
 	shadowStrength: number; // float > 0
 }
 
-export interface Interaction {
-	decelerateTimer: number; // int > 0
-	accelerateTimer: number; // int > 0
-	enabled: boolean;
-	beta: number; // float
-	gamma: number; // float
-	speed: number; // float
-	velocity: Vector3;
-}
-
 export interface BoundingBox {
 	size: Vector3;
 	minX: number; // float
@@ -321,4 +311,12 @@ export interface GyroscopeData {
 	beta: number;
 	gamma: number;
 	enabled: boolean;
+}
+
+export interface Interaction {
+	decelerateTimer: number;
+	accelerateTimer: number;
+	gyroscope: GyroscopeData;
+	velocity: Vector3;
+	rotation: Vector3;
 }
