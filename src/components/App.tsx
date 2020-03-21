@@ -8,7 +8,7 @@ import IntegrationPage from '../pages/IntegrationPage';
 import styles from './app.module.scss';
 
 const App = () => {
-	const [activePageIndex, setActivePageIndex] = React.useState<number>(0);
+	const [activePageIndex, setActivePageIndex] = React.useState<number>(3);
 	if (!glSupported()) return <div>'WebGL is not supported on this device.'</div>;
 	return (
 		<div className={styles.app}>

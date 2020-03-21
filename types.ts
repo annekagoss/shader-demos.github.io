@@ -311,12 +311,23 @@ export interface GyroscopeData {
 	beta: number;
 	gamma: number;
 	enabled: boolean;
+	decelerateTimer: number;
+	accelerateTimer: number;
+	velocity: Vector3;
+}
+
+export interface DragData {
+	enabled: boolean;
+	isDragging: boolean;
+	position: Vector2;
+	velocity: Vector3;
+	dragVelocity: Vector2;
+	decelerateTimer: number;
+	accelerateTimer: number;
 }
 
 export interface Interaction {
-	decelerateTimer: number;
-	accelerateTimer: number;
 	gyroscope: GyroscopeData;
-	velocity: Vector3;
+	drag: DragData;
 	rotation: Vector3;
 }

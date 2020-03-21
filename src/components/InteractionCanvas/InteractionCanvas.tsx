@@ -9,9 +9,10 @@ import { degreesToRadians } from '../../../lib/gl/math';
 import { useOBJLoaderWebWorker } from '../../hooks/webWorker';
 import { formatAttributes } from '../../utils/general';
 import styles from './InteractionCanvas.module.scss';
-import { unprojectCoordinate, mapMouseToScreenSpace, lookAtMouse, updateMouseInteraction, updateInteraction } from '../../../lib/gl/interaction';
+import { lookAtMouse, updateInteraction, getInitialInteraction } from '../../../lib/gl/interaction';
 import { useGyroscope } from '../../hooks/gyroscope';
-import { DEFAULT_ROTATION_VELOCITY } from '../../../lib/gl/settings';
+import { useDrag } from '../../hooks/drag';
+import { useMouse } from '../../hooks/mouse';
 
 interface Props {
 	fragmentShader: string;
@@ -138,20 +139,9 @@ const InteractionCanvas = ({ fragmentShader, vertexShader, uniforms, setAttribut
 		y: window.innerHeight * window.devicePixelRatio
 	});
 	uniforms.current[0].value = size.current;
-	const mouseDownRef: React.MutableRefObject<boolean> = React.useRef<boolean>(false);
 	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({ x: size.current.x * 0.5, y: size.current.y * -0.5 });
 	const rotation = uniforms.current.find(uniform => uniform.name === 'uRotation').value;
-	const interactionRef: React.MutableRefObject<Interaction> = React.useRef<Interaction>({
-		decelerateTimer: 1,
-		accelerateTimer: 0,
-		velocity: { x: 0, y: 0, z: 0 },
-		gyroscope: {
-			beta: 0,
-			gamma: 0,
-			enabled: false
-		},
-		rotation: { x: degreesToRadians(rotation.x), y: degreesToRadians(rotation.y), z: degreesToRadians(rotation.z) }
-	});
+	const interactionRef: React.MutableRefObject<Interaction> = React.useRef<Interaction>(getInitialInteraction(rotation));
 	const gl = React.useRef<WebGLRenderingContext>();
 	const uniformLocations: React.MutableRefObject<Record<string, WebGLUniformLocation>> = React.useRef<Record<string, WebGLUniformLocation>>();
 	const meshRef: React.MutableRefObject<Mesh> = React.useRef<Mesh>();
@@ -198,7 +188,9 @@ const InteractionCanvas = ({ fragmentShader, vertexShader, uniforms, setAttribut
 	});
 
 	useWindowSize(canvasRef, gl, uniforms.current, size);
-	useGyroscope(interactionRef);
+	// useGyroscope(interactionRef);
+	useMouse(mousePosRef, canvasRef);
+	useDrag(interactionRef, canvasRef);
 
 	useAnimationFrame(canvasRef, (time: number, pingPong: number) => {
 		interactionRef.current = updateInteraction(interactionRef.current);
@@ -221,28 +213,7 @@ const InteractionCanvas = ({ fragmentShader, vertexShader, uniforms, setAttribut
 		});
 	});
 
-	return (
-		<canvas
-			ref={canvasRef}
-			width={size.current.x}
-			height={size.current.y}
-			className={styles.fullScreenCanvas}
-			onMouseDown={() => {
-				mouseDownRef.current = true;
-			}}
-			onMouseUp={() => {
-				mouseDownRef.current = false;
-			}}
-			onMouseMove={e => {
-				// if (!mouseDownRef.current) return;
-				const { left, top } = canvasRef.current.getBoundingClientRect();
-				mousePosRef.current = {
-					x: e.clientX - left,
-					y: (e.clientY - top) * -1
-				};
-			}}
-		/>
-	);
+	return <canvas ref={canvasRef} width={size.current.x} height={size.current.y} className={styles.fullScreenCanvas} />;
 };
 
 export default InteractionCanvas;

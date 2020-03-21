@@ -1,10 +1,11 @@
 import * as React from 'react';
-import {UniformSetting, Vector2, UNIFORM_TYPE, FBO, MESH_TYPE} from '../../types';
-import {useInitializeGL} from '../hooks/gl';
-import {useAnimationFrame} from '../hooks/animation';
-import {assignUniforms} from '../../lib/gl/initialize';
-import {useWindowSize} from '../hooks/resize';
-import {BASE_TRIANGLE_MESH} from '../../lib/gl/settings';
+import { UniformSetting, Vector2, UNIFORM_TYPE, FBO, MESH_TYPE } from '../../types';
+import { BASE_TRIANGLE_MESH } from '../../lib/gl/settings';
+import { useInitializeGL } from '../hooks/gl';
+import { useAnimationFrame } from '../hooks/animation';
+import { assignUniforms } from '../../lib/gl/initialize';
+import { useWindowSize } from '../hooks/resize';
+import { useMouse } from '../hooks/mouse';
 
 interface Props {
 	fragmentShader: string;
@@ -26,7 +27,7 @@ interface RenderProps {
 	size: Vector2;
 }
 
-const render = ({gl, uniformLocations, uniforms, time, mousePos, FBOA, FBOB, pingPong}: RenderProps) => {
+const render = ({ gl, uniformLocations, uniforms, time, mousePos, FBOA, FBOB, pingPong }: RenderProps) => {
 	assignUniforms(uniforms, uniformLocations, gl, time, mousePos);
 
 	const buffer: WebGLFramebuffer = pingPong === 0 ? FBOA.buffer : FBOB.buffer;
@@ -46,7 +47,7 @@ const render = ({gl, uniformLocations, uniforms, time, mousePos, FBOA, FBOB, pin
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 };
 
-const FeedbackCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes}: Props) => {
+const FeedbackCanvas = ({ fragmentShader, vertexShader, uniforms, setAttributes }: Props) => {
 	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
 	const size: React.MutableRefObject<Vector2> = React.useRef<Vector2>({
 		x: uniforms.current[0].value.x * window.devicePixelRatio,
@@ -55,7 +56,7 @@ const FeedbackCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes}:
 	const gl = React.useRef<WebGLRenderingContext>();
 	const uniformLocations = React.useRef<Record<string, WebGLUniformLocation>>();
 	const mouseDownRef: React.MutableRefObject<boolean> = React.useRef<boolean>(false);
-	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: size.current.x * 0.5, y: size.current.y * -0.5});
+	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({ x: size.current.x * 0.5, y: size.current.y * -0.5 });
 	const FBOA: React.MutableRefObject<FBO> = React.useRef();
 	const FBOB: React.MutableRefObject<FBO> = React.useRef();
 
@@ -73,12 +74,13 @@ const FeedbackCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes}:
 	});
 
 	React.useEffect(() => {
-		setAttributes([{name: 'aVertexPosition', value: BASE_TRIANGLE_MESH.join(', ')}]);
+		setAttributes([{ name: 'aVertexPosition', value: BASE_TRIANGLE_MESH.join(', ') }]);
 		uniforms.current[0].value = size.current;
 		gl.current.viewport(0, 0, size.current.x, size.current.y);
 	}, []);
 
 	useWindowSize(canvasRef, gl, uniforms.current, size);
+	useMouse(mousePosRef, canvasRef);
 
 	useAnimationFrame(canvasRef, (time: number, pingPong: number) => {
 		render({
@@ -94,27 +96,7 @@ const FeedbackCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes}:
 		});
 	});
 
-	return (
-		<canvas
-			ref={canvasRef}
-			width={size.current.x}
-			height={size.current.y}
-			onMouseDown={() => {
-				mouseDownRef.current = true;
-			}}
-			onMouseUp={() => {
-				mouseDownRef.current = false;
-			}}
-			onMouseMove={e => {
-				if (!mouseDownRef.current) return;
-				const {left, top} = canvasRef.current.getBoundingClientRect();
-				mousePosRef.current = {
-					x: e.clientX - left,
-					y: (e.clientY - top) * -1
-				};
-			}}
-		/>
-	);
+	return <canvas ref={canvasRef} width={size.current.x} height={size.current.y} />;
 };
 
 export default FeedbackCanvas;

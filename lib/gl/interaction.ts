@@ -1,4 +1,4 @@
-import { Interaction, Transformation, Vector3, Vector2, Matrix } from '../../types';
+import { Interaction, Transformation, Vector3, Vector2, Matrix, GyroscopeData, DragData } from '../../types';
 
 import { interpolateVectors, clamp, addVectors, degreesToRadians } from './math';
 import { invertMatrix, applyMatrixToVector3, lookAt } from './matrix';
@@ -20,6 +20,27 @@ const INTERACTION_SETTINGS: InteractionSettings = {
 	betaOffsetDegrees: -30,
 	friction: 0.001
 };
+
+export const getInitialInteraction = (rotationFromUniforms: Vector3): Interaction => ({
+	gyroscope: {
+		beta: 0,
+		gamma: 0,
+		enabled: false,
+		decelerateTimer: 1,
+		accelerateTimer: 0,
+		velocity: { x: 0, y: 0, z: 0 }
+	},
+	drag: {
+		enabled: false,
+		decelerateTimer: 1,
+		accelerateTimer: 0,
+		position: { x: 0, y: 0 },
+		velocity: { x: 0, y: 0, z: 0 },
+		dragVelocity: { x: 0, y: 0 },
+		isDragging: false
+	},
+	rotation: { x: degreesToRadians(rotationFromUniforms.x), y: degreesToRadians(rotationFromUniforms.y), z: degreesToRadians(rotationFromUniforms.z) }
+});
 
 // export const updateMouseInteraction = ({ clientX, clientY }: React.MouseEvent, interaction: Interaction, $container: HTMLDivElement): Interaction => {
 // 	const { width, height, left, top } = $container.getBoundingClientRect();
@@ -74,31 +95,54 @@ const INTERACTION_SETTINGS: InteractionSettings = {
 // };
 
 export const updateInteraction = (interaction: Interaction): Interaction => {
-	const { accelerateTimer, decelerateTimer, rotation } = interaction;
-	const newVelocity = updateVelocity(interaction);
+	const { drag, gyroscope, rotation } = interaction;
+
+	const newDrag: DragData = drag;
+	const newGyroscope: GyroscopeData = gyroscope;
+
+	if (newDrag.enabled) {
+		newDrag.velocity = updateDragVelocity(drag);
+		newDrag.accelerateTimer = updateDragTimer(drag.accelerateTimer);
+		newDrag.decelerateTimer = updateDragTimer(drag.decelerateTimer);
+	}
+	if (newGyroscope.enabled) {
+		newGyroscope.velocity = updateGyroVelocity(gyroscope);
+		newGyroscope.accelerateTimer = updateGyroTimer(gyroscope.accelerateTimer);
+		newGyroscope.decelerateTimer = updateGyroTimer(gyroscope.decelerateTimer);
+	}
+
 	return {
 		...interaction,
-		velocity: newVelocity,
-		accelerateTimer: updateTimer(accelerateTimer),
-		decelerateTimer: updateTimer(decelerateTimer),
-		rotation: addVectors(rotation, newVelocity)
+		drag: newDrag,
+		gyroscope: newGyroscope
 	};
 };
+const updateDragTimer = (timer: number): number => (timer < 1 ? clamp(timer + INTERACTION_SETTINGS.friction, 0, 1) : timer);
 
-const updateTimer = (timer: number): number => (timer < 1 ? clamp(timer + INTERACTION_SETTINGS.friction, 0, 1) : timer);
+const updateGyroTimer = (timer: number): number => (timer < 1 ? clamp(timer + INTERACTION_SETTINGS.friction, 0, 1) : timer);
 
-const updateVelocity = (interaction: Interaction): Vector3 => {
-	const { gyroscope, accelerateTimer, decelerateTimer, velocity } = interaction;
-
-	const targetVelocity: Vector3 = gyroscope.enabled
+const updateDragVelocity = ({ enabled, dragVelocity, accelerateTimer, decelerateTimer, velocity }: DragData): Vector3 => {
+	const targetVelocity: Vector3 = enabled
 		? {
-				x: gyroscope.beta,
-				y: gyroscope.gamma,
+				x: dragVelocity.x,
+				y: dragVelocity.y,
 				z: 0
 		  }
 		: { x: 0, y: 0, z: 0 };
 
-	return gyroscope.enabled ? interpolateVectors(velocity, targetVelocity, accelerateTimer) : interpolateVectors(velocity, targetVelocity, decelerateTimer);
+	return enabled ? interpolateVectors(velocity, targetVelocity, accelerateTimer) : interpolateVectors(velocity, targetVelocity, decelerateTimer);
+};
+
+const updateGyroVelocity = ({ beta, gamma, enabled, accelerateTimer, decelerateTimer, velocity }: GyroscopeData): Vector3 => {
+	const targetVelocity: Vector3 = enabled
+		? {
+				x: beta,
+				y: gamma,
+				z: 0
+		  }
+		: { x: 0, y: 0, z: 0 };
+
+	return enabled ? interpolateVectors(velocity, targetVelocity, accelerateTimer) : interpolateVectors(velocity, targetVelocity, decelerateTimer);
 };
 
 // Map mouse position from pixel coordinate to a range of -1 to 1

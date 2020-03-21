@@ -1,11 +1,12 @@
 import * as React from 'react';
-import {UniformSetting, Vector2, Matrix, Vector3, FaceArray, MESH_TYPE, Buffers} from '../../types';
-import {assignProjectionMatrix, assignUniforms} from '../../lib/gl/initialize';
-import {useInitializeGL} from '../hooks/gl';
-import {useAnimationFrame} from '../hooks/animation';
-import {applyRotation, createMat4} from '../../lib/gl/matrix';
-import {addVectors} from '../../lib/gl/math';
-import {useWindowSize} from '../hooks/resize';
+import { UniformSetting, Vector2, Matrix, Vector3, FaceArray, MESH_TYPE, Buffers } from '../../types';
+import { assignProjectionMatrix, assignUniforms } from '../../lib/gl/initialize';
+import { applyRotation, createMat4 } from '../../lib/gl/matrix';
+import { addVectors } from '../../lib/gl/math';
+import { useInitializeGL } from '../hooks/gl';
+import { useAnimationFrame } from '../hooks/animation';
+import { useWindowSize } from '../hooks/resize';
+import { useMouse } from '../hooks/mouse';
 
 interface Props {
 	fragmentShader: string;
@@ -28,7 +29,7 @@ interface RenderProps {
 	rotation: Vector3;
 }
 
-const render = ({gl, uniformLocations, uniforms, time, mousePos, size, numVertices, rotation}: RenderProps) => {
+const render = ({ gl, uniformLocations, uniforms, time, mousePos, size, numVertices, rotation }: RenderProps) => {
 	assignProjectionMatrix(gl, uniformLocations, size);
 	const modelViewMatrix: Matrix = applyRotation(createMat4().slice(), rotation);
 	gl.uniformMatrix4fv(uniformLocations.uModelViewMatrix, false, modelViewMatrix);
@@ -36,14 +37,14 @@ const render = ({gl, uniformLocations, uniforms, time, mousePos, size, numVertic
 	gl.drawArrays(gl.TRIANGLES, 0, numVertices);
 };
 
-const DepthCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef, faceArray, rotationDelta}: Props) => {
+const DepthCanvas = ({ fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef, faceArray, rotationDelta }: Props) => {
 	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
 	const size: React.MutableRefObject<Vector2> = React.useRef<Vector2>({
 		x: uniforms.current[0].value.x * window.devicePixelRatio,
 		y: uniforms.current[0].value.y * window.devicePixelRatio
 	});
 	const mouseDownRef: React.MutableRefObject<boolean> = React.useRef<boolean>(false);
-	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: size.current.x * 0.5, y: size.current.y * -0.5});
+	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({ x: size.current.x * 0.5, y: size.current.y * -0.5 });
 	const gl = React.useRef<WebGLRenderingContext>();
 	const uniformLocations = React.useRef<Record<string, WebGLUniformLocation>>();
 	const numVertices: number = faceArray.flat().length;
@@ -55,7 +56,7 @@ const DepthCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pag
 		textureAddressBuffer: null,
 		barycentricBuffer: null
 	});
-	const rotationRef: React.MutableRefObject<Vector3> = React.useRef<Vector3>({x: 0, y: 0, z: 0});
+	const rotationRef: React.MutableRefObject<Vector3> = React.useRef<Vector3>({ x: 0, y: 0, z: 0 });
 
 	useInitializeGL({
 		gl,
@@ -72,12 +73,13 @@ const DepthCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pag
 
 	React.useEffect(() => {
 		setAttributes([
-			{name: 'aVertexPosition', value: buffersRef.current && buffersRef.current.vertexBuffer.data.join(', ')},
-			{name: 'aVertexNormal', value: buffersRef.current && buffersRef.current.normalBuffer.data.join(', ')}
+			{ name: 'aVertexPosition', value: buffersRef.current && buffersRef.current.vertexBuffer.data.join(', ') },
+			{ name: 'aVertexNormal', value: buffersRef.current && buffersRef.current.normalBuffer.data.join(', ') }
 		]);
 	}, []);
 
 	useWindowSize(canvasRef, gl, uniforms.current, size);
+	// useMouse(mousePosRef, canvasRef);
 
 	useAnimationFrame(canvasRef, (time: number) => {
 		rotationRef.current = addVectors(rotationRef.current, rotationDelta);
@@ -93,30 +95,7 @@ const DepthCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pag
 		});
 	});
 
-	return (
-		<canvas
-			ref={canvasRef}
-			width={size.current.x}
-			height={size.current.y}
-			onMouseDown={() => {
-				mouseDownRef.current = true;
-			}}
-			onMouseUp={() => {
-				mouseDownRef.current = false;
-			}}
-			onMouseMove={e => {
-				if (!mouseDownRef.current) return;
-				const {left, top} = canvasRef.current.getBoundingClientRect();
-				mousePosRef.current = {
-					x: e.clientX - left,
-					y: (e.clientY - top) * -1
-				};
-				if (pageMousePosRef) {
-					pageMousePosRef.current = mousePosRef.current;
-				}
-			}}
-		/>
-	);
+	return <canvas ref={canvasRef} width={size.current.x} height={size.current.y} />;
 };
 
 export default DepthCanvas;
