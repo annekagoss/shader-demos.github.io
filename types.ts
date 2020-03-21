@@ -309,7 +309,7 @@ export enum MESH_TYPE {
 
 export interface GyroscopeData {
 	beta: number;
-	gamma: number;
+	alpha: number;
 	enabled: boolean;
 	decelerateTimer: number;
 	accelerateTimer: number;
@@ -330,4 +330,5 @@ export interface Interaction {
 	gyroscope: GyroscopeData;
 	drag: DragData;
 	rotation: Vector3;
+	initialRotation: Vector3;
 }

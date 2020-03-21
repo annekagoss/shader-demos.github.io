@@ -41,6 +41,7 @@ canvas {
 	min-height: 400px;
 	box-sizing: border-box;
 	cursor: crosshair;
+	touch-action: none;
 
 	@media (max-width: 900px) {
 		width: auto;

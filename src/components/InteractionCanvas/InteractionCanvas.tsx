@@ -89,7 +89,7 @@ const drawOutlines = ({ gl, outlineProgram, uniforms, outlineUniformLocations, b
 const createModelViewMatrix = (mousePos, size, projectionMatrix, interaction, uniforms): Matrix => {
 	const translation: Vector3 = uniforms.find(uniform => uniform.name === 'uTranslation').value;
 	const scale: number = uniforms.find(uniform => uniform.name === 'uScale').value;
-	if (interaction.gyroscope.enabled) {
+	if (interaction.gyroscope.enabled || interaction.drag.enabled) {
 		const modelViewMatrix = lookAt(createMat4(), {
 			target: { x: 0, y: 0, z: 0.5 },
 			origin: { x: 0, y: 0, z: 0 },
@@ -188,7 +188,7 @@ const InteractionCanvas = ({ fragmentShader, vertexShader, uniforms, setAttribut
 	});
 
 	useWindowSize(canvasRef, gl, uniforms.current, size);
-	// useGyroscope(interactionRef);
+	useGyroscope(interactionRef);
 	useMouse(mousePosRef, canvasRef);
 	useDrag(interactionRef, canvasRef);
 

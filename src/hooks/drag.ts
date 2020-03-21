@@ -1,53 +1,48 @@
 import { useEffect } from 'react';
 import { Interaction, Vector2 } from '../../types';
+import { throttle } from './helpers';
 
 export const useDrag = (interactionRef: React.MutableRefObject<Interaction>, canvasRef: React.RefObject<HTMLCanvasElement>) => {
 	useEffect(() => {
 		console.log(Boolean('ontouchstart' in window), Boolean(canvasRef.current));
 		if (!Boolean('ontouchstart' in window) || !Boolean(canvasRef.current)) return;
+		interactionRef.current.drag.enabled = true;
 		const touchStartHandler = (e: TouchEvent) => handleTouchStart(e, interactionRef, canvasRef);
-		const touchMoveHandler = throttle(100, (e: TouchEvent) => handleTouchMove(e, interactionRef, canvasRef));
+		const touchMoveHandler = throttle(30, (e: TouchEvent) => handleTouchMove(e, interactionRef, canvasRef));
 		const touchEndHandler = (e: TouchEvent) => handleTouchEnd(e, interactionRef, canvasRef);
-		window.addEventListener('touchstart', touchStartHandler);
-		window.addEventListener('touchmove', touchMoveHandler);
-		window.addEventListener('touchend', touchEndHandler);
+		canvasRef.current.addEventListener('touchstart', touchStartHandler);
+		canvasRef.current.addEventListener('touchmove', touchMoveHandler);
+		canvasRef.current.addEventListener('touchend', touchEndHandler);
 		return () => {
-			window.removeEventListener('touchstart', touchStartHandler);
-			window.removeEventListener('touchmove', touchMoveHandler);
-			window.removeEventListener('touchend', touchEndHandler);
+			canvasRef.current.removeEventListener('touchstart', touchStartHandler);
+			canvasRef.current.removeEventListener('touchmove', touchMoveHandler);
+			canvasRef.current.removeEventListener('touchend', touchEndHandler);
 		};
 	}, []);
 };
 
-const throttle = (delay, fn) => {
-	let lastCall = 0;
-	return (...args) => {
-		const now = new Date().getTime();
-		if (now - lastCall < delay) {
-			return;
-		}
-		lastCall = now;
-		return fn(...args);
-	};
-};
-
 const handleTouchStart = (e: TouchEvent, interactionRef: React.MutableRefObject<Interaction>, canvasRef: React.RefObject<HTMLCanvasElement>) => {
-	const { clientX: x, clientY: y } = e.touches[0];
-	interactionRef.current.drag.position = normalizePosition(x, y, canvasRef);
+	interactionRef.current.drag.isDragging = true;
 };
 
 const handleTouchMove = (e: TouchEvent, interactionRef: React.MutableRefObject<Interaction>, canvasRef: React.RefObject<HTMLCanvasElement>) => {
 	const { clientX: x, clientY: y } = e.touches[0];
-	interactionRef.current.drag.position = normalizePosition(x, y, canvasRef);
-	console.log(interactionRef.current.drag.position);
+	const newPosition: Vector2 = normalizePosition(x, y, canvasRef);
+	interactionRef.current.drag.dragVelocity = {
+		x: interactionRef.current.drag.position.x - newPosition.x,
+		y: interactionRef.current.drag.position.y - newPosition.y
+	};
 };
 
-const handleTouchEnd = (e: TouchEvent, interactionRef: React.MutableRefObject<Interaction>, canvasRef: React.RefObject<HTMLCanvasElement>) => {};
+const handleTouchEnd = (e: TouchEvent, interactionRef: React.MutableRefObject<Interaction>, canvasRef: React.RefObject<HTMLCanvasElement>) => {
+	interactionRef.current.drag.isDragging = false;
+};
 
+// Map coordinates from -1 to 1
 const normalizePosition = (x, y, canvasRef): Vector2 => {
 	const { left, top, width, height } = canvasRef.current.getBoundingClientRect();
 	return {
-		x: (x - left) / width,
-		y: (y - top) / height
+		x: ((x - left) / width) * 2 - 1,
+		y: ((y - top) / height) * 2 - 1
 	};
 };

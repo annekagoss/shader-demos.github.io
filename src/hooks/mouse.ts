@@ -1,5 +1,6 @@
 import { Vector2 } from '../../types';
 import { useEffect } from 'react';
+import { throttle } from './helpers';
 
 export const useMouse = (mousePosRef: React.MutableRefObject<Vector2>, canvasRef: React.RefObject<HTMLCanvasElement>) => {
 	useEffect(() => {
@@ -9,18 +10,6 @@ export const useMouse = (mousePosRef: React.MutableRefObject<Vector2>, canvasRef
 			canvasRef.current.removeEventListener('mousemove', mouseMoveHandler);
 		};
 	}, []);
-};
-
-const throttle = (delay, fn) => {
-	let lastCall = 0;
-	return (...args) => {
-		const now = new Date().getTime();
-		if (now - lastCall < delay) {
-			return;
-		}
-		lastCall = now;
-		return fn(...args);
-	};
 };
 
 const handleMouseMove = (e: MouseEvent, mousePosRef: React.MutableRefObject<Vector2>, canvasRef: React.RefObject<HTMLCanvasElement>) => {

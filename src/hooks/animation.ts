@@ -1,5 +1,5 @@
-import {useRef, useEffect} from 'react';
-import {MAX_IDLE_TIME} from '../../lib/gl/settings';
+import { useRef, useEffect } from 'react';
+import { MAX_IDLE_TIME } from '../../lib/gl/settings';
 
 interface UsePauseWhileOffScreenProps {
 	canvasRef: React.MutableRefObject<HTMLCanvasElement>;
@@ -40,7 +40,7 @@ export const useAnimationFrame = (canvasRef: React.MutableRefObject<HTMLCanvasEl
 		return () => cancelAnimationFrame(requestRef.current);
 	}, []);
 
-	usePauseWhileOffScreen({canvasRef, idleRef, idleTimerRef, requestRef, animate});
+	usePauseWhileOffScreen({ canvasRef, idleRef, idleTimerRef, requestRef, animate });
 };
 
 const usePauseWhileOffScreen = (props: UsePauseWhileOffScreenProps) => {
@@ -50,16 +50,18 @@ const usePauseWhileOffScreen = (props: UsePauseWhileOffScreenProps) => {
 	useEffect(() => {
 		window.addEventListener('scroll', scrollHandler);
 		window.addEventListener('mousemove', mouseMoveHandler);
+		window.addEventListener('touchmove', mouseMoveHandler);
 		return () => {
 			window.removeEventListener('scroll', scrollHandler);
 			window.removeEventListener('mousemove', mouseMoveHandler);
+			window.removeEventListener('touchmove', mouseMoveHandler);
 		};
 	}, []);
 };
 
-const handleScroll = ({canvasRef, idleRef, idleTimerRef, requestRef, animate}: UsePauseWhileOffScreenProps) => {
+const handleScroll = ({ canvasRef, idleRef, idleTimerRef, requestRef, animate }: UsePauseWhileOffScreenProps) => {
 	if (!canvasRef.current) return;
-	const {y, height} = canvasRef.current.getBoundingClientRect() as DOMRect;
+	const { y, height } = canvasRef.current.getBoundingClientRect() as DOMRect;
 	const topAboveBottom: boolean = y < window.innerHeight;
 	const bottomBelowTop: boolean = y + height > 0;
 	const inView: boolean = topAboveBottom && bottomBelowTop;
@@ -76,7 +78,7 @@ const handleScroll = ({canvasRef, idleRef, idleTimerRef, requestRef, animate}: U
 	}
 };
 
-const resetIdleTimer = ({idleRef, idleTimerRef, requestRef, animate}: UsePauseWhileOffScreenProps) => {
+const resetIdleTimer = ({ idleRef, idleTimerRef, requestRef, animate }: UsePauseWhileOffScreenProps) => {
 	if (!idleRef.current) return;
 	idleTimerRef.current = 0;
 	requestRef.current = requestAnimationFrame(animate);

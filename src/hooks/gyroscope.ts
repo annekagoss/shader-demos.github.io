@@ -4,9 +4,8 @@ import { normalizeOrientation } from '../../lib/gl/interaction';
 
 export const useGyroscope = (interactionRef: React.MutableRefObject<Interaction>) => {
 	const handleOrientationChange = (e: DeviceOrientationEvent) => {
-		const { beta, gamma } = normalizeOrientation(e);
-		interactionRef.current.gyroscope.beta = beta;
-		interactionRef.current.gyroscope.gamma = gamma;
+		interactionRef.current.gyroscope.beta = e.beta;
+		interactionRef.current.gyroscope.alpha = e.alpha;
 	};
 	useEffect(() => {
 		interactionRef.current.gyroscope.enabled = Boolean('ondeviceorientation' in window) && Boolean('ontouchstart' in window);
