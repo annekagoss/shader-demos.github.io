@@ -1,7 +1,5 @@
 import { Interaction, Transformation, Vector3, Vector2, Matrix } from '../../types';
 
-import { DEFAULT_ROTATION_VELOCITY } from './settings';
-
 import { interpolateVectors, clamp, addVectors, degreesToRadians } from './math';
 import { invertMatrix, applyMatrixToVector3, lookAt } from './matrix';
 
@@ -22,20 +20,6 @@ const INTERACTION_SETTINGS: InteractionSettings = {
 	betaOffsetDegrees: -30,
 	friction: 0.001
 };
-
-export const startInteraction = (animState: Interaction): Interaction => ({
-	...animState,
-	accelerateTimer: 0,
-	enabled: true
-});
-
-export const stopInteraction = (animState: Interaction): Interaction => ({
-	...animState,
-	beta: null,
-	gamma: null,
-	decelerateTimer: 0,
-	enabled: false
-});
 
 // export const updateMouseInteraction = ({ clientX, clientY }: React.MouseEvent, interaction: Interaction, $container: HTMLDivElement): Interaction => {
 // 	const { width, height, left, top } = $container.getBoundingClientRect();

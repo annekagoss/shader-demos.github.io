@@ -1,6 +1,6 @@
 import * as React from 'react';
-import {UNIFORM_TYPE, Vector2, UniformSetting, Vector3} from '../../types';
-import {BASE_UNIFORMS} from '../utils/general';
+import { UNIFORM_TYPE, Vector2, UniformSetting, Vector3 } from '../../types';
+import { BASE_UNIFORMS } from '../utils/general';
 import interactionVertexShader from '../../lib/gl/shaders/phong.vert';
 import interactionFragmentShader from '../../lib/gl/shaders/toon.frag';
 import Section from '../components/Section/Section';
@@ -28,18 +28,18 @@ const BASE_INTERACTION_UNIFORMS: UniformSetting[] = [
 		value: 0
 	},
 	{
-		defaultValue: {x: 0, y: 0, z: 0},
+		defaultValue: { x: 0, y: 0, z: 0 },
 		name: 'uTranslation',
 		readonly: false,
 		type: UNIFORM_TYPE.VEC_3,
-		value: {x: 0, y: 0, z: 0}
+		value: { x: 0, y: 0, z: 0 }
 	},
 	{
-		defaultValue: {x: 14.9, y: 180 + 50.7, z: 28.8},
+		defaultValue: { x: 14.9, y: 180 + 50.7, z: 28.8 },
 		name: 'uRotation',
 		readonly: false,
 		type: UNIFORM_TYPE.VEC_3,
-		value: {x: 14.9, y: 180 + 50.7, z: 28.8}
+		value: { x: 14.9, y: 180 + 50.7, z: 28.8 }
 	},
 	{
 		defaultValue: 0.0485,
@@ -50,12 +50,8 @@ const BASE_INTERACTION_UNIFORMS: UniformSetting[] = [
 	}
 ];
 
-const IntegrationPage = ({isActive}: Props) => {
+const IntegrationPage = ({ isActive }: Props) => {
 	const interactionUniforms = React.useRef<UniformSetting[]>(BASE_INTERACTION_UNIFORMS);
-	const pageMousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({
-		x: 0.5,
-		y: 0.5
-	});
 	const [attributes, setAttributes] = React.useState<any[]>([]);
 	if (!isActive) return <></>;
 	const foxOBJData = {
@@ -71,7 +67,13 @@ const IntegrationPage = ({isActive}: Props) => {
 
 	return (
 		<div>
-			<Section title='3.0: Cross-device interaction' fullScreen={true}>
+			<Section
+				title='3.0: Cross-device interaction'
+				fullScreen={true}
+				fragmentShader={interactionFragmentShader}
+				vertexShader={interactionVertexShader}
+				attributes={attributes}
+				uniforms={interactionUniforms}>
 				<InteractionCanvas
 					fragmentShader={interactionFragmentShader}
 					vertexShader={interactionVertexShader}
@@ -79,8 +81,6 @@ const IntegrationPage = ({isActive}: Props) => {
 					setAttributes={setAttributes}
 					OBJData={foxOBJData}
 				/>
-				<ShaderText fragmentShader={interactionFragmentShader} vertexShader={interactionVertexShader} fullScreen={true} />
-				<Inputs attributes={attributes} uniforms={interactionUniforms} pageMousePosRef={pageMousePosRef} fullScreen={true} />
 			</Section>
 		</div>
 	);

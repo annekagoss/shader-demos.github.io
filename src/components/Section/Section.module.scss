@@ -10,8 +10,9 @@
 	margin-bottom: 1rem;
 }
 
-.childrenWrapper {
+.contentWrapper {
 	display: flex;
+	flex-wrap: nowrap;
 
 	.root.fullScreen & {
 		flex-wrap: wrap;
@@ -24,6 +25,27 @@
 			canvas {
 				flex-basis: 100%;
 			}
+		}
+	}
+}
+
+.textWrapper {
+	width: 100%;
+	display: flex;
+	flex-wrap: wrap;
+	flex-direction: column;
+	margin-top: 10px;
+
+	@media (min-width: 900px) {
+		width: calc(100% - 420px);
+		flex-direction: row;
+		flex-wrap: nowrap;
+		margin-top: 0;
+		margin-left: 10px;
+
+		.root.fullScreen & {
+			width: 100%;
+			margin-top: 10px;
 		}
 	}
 }

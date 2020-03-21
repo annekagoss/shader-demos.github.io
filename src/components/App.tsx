@@ -1,6 +1,6 @@
 import * as React from 'react';
 import cx from 'classnames';
-import {glSupported} from '../utils/general';
+import { glSupported } from '../utils/general';
 import FormPage from '../pages/FormPage';
 import MotionPage from '../pages/MotionPage';
 import DepthPage from '../pages/DepthPage';
@@ -8,7 +8,7 @@ import IntegrationPage from '../pages/IntegrationPage';
 import styles from './app.module.scss';
 
 const App = () => {
-	const [activePageIndex, setActivePageIndex] = React.useState<number>(3);
+	const [activePageIndex, setActivePageIndex] = React.useState<number>(0);
 	if (!glSupported()) return <div>'WebGL is not supported on this device.'</div>;
 	return (
 		<div className={styles.app}>
