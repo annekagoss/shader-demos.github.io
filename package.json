@@ -14,13 +14,11 @@
 	},
 	"homepage": "https://github.com/annekagoss/webgl-portfolio#readme",
 	"scripts": {
-		"build": "yarn run clean-dist && webpack -p --config=configs/webpack/prod.js",
+		"build": "webpack --config=configs/webpack/prod.js",
 		"clean-dist": "rm -f -r -d dist",
 		"lint": "tslint './src|lib$/**/*.ts*' --format stylish --force",
 		"lint-fix": "tslint './src|lib$/**/*.ts*' --fix --format stylish --force",
-		"start": "yarn run start-dev --http",
-		"start-dev": "webpack-dev-server --config=configs/webpack/dev.js --http",
-		"start-prod": "yarn run build && webpack-dev-server --config=configs/webpack/prod.js --http",
+		"start": "webpack-dev-server --open --config=configs/webpack/dev.js",
 		"test": "jest --watch --coverage --config=configs/jest.json"
 	},
 	"babel": {
@@ -72,7 +70,7 @@
 		"jest": "^24.5.0",
 		"node-sass": "^4.11.0",
 		"postcss-loader": "^3.0.0",
-		"react": "^16.13.0",
+		"react": "^16.13.1",
 		"react-dom": "^16.13.0",
 		"react-hot-loader": "^4.8.4",
 		"sass-loader": "^7.1.0",
@@ -97,6 +95,7 @@
 		"babel-polyfill": "^6.26.0",
 		"babel-preset-es2015": "^6.24.1",
 		"classnames": "^2.2.6",
+		"clean-webpack-plugin": "^3.0.0",
 		"glslify": "^7.0.0",
 		"glslify-loader": "^2.0.0",
 		"latest": "^0.2.0",

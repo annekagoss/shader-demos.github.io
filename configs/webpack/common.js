@@ -1,8 +1,9 @@
 // shared config (dev and prod)
 
 const autoprefixer = require('autoprefixer');
-const {resolve} = require('path');
-const {CheckerPlugin} = require('awesome-typescript-loader');
+const { resolve } = require('path');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const { CheckerPlugin } = require('awesome-typescript-loader');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const CSSModuleLoader = {
@@ -55,15 +56,15 @@ module.exports = {
 						presets: [
 							[
 								'@babel/preset-env',
-								{targets: {browsers: 'last 2 versions'}} // or whatever your project requires
+								{ targets: { browsers: 'last 2 versions' } } // or whatever your project requires
 							],
 							'@babel/preset-typescript',
 							'@babel/preset-react'
 						],
 						plugins: [
 							// plugin-proposal-decorators is only needed if you're using experimental decorators in TypeScript
-							['@babel/plugin-proposal-decorators', {legacy: true}],
-							['@babel/plugin-proposal-class-properties', {loose: true}],
+							['@babel/plugin-proposal-decorators', { legacy: true }],
+							['@babel/plugin-proposal-class-properties', { loose: true }],
 							'react-hot-loader/babel'
 						]
 					}
@@ -98,12 +99,9 @@ module.exports = {
 			}
 		]
 	},
-	plugins: [new CheckerPlugin(), new HtmlWebpackPlugin({template: 'index.html.ejs'})],
-	externals: {
-		react: 'React',
-		'react-dom': 'ReactDOM'
-	},
-	performance: {
-		hints: false
+	plugins: [new CleanWebpackPlugin(), new CheckerPlugin(), new HtmlWebpackPlugin({ template: 'index.html.ejs' })],
+	output: {
+		filename: '[name].bundle.js',
+		path: resolve(__dirname, '../../dist')
 	}
 };

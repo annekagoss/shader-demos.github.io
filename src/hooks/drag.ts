@@ -4,7 +4,6 @@ import { throttle } from './helpers';
 
 export const useDrag = (interactionRef: React.MutableRefObject<Interaction>, canvasRef: React.RefObject<HTMLCanvasElement>) => {
 	useEffect(() => {
-		console.log(Boolean('ontouchstart' in window), Boolean(canvasRef.current));
 		if (!Boolean('ontouchstart' in window) || !Boolean(canvasRef.current)) return;
 		interactionRef.current.drag.enabled = true;
 		const touchStartHandler = (e: TouchEvent) => handleTouchStart(e, interactionRef, canvasRef);

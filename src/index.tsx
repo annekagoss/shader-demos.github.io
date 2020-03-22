@@ -1,6 +1,6 @@
 import * as React from 'react';
-import {render} from 'react-dom';
-import {AppContainer, setConfig} from 'react-hot-loader';
+import { render } from 'react-dom';
+import { AppContainer, setConfig } from 'react-hot-loader';
 import App from './components/App';
 
 setConfig({
@@ -9,6 +9,8 @@ setConfig({
 });
 
 const rootEl = document.getElementById('root');
+
+console.log(`mode: ${process.env.NODE_ENV}`);
 
 render(
 	<AppContainer>
