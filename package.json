@@ -20,7 +20,7 @@
 		"lint-fix": "tslint './src|lib$/**/*.ts*' --fix --format stylish --force",
 		"start": "yarn run start-dev --http",
 		"start-dev": "webpack-dev-server --config=configs/webpack/dev.js --http",
-		"start-prod": "webpack-dev-server --config=configs/webpack/prod.js --http",
+		"start-prod": "yarn run build && webpack-dev-server --config=configs/webpack/prod.js --http",
 		"test": "jest --watch --coverage --config=configs/jest.json"
 	},
 	"babel": {
