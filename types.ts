@@ -299,6 +299,7 @@ export interface OBJData {
 export interface WebWorkerLoadMessage {
 	onLoadHandler: (data: Mesh) => void;
 	OBJData: OBJData;
+	useWebWorker?: boolean;
 }
 
 export enum MESH_TYPE {

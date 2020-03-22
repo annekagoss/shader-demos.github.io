@@ -14,6 +14,13 @@ import { useGyroscope } from '../../hooks/gyroscope';
 import { useDrag } from '../../hooks/drag';
 import { useMouse } from '../../hooks/mouse';
 
+const IS_SAFARI: boolean =
+	/constructor/i.test(window.HTMLElement) ||
+	(function(p) {
+		return p.toString() === '[object SafariRemoteNotification]';
+	})(!window['safari'] || (typeof safari !== 'undefined' && safari.pushNotification));
+console.log({ IS_SAFARI });
+
 interface Props {
 	fragmentShader: string;
 	vertexShader: string;
@@ -44,6 +51,12 @@ interface RenderProps {
 const render = (props: RenderProps) => {
 	if (!props.gl) return;
 	const { gl, size, uniformLocations, outlineUniformLocations, program, outlineProgram, FBOA, FBOB } = props;
+
+	if (IS_SAFARI) {
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		draw(props);
+		return;
+	}
 
 	gl.activeTexture(gl.TEXTURE4);
 	gl.bindFramebuffer(gl.FRAMEBUFFER, FBOA.buffer);
@@ -184,7 +197,8 @@ const InteractionCanvas = ({ fragmentShader, vertexShader, uniforms, setAttribut
 			});
 			setAttributes(formatAttributes(buffersRef));
 		},
-		OBJData
+		OBJData,
+		useWebWorker: !IS_SAFARI
 	});
 
 	useWindowSize(canvasRef, gl, uniforms.current, size);

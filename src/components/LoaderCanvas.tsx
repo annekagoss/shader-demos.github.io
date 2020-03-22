@@ -1,13 +1,15 @@
 import * as React from 'react';
-import {UniformSetting, Vector2, Matrix, Vector3, Mesh, Buffers, MESH_TYPE, Buffer, OBJData, FBO} from '../../types';
-import {initializeGL} from '../hooks/gl';
-import {useAnimationFrame} from '../hooks/animation';
-import {useWindowSize} from '../hooks/resize';
-import {assignProjectionMatrix, assignUniforms} from '../../lib/gl/initialize';
-import {createMat4, applyTransformation, invertMatrix, transposeMatrix} from '../../lib/gl/matrix';
-import {addVectors} from '../../lib/gl/math';
-import {useOBJLoaderWebWorker} from '../hooks/webWorker';
-import {formatAttributes} from '../utils/general';
+import { UniformSetting, Vector2, Matrix, Vector3, Mesh, Buffers, MESH_TYPE, Buffer, OBJData, FBO } from '../../types';
+import { initializeGL } from '../hooks/gl';
+import { useAnimationFrame } from '../hooks/animation';
+import { useWindowSize } from '../hooks/resize';
+import { assignProjectionMatrix, assignUniforms } from '../../lib/gl/initialize';
+import { createMat4, applyTransformation, invertMatrix, transposeMatrix } from '../../lib/gl/matrix';
+import { addVectors } from '../../lib/gl/math';
+import { useOBJLoaderWebWorker } from '../hooks/webWorker';
+import { formatAttributes, isSafari } from '../utils/general';
+
+const IS_SAFARI: boolean = isSafari();
 
 interface Props {
 	fragmentShader: string;
@@ -39,9 +41,9 @@ interface RenderProps {
 
 const render = (props: RenderProps) => {
 	if (!props.gl) return;
-	const {gl, size, uniforms, uniformLocations, outlineUniformLocations, program, outlineProgram, FBOA, FBOB} = props;
+	const { gl, size, uniforms, uniformLocations, outlineUniformLocations, program, outlineProgram, FBOA, FBOB } = props;
 
-	if (parseInt(uniforms.find(uniform => uniform.name === 'uMaterialType').value) !== 2) {
+	if (IS_SAFARI || parseInt(uniforms.find(uniform => uniform.name === 'uMaterialType').value) !== 2) {
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.useProgram(program);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -80,7 +82,7 @@ const render = (props: RenderProps) => {
 	drawOutlines(props);
 };
 
-const drawOutlines = ({gl, outlineProgram, program, baseVertexBuffer, buffers}: RenderProps) => {
+const drawOutlines = ({ gl, outlineProgram, program, baseVertexBuffer, buffers }: RenderProps) => {
 	const vertexPosition = gl.getAttribLocation(outlineProgram, 'aBaseVertexPosition');
 	gl.enableVertexAttribArray(vertexPosition);
 	gl.bindBuffer(gl.ARRAY_BUFFER, baseVertexBuffer.buffer);
@@ -89,7 +91,7 @@ const drawOutlines = ({gl, outlineProgram, program, baseVertexBuffer, buffers}: 
 	gl.disableVertexAttribArray(vertexPosition);
 };
 
-const draw = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, rotation, outlineProgram, program}: RenderProps): void => {
+const draw = ({ gl, uniformLocations, uniforms, buffers, time, mousePos, size, rotation, outlineProgram, program }: RenderProps): void => {
 	assignProjectionMatrix(gl, uniformLocations, size);
 	const modelViewMatrix: Matrix = applyTransformation(createMat4(), {
 		translation: uniforms.find(uniform => uniform.name === 'uTranslation').value,
@@ -117,14 +119,14 @@ const draw = ({gl, uniformLocations, uniforms, buffers, time, mousePos, size, ro
 	gl.drawElements(gl.TRIANGLES, vertexCount, indexType, indexOffset);
 };
 
-const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef, OBJData, rotationDelta}: Props) => {
+const LoaderCanvas = ({ fragmentShader, vertexShader, uniforms, setAttributes, pageMousePosRef, OBJData, rotationDelta }: Props) => {
 	const canvasRef: React.RefObject<HTMLCanvasElement> = React.useRef<HTMLCanvasElement>();
 	const size: React.MutableRefObject<Vector2> = React.useRef<Vector2>({
 		x: uniforms.current[0].value.x * window.devicePixelRatio,
 		y: uniforms.current[0].value.y * window.devicePixelRatio
 	});
 	const mouseDownRef: React.MutableRefObject<boolean> = React.useRef<boolean>(false);
-	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({x: size.current.x * 0.5, y: size.current.y * -0.5});
+	const mousePosRef: React.MutableRefObject<Vector2> = React.useRef<Vector2>({ x: size.current.x * 0.5, y: size.current.y * -0.5 });
 	const gl = React.useRef<WebGLRenderingContext>();
 	const uniformLocations: React.MutableRefObject<Record<string, WebGLUniformLocation>> = React.useRef<Record<string, WebGLUniformLocation>>();
 	const buffersRef: React.MutableRefObject<Buffers> = React.useRef<Buffers>({
@@ -135,7 +137,7 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 		textureAddressBuffer: null,
 		barycentricBuffer: null
 	});
-	const rotationRef: React.MutableRefObject<Vector3> = React.useRef<Vector3>({x: 0, y: 0, z: 0});
+	const rotationRef: React.MutableRefObject<Vector3> = React.useRef<Vector3>({ x: 0, y: 0, z: 0 });
 	const meshRef: React.MutableRefObject<Mesh> = React.useRef<Mesh>();
 	// Toon outline pass
 	const programRef: React.MutableRefObject<WebGLProgram> = React.useRef<WebGLProgram>();
@@ -168,7 +170,8 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 			});
 			setAttributes(formatAttributes(buffersRef));
 		},
-		OBJData
+		OBJData,
+		useWebWorker: !IS_SAFARI
 	});
 
 	useWindowSize(canvasRef, gl, uniforms.current, size);
@@ -207,7 +210,7 @@ const LoaderCanvas = ({fragmentShader, vertexShader, uniforms, setAttributes, pa
 			}}
 			onMouseMove={e => {
 				if (!mouseDownRef.current) return;
-				const {left, top} = canvasRef.current.getBoundingClientRect();
+				const { left, top } = canvasRef.current.getBoundingClientRect();
 				mousePosRef.current = {
 					x: e.clientX - left,
 					y: (e.clientY - top) * -1

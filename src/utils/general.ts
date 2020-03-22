@@ -1,14 +1,20 @@
-import {UNIFORM_TYPE, UniformSetting, Buffers} from '../../types';
+import { UNIFORM_TYPE, UniformSetting, Buffers } from '../../types';
 
 export const BASE_UNIFORMS: UniformSetting[] = [
 	{
-		defaultValue: {x: 400, y: 400},
+		defaultValue: { x: 400, y: 400 },
 		name: 'uResolution',
 		readonly: true,
 		type: UNIFORM_TYPE.VEC_2,
-		value: {x: 400, y: 400}
+		value: { x: 400, y: 400 }
 	}
 ];
+
+export const isSafari = (): boolean =>
+	/constructor/i.test(window.HTMLElement) ||
+	(function(p) {
+		return p.toString() === '[object SafariRemoteNotification]';
+	})(!window['safari'] || (typeof safari !== 'undefined' && safari.pushNotification));
 
 export const glSupported = (): boolean => {
 	// Check https://github.com/AnalyticalGraphicsInc/webglreport for more detailed compatibility tests
